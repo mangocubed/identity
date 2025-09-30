@@ -1,0 +1,28 @@
+[application]
+name = "Mango³ ID"
+
+[web.app]
+
+# HTML title tag content
+title = "Mango³ ID"
+
+# include `assets` in web platform
+[web.resource]
+
+# Additional CSS style files
+style = []
+
+# Additional JavaScript files
+script = []
+
+[web.resource.dev]
+
+# Javascript code file
+# serve: [dev-server] only
+script = []
+
+[bundle]
+identifier = "app.mango3.id"
+icon = ["app/assets/favicon.png"]
+publisher = "Mango³ Group"
+copyright = "© 2025 Mango³ Group"

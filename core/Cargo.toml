@@ -1,0 +1,4 @@
+[package]
+name = "identity-core"
+version.workspace = true
+edition.workspace = true

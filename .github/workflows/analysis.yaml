@@ -1,0 +1,44 @@
+name: Analysis
+
+on:
+    workflow_call:
+
+env:
+    CARGO_TERM_COLOR: always
+    DATABASE_URL: postgres://mango3:mango3@127.0.0.1:5432/identity_test
+
+jobs:
+    check_rust:
+        runs-on: ubuntu-24.04
+        services:
+            postgres:
+                image: postgres:17-alpine
+                env:
+                    POSTGRES_USER: mango3
+                    POSTGRES_PASSWORD: mango3
+                    POSTGRES_DB: identity_test
+                ports:
+                    - 5432:5432
+                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        steps:
+            - uses: actions/checkout@v5
+            - uses: ./.github/actions/setup-dioxus
+            - name: Check with cargo-clippy
+              run: |
+                  cargo clippy --package identity-core -- -D warnings
+                  cargo clippy --package identity-app -- -D warnings
+                  cargo clippy --package identity-cli -- -D warnings
+            - name: Check with cargo-fmt
+              run: cargo fmt --all --check
+            - name: Check with dioxus-cli
+              run: |
+                  dx check --package identity-app --all-features
+                  dx fmt --package identity-app --check
+
+    check_sql:
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v5
+            - uses: quarylabs/install-sqruff-cli-action@main
+            - name: Check with sqruff
+              run: sqruff lint migrations/*.sql

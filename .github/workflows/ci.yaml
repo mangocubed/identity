@@ -1,0 +1,24 @@
+name: CI
+
+on:
+    pull_request:
+        branches: [main]
+        paths-ignore:
+            - .editorconfig
+            - LICENCE
+            - README.md
+
+    push:
+        branches: [main]
+        paths-ignore:
+            - .editorconfig
+            - LICENCE
+            - README.md
+
+jobs:
+    analysis:
+        uses: ./.github/workflows/analysis.yaml
+
+    tests:
+        needs: [analysis]
+        uses: ./.github/workflows/tests.yaml

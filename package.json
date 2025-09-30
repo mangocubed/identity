@@ -1,0 +1,14 @@
+{
+    "scripts": {
+        "build": "npx @tailwindcss/cli --minify --input ./app/style.css --output ./app/assets/style.css",
+        "watch": "npx @tailwindcss/cli --minify --input ./app/style.css --output ./app/assets/style.css --watch",
+        "end2end": "npx playwright test --config app/playwright.config.js"
+    },
+    "devDependencies": {
+        "@faker-js/faker": "^10.0.0",
+        "@playwright/test": "^1.55.0"
+    },
+    "dependencies": {
+        "sdk": "github:mangocubed/sdk#v0.0.0-alpha.2"
+    }
+}

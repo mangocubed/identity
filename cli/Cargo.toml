@@ -1,0 +1,8 @@
+[package]
+name = "identity-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+clap = "4.5.48"
+identity-core = { workspace = true }

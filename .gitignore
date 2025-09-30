@@ -1,0 +1,6 @@
+/.zed
+/app/assets/style.css
+/app/end2end/output
+/node_modules
+/storage
+/target

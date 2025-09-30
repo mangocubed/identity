@@ -1,0 +1,49 @@
+name: Tests
+
+on:
+    workflow_call:
+
+env:
+    CARGO_TERM_COLOR: always
+    DATABASE_URL: postgres://mango3:mango3@127.0.0.1:5432/identity_test
+
+jobs:
+    unit_tests:
+        runs-on: ubuntu-24.04
+        services:
+            postgres:
+                image: postgres:17-alpine
+                env:
+                    POSTGRES_USER: mango3
+                    POSTGRES_PASSWORD: mango3
+                    POSTGRES_DB: identity_test
+                ports:
+                    - 5432:5432
+                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        steps:
+            - uses: actions/checkout@v5
+            - uses: taiki-e/install-action@nextest
+            - uses: ./.github/actions/setup-dioxus
+            - name: Run all unit tests
+              run: cargo nextest run --package identity-core --all-features
+
+    end2end_tests:
+        runs-on: ubuntu-24.04
+        services:
+            postgres:
+                image: postgres:17-alpine
+                env:
+                    POSTGRES_USER: mango3
+                    POSTGRES_PASSWORD: mango3
+                    POSTGRES_DB: identity_test
+                ports:
+                    - 5432:5432
+                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        steps:
+            - uses: actions/checkout@v5
+            - uses: ./.github/actions/setup-dioxus
+            - uses: ./.github/actions/setup-node
+            - name: Setup Playwright
+              run: npx playwright install chromium firefox --with-deps
+            - name: Run all end2end tests
+              run: npm run end2end

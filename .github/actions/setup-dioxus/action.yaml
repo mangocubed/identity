@@ -1,0 +1,26 @@
+name: Setup Dioxus
+description: Setup Dioxus environment with dependencies and database configuration
+
+runs:
+    using: composite
+    steps:
+        - uses: actions/cache@v4
+          with:
+              path: |
+                  ~/.cargo/
+                  ~/.dioxus/
+                  ~/.rustup/
+                  target/
+              key: ${{ runner.os }}-cargo-{{ hashFiles('**/Cargo.lock') }}
+        - uses: cargo-bins/cargo-binstall@main
+        - name: Install Dioxus CLI & SQLx CLI
+          shell: bash
+          run: cargo binstall -y dioxus-cli@0.7.0-rc.0 sqlx-cli@0.8.6
+        - name: Add additional Rustup targets
+          shell: bash
+          run: rustup target add wasm32-unknown-unknown
+        - name: Run database migrations
+          shell: bash
+          run: sqlx database setup
+        - shell: bash
+          run: touch app/assets/style.css

@@ -1,0 +1,14 @@
+[workspace]
+resolver = "3"
+members = ["app", "cli", "core"]
+
+[workspace.package]
+version = "0.0.0-alpha.0"
+edition = "2024"
+authors = ["Javier E. <jaedns@gmail.com>"]
+homepage = "https://id.mango3.app"
+repository = "https://github.com/mangocubed/identity"
+
+[workspace.dependencies]
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+identity-core = { path = "core" }
