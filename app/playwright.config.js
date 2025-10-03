@@ -44,7 +44,7 @@ export default defineConfig({
 
     webServer: {
         cwd: "..",
-        command: `npm run build && cargo build --bin identity-cli --release && \
+        command: `npm run build && cargo build --package identity-cli --release && \
             dx build --package identity-app --release --web && \
             dx serve --package identity-app --release --web`,
         port: 8080,

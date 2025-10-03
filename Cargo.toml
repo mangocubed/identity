@@ -10,5 +10,7 @@ homepage = "https://id.mango3.app"
 repository = "https://github.com/mangocubed/identity"
 
 [workspace.dependencies]
+rust_iso3166 = "0.1.14"
 tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
 identity-core = { path = "core" }
+sdk = { git = "https://github.com/mangocubed/sdk.git", tag = "v0.0.0-alpha.4" }

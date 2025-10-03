@@ -50,7 +50,7 @@ jobs:
         steps:
             - uses: actions/checkout@v5
             - uses: ./.github/actions/setup-dioxus
-            - run: cargo build --bin identity-cli --release
+            - run: cargo build --package identity-cli --release
             - uses: actions/upload-artifact@v4
               with:
                   name: identity_cli_build

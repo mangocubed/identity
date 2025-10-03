@@ -12,11 +12,18 @@ chrono = "0.4.42"
 [dependencies]
 axum = { version = "0.8.6", optional = true }
 dioxus = { version = "0.7.0-rc.0", features = ["router", "fullstack"] }
+rust_iso3166 = { workspace = true }
 tokio = { workspace = true, optional = true }
 identity-core = { workspace = true }
-sdk = { git = "https://github.com/mangocubed/sdk.git", tag = "v0.0.0-alpha.2" }
+sdk = { workspace = true, features = ["dioxus", "fullstack"] }
 
 [features]
 default = ["web"]
-web = ["dioxus/web"]
-server = ["dep:axum", "dep:tokio", "dioxus/server"]
+web = ["dioxus/web", "sdk/web"]
+server = [
+    "dep:axum",
+    "dep:tokio",
+    "identity-core/server",
+    "dioxus/server",
+    "sdk/server",
+]

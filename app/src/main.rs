@@ -1,11 +1,14 @@
 use dioxus::prelude::*;
 
-use sdk::components::{AppProvider, LoadingOverlay};
+use sdk::{components::AppProvider, serv_fn::set_serv_fn_header};
 
+mod constants;
 mod layouts;
 mod pages;
 mod routes;
+mod server_fns;
 
+use constants::HEADER_APP_TOKEN;
 use routes::Routes;
 
 const FAVICON_ICO: Asset = asset!("assets/favicon.ico");
@@ -31,10 +34,12 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let mut app_is_loading = use_signal(|| true);
+    let mut is_starting = use_signal(|| true);
 
     use_effect(move || {
-        app_is_loading.set(false);
+        is_starting.set(false);
+
+        set_serv_fn_header(HEADER_APP_TOKEN, env!("APP_TOKEN"));
     });
 
     rsx! {
@@ -45,8 +50,6 @@ fn App() -> Element {
         document::Link { rel: "icon", href: FAVICON_ICO }
         document::Link { rel: "stylesheet", href: STYLE_CSS }
 
-        AppProvider { Router::<Routes> {} }
-
-        LoadingOverlay { is_visible: app_is_loading }
+        AppProvider { is_starting, Router::<Routes> {} }
     }
 }
