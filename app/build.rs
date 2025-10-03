@@ -4,7 +4,7 @@ use chrono::{SecondsFormat, Utc};
 
 fn main() {
     let app_server_url = std::env::var("APP_SERVER_URL").unwrap_or("http://127.0.0.1:8080".to_owned());
-    let app_token = std::env::var("APP_TOKEN").unwrap_or("00000000".to_owned());
+    let app_token = std::env::var("APP_TOKEN").unwrap_or("identity_dev".to_owned());
     let git_rev_short = {
         let output = Command::new("git")
             .args(["rev-parse", "--short", "HEAD"])

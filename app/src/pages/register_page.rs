@@ -1,0 +1,86 @@
+use dioxus::prelude::*;
+
+use sdk::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField, SelectField, TextField};
+use sdk::constants::{PRIVACY_URL, TERMS_URL};
+use sdk::hooks::use_form_provider;
+use sdk::icons::InformationCircleOutline;
+
+use crate::routes::Routes;
+use crate::server_fns::attempt_to_register;
+
+#[component]
+pub fn RegisterPage() -> Element {
+    use_form_provider("register".to_owned(), attempt_to_register);
+
+    let navigator = use_navigator();
+
+    rsx! {
+        PageTitle { "Register" }
+
+        H1 { "Register" }
+
+        FormSuccessModal {
+            on_close: move |_| {
+                navigator.push(Routes::home());
+            },
+        }
+
+        Form {
+            TextField {
+                id: "username",
+                label: "Username",
+                max_length: 16,
+                name: "username",
+            }
+
+            TextField {
+                id: "email",
+                input_type: "email",
+                label: "Email",
+                name: "email",
+            }
+
+            PasswordField {
+                id: "password",
+                label: "Password",
+                max_length: 128,
+                name: "password",
+            }
+
+            TextField { id: "full_name", label: "Full name", name: "full_name" }
+
+            TextField {
+                id: "birthdate",
+                label: "Birthdate",
+                name: "birthdate",
+                input_type: "date",
+            }
+
+            SelectField {
+                id: "country_alpha2",
+                label: "Country",
+                name: "country_alpha2",
+                option { "Select" }
+                for country in rust_iso3166::ALL {
+                    option { value: country.alpha2, {country.name} }
+                }
+            }
+
+            div { class: "alert mt-4 mb-2",
+                InformationCircleOutline {}
+
+                p {
+                    "By submitting this form, you are declaring that you accept our "
+
+                    a { class: "link", href: TERMS_URL, target: "_blank", "Terms of Service" }
+
+                    " and "
+
+                    a { class: "link", href: PRIVACY_URL, target: "_blank", "Privacy Policy" }
+
+                    "."
+                }
+            }
+        }
+    }
+}
