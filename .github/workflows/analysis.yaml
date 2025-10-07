@@ -28,6 +28,7 @@ jobs:
                   cargo clippy --package identity-core -- -D warnings
                   cargo clippy --package identity-app -- -D warnings
                   cargo clippy --package identity-cli -- -D warnings
+                  cargo clippy --package identity-monitor -- -D warnings
             - name: Check with cargo-fmt
               run: cargo fmt --all --check
             - name: Check with dioxus-cli

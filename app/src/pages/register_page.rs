@@ -4,15 +4,27 @@ use sdk::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField, Sele
 use sdk::constants::{PRIVACY_URL, TERMS_URL};
 use sdk::hooks::use_form_provider;
 use sdk::icons::InformationCircleOutline;
+use sdk::{DataStorage, data_storage};
+use serde_json::Value;
 
+use crate::constants::KEY_SESSION_TOKEN;
+use crate::hooks::use_current_user;
 use crate::routes::Routes;
-use crate::server_fns::attempt_to_register;
+use crate::server_fns::{attempt_to_register, can_register_user};
 
 #[component]
 pub fn RegisterPage() -> Element {
     use_form_provider("register".to_owned(), attempt_to_register);
 
     let navigator = use_navigator();
+    let mut current_user = use_current_user();
+    let can_register_user = use_resource(can_register_user);
+
+    use_effect(move || {
+        if can_register_user() == Some(Ok(false)) {
+            navigator.push(Routes::login());
+        }
+    });
 
     rsx! {
         PageTitle { "Register" }
@@ -22,10 +34,16 @@ pub fn RegisterPage() -> Element {
         FormSuccessModal {
             on_close: move |_| {
                 navigator.push(Routes::home());
+                current_user.restart();
             },
         }
 
         Form {
+            on_success: move |value| {
+                if let Value::String(token) = value {
+                    data_storage().set(KEY_SESSION_TOKEN, &token);
+                }
+            },
             TextField {
                 id: "username",
                 label: "Username",
@@ -81,6 +99,10 @@ pub fn RegisterPage() -> Element {
                     "."
                 }
             }
+        }
+
+        div { class: "login-links",
+            Link { class: "btn btn-block btn-outline", to: Routes::login(), "Back to login" }
         }
     }
 }

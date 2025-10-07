@@ -2,6 +2,17 @@ import { test, expect } from "@playwright/test";
 import { faker } from "@faker-js/faker/locale/en";
 import { waitForSplash } from "./shared_expects";
 
+test("should be a link to register page", async ({ page }) => {
+    await page.goto("/login");
+
+    await waitForSplash(page);
+
+    page.getByRole("link", { name: "I don't have an account" }).click();
+
+    await expect(page).toHaveURL("/register");
+    await expect(page.locator("h1", { hasText: "Register" })).toBeVisible();
+});
+
 test("should register a new user", async ({ page }) => {
     const username = faker.internet.username().substring(0, 16);
 

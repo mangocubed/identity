@@ -1,13 +1,27 @@
 use dioxus::prelude::*;
 
-use sdk::components::{Brand, Footer, Navbar, NavbarStart};
+use sdk::components::{Brand, ConfirmationModal, Footer, Navbar, NavbarEnd, NavbarStart};
 use sdk::constants::{COPYRIGHT, PRIVACY_URL, TERMS_URL};
+use sdk::hooks::use_resource_with_loader;
+use sdk::icons::ChevronDownMini;
+use sdk::{DataStorage, data_storage};
 
-use crate::constants::SOURCE_CODE_URL;
+use crate::constants::{KEY_SESSION_TOKEN, SOURCE_CODE_URL};
+use crate::hooks::use_current_user;
 use crate::routes::Routes;
+use crate::server_fns::{attempt_to_logout, is_logged_in};
 
 #[component]
 pub fn GuestLayout() -> Element {
+    let is_logged_in = use_resource_with_loader("logged-in".to_owned(), is_logged_in);
+    let navigator = use_navigator();
+
+    use_effect(move || {
+        if let Some(Ok(true)) = is_logged_in() {
+            navigator.push(Routes::home());
+        }
+    });
+
     rsx! {
         div { class: "flex flex-col min-h-screen",
             Navbar {
@@ -57,11 +71,66 @@ pub fn GuestLayout() -> Element {
 
 #[component]
 pub fn UserLayout() -> Element {
+    let navigator = use_navigator();
+    let mut current_user = use_current_user();
+    let mut show_logout_confirmation = use_signal(|| false);
+
+    use_effect(move || {
+        if let Some(None) = *current_user.read() {
+            navigator.push(Routes::login());
+        }
+    });
+
     rsx! {
-        Navbar {
-            NavbarStart {
-                Link { to: Routes::home(),
-                    Brand { "ID" }
+        if let Some(Some(user)) = &*current_user.read() {
+            Navbar {
+                NavbarStart {
+                    Link { to: Routes::home(),
+                        Brand { "ID" }
+                    }
+                }
+
+                NavbarEnd {
+                    div { class: "dropdown dropdown-end",
+                        div { class: "flex gap-2", tabindex: 0,
+                            div { class: "text-left text-xs",
+                                div { class: "mb-1 font-bold", {user.display_name.clone()} }
+                                div { class: "opacity-70",
+                                    "@"
+                                    {user.username.clone()}
+                                }
+                            }
+
+                            ChevronDownMini {}
+                        }
+
+                        ul {
+                            class: "menu menu-sm dropdown-content bg-base-200 rounded-box shadow mt-3 p-2 w-max z-1",
+                            tabindex: 0,
+                            li {
+                                a {
+                                    onclick: move |_| {
+                                        *show_logout_confirmation.write() = true;
+                                    },
+                                    "Logout"
+                                }
+                            }
+                        }
+                    }
+
+                    ConfirmationModal {
+                        is_open: show_logout_confirmation,
+                        on_accept: move |()| {
+                            async move {
+                                if attempt_to_logout().await.is_ok() {
+                                    data_storage().delete(KEY_SESSION_TOKEN);
+                                    navigator.push(Routes::login());
+                                    current_user.restart();
+                                }
+                            }
+                        },
+                        "Are you sure you want to logout?"
+                    }
                 }
             }
         }

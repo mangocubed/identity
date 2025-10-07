@@ -1,1 +1,5 @@
 @import "sdk";
+
+@utility login-links {
+    @apply max-w-[640px] mx-auto mt-5 flex flex-col gap-4;
+}
