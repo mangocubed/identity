@@ -57,8 +57,30 @@ jobs:
                   path: ./target/release/identity-cli
                   retention-days: 1
 
+    build_monitor:
+        runs-on: ubuntu-24.04
+        services:
+            postgres:
+                image: postgres:17-alpine
+                env:
+                    POSTGRES_USER: mango3
+                    POSTGRES_PASSWORD: mango3
+                    POSTGRES_DB: identity_test
+                ports:
+                    - 5432:5432
+                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        steps:
+            - uses: actions/checkout@v5
+            - uses: ./.github/actions/setup-dioxus
+            - run: cargo build --package identity-monitor --release
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: identity_monitor_build
+                  path: ./target/release/identity-monitor
+                  retention-days: 1
+
     deploy:
-        needs: [build_app, build_cli]
+        needs: [build_app, build_cli, build_monitor]
         runs-on: ubuntu-24.04
         steps:
             - uses: actions/checkout@v5
@@ -69,6 +91,10 @@ jobs:
             - uses: actions/download-artifact@v5
               with:
                   name: identity_cli_build
+                  path: builds/
+            - uses: actions/download-artifact@v5
+              with:
+                  name: identity_monitor_build
                   path: builds/
             - name: Run deploy script
               run: ${{ secrets.DEPLOY_SCRIPT }}

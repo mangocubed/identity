@@ -10,9 +10,11 @@ pub mod inputs;
 #[cfg(feature = "server")]
 pub mod commands;
 #[cfg(feature = "server")]
-mod config;
+pub mod config;
 #[cfg(feature = "server")]
 mod constants;
+#[cfg(feature = "server")]
+pub mod jobs_storage;
 #[cfg(feature = "server")]
 pub mod models;
 
@@ -20,7 +22,7 @@ pub mod models;
 mod test_utils;
 
 #[cfg(feature = "server")]
-use crate::config::DATABASE_CONFIG;
+use config::DATABASE_CONFIG;
 
 #[cfg(feature = "server")]
 static DB_POOL_CELL: OnceCell<PgPool> = OnceCell::const_new();

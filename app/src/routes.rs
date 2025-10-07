@@ -13,6 +13,8 @@ pub enum Routes {
     #[end_layout]
 
     #[layout(GuestLayout)]
+        #[route("/login")]
+        LoginPage {},
         #[route("/register")]
         RegisterPage {},
 }
@@ -20,5 +22,13 @@ pub enum Routes {
 impl Routes {
     pub fn home() -> Self {
         Self::HomePage {}
+    }
+
+    pub fn login() -> Self {
+        Self::LoginPage {}
+    }
+
+    pub fn register() -> Self {
+        Self::RegisterPage {}
     }
 }

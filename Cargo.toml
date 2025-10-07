@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["app", "cli", "core"]
+members = ["app", "cli", "core", "monitor"]
 
 [workspace.package]
 version = "0.0.0-alpha.0"
@@ -10,7 +10,11 @@ homepage = "https://id.mango3.app"
 repository = "https://github.com/mangocubed/identity"
 
 [workspace.dependencies]
+apalis = "0.7.3"
+apalis-redis = "0.7.3"
 rust_iso3166 = "0.1.14"
+serde = { version = "1.0.228", features = ["derive"] }
 tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+uuid = { version = "1.18.1", features = ["serde"] }
 identity-core = { path = "core" }
-sdk = { git = "https://github.com/mangocubed/sdk.git", tag = "v0.0.0-alpha.4" }
+sdk = { git = "https://github.com/mangocubed/sdk.git", tag = "v0.0.0-alpha.5" }
