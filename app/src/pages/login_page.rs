@@ -1,14 +1,13 @@
 use dioxus::prelude::*;
-use sdk::{DataStorage, data_storage};
 use serde_json::Value;
 
 use sdk::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField, TextField};
 use sdk::hooks::use_form_provider;
 
-use crate::constants::KEY_SESSION_TOKEN;
 use crate::hooks::use_current_user;
 use crate::routes::Routes;
 use crate::server_fns::{attempt_to_login, can_register_user};
+use crate::set_session_token;
 
 #[component]
 pub fn LoginPage() -> Element {
@@ -33,7 +32,7 @@ pub fn LoginPage() -> Element {
         Form {
             on_success: move |value| {
                 if let Value::String(token) = value {
-                    data_storage().set(KEY_SESSION_TOKEN, &token);
+                    set_session_token(&token);
                 }
             },
             TextField {

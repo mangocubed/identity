@@ -10,12 +10,36 @@ pub struct Session<'a> {
     pub user_id: Uuid,
     pub token: Cow<'a, str>,
     pub user_agent: Cow<'a, str>,
-    pub country_alpha2: Cow<'a, str>,
-    pub region: Cow<'a, str>,
-    pub city: Cow<'a, str>,
+    pub country_alpha2: Option<String>,
+    pub region: Option<String>,
+    pub city: Option<String>,
     pub finished_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: Option<DateTime<Utc>>,
+}
+
+impl Session<'_> {
+    pub fn location(&self) -> String {
+        let Some(country) = self.country_alpha2.as_ref().and_then(|c| rust_iso3166::from_alpha2(c)) else {
+            return "Unknown".to_owned();
+        };
+
+        let mut location = country.name.to_owned();
+
+        if let Some(region) = &self.region {
+            location += &format!(", {region}");
+        }
+
+        if let Some(city) = &self.city {
+            location += &format!(", {city}");
+        }
+
+        location
+    }
+
+    pub async fn user(&self) -> User<'_> {
+        get_user_by_id(self.user_id).await.expect("Could not get user")
+    }
 }
 
 pub struct User<'a> {
@@ -31,12 +55,6 @@ pub struct User<'a> {
     pub disabled_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: Option<DateTime<Utc>>,
-}
-
-impl Session<'_> {
-    pub async fn user(&self) -> User<'_> {
-        get_user_by_id(self.user_id).await.expect("Could not get user")
-    }
 }
 
 impl User<'_> {

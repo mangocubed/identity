@@ -3,6 +3,11 @@ use dioxus::prelude::*;
 use sdk::components::AppProvider;
 use sdk::hooks::use_resource_with_loader;
 
+#[cfg(not(feature = "server"))]
+use sdk::serv_fn::{remove_serv_fn_header, set_serv_fn_header};
+#[cfg(not(feature = "server"))]
+use sdk::{DataStorage, data_storage};
+
 mod constants;
 mod hooks;
 mod layouts;
@@ -13,6 +18,9 @@ mod server_fns;
 
 use routes::Routes;
 use server_fns::get_current_user;
+
+#[cfg(not(feature = "server"))]
+use constants::{HEADER_AUTHORIZATION, KEY_SESSION_TOKEN};
 
 const FAVICON_ICO: Asset = asset!("assets/favicon.ico");
 const STYLE_CSS: Asset = asset!("assets/style.css");
@@ -36,7 +44,29 @@ async fn main() {
 
 #[cfg(not(feature = "server"))]
 fn main() {
+    if let Some(session_token) = data_storage().get(KEY_SESSION_TOKEN) {
+        set_serv_fn_header(HEADER_AUTHORIZATION, &format!("Bearer {session_token}"));
+    }
+
     dioxus::launch(App);
+}
+
+#[cfg(feature = "server")]
+fn delete_session_token() {}
+
+#[cfg(not(feature = "server"))]
+fn delete_session_token() {
+    data_storage().delete(KEY_SESSION_TOKEN);
+    remove_serv_fn_header(HEADER_AUTHORIZATION);
+}
+
+#[cfg(feature = "server")]
+fn set_session_token(_token: &str) {}
+
+#[cfg(not(feature = "server"))]
+fn set_session_token(token: &str) {
+    data_storage().set(KEY_SESSION_TOKEN, token);
+    set_serv_fn_header(HEADER_AUTHORIZATION, &format!("Bearer {token}"));
 }
 
 #[component]

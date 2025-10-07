@@ -1,4 +1,6 @@
+import { execSync } from "child_process";
 import { expect } from "@playwright/test";
+import { faker } from "@faker-js/faker/locale/en";
 
 export async function waitForSplash(page) {
     await expect(page.locator(".splash")).toHaveClass(/splash-hidden/);
@@ -21,7 +23,7 @@ export async function loginAndGoToHome(page) {
 
     await page.goto("/login");
 
-    await waitForLoadingOverlay(page);
+    await waitForSplash(page);
 
     await expect(page.locator("h1", { hasText: "Login" })).toBeVisible();
 
@@ -36,6 +38,7 @@ export async function loginAndGoToHome(page) {
 
     await expect(page).toHaveURL("/");
     await expect(page.locator("h1", { hasText: "Home" })).toBeVisible();
+    await expect(page.locator("div.dropdown", { hasText: `@${username}` })).toBeVisible();
 
     return {
         username,

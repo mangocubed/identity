@@ -3509,7 +3509,8 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sdk"
-version = "0.0.0-alpha.4"
+version = "0.0.0-alpha.5"
+source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.5#12643b4e38677428d069e6ced341d04d449e0d44"
 dependencies = [
  "axum-extra",
  "dioxus",

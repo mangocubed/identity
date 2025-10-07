@@ -27,25 +27,31 @@ pub async fn new_user_job(job: NewUser) -> Result<(), apalis::prelude::Error> {
 }
 
 pub async fn new_session_job(job: NewSession) -> Result<(), apalis::prelude::Error> {
-    let session = get_session_by_id(job.session_id).await.expect("Could not get session");
+    let mut session = get_session_by_id(job.session_id).await.expect("Could not get session");
 
-    let ip_geo: IpGeo = reqwest::get(format!(
-        "https://api.ipgeolocation.io/v2/ipgeo?apiKey={}&ip={}",
-        IP_GEOLOCATION_CONFIG.api_key, job.ip_addr
-    ))
-    .await
-    .expect("Could not get location")
-    .json()
-    .await
-    .expect("Could not parse location");
+    if !job.ip_addr.is_loopback() && !job.ip_addr.is_multicast() && !job.ip_addr.is_unspecified() {
+        let result = reqwest::get(format!(
+            "https://api.ipgeolocation.io/v2/ipgeo?apiKey={}&ip={}",
+            IP_GEOLOCATION_CONFIG.api_key, job.ip_addr
+        ))
+        .await;
 
-    let result = update_session_location(
-        &session,
-        &ip_geo.location.country_code2,
-        &ip_geo.location.state_prov,
-        &ip_geo.location.city,
-    )
-    .await;
+        if let Ok(response) = result
+            && let Ok(ip_geo) = response.json::<IpGeo>().await
+        {
+            let result = update_session_location(
+                &session,
+                &ip_geo.location.country_code2,
+                &ip_geo.location.state_prov,
+                &ip_geo.location.city,
+            )
+            .await;
 
-    send_new_session_email(&result.unwrap_or(session)).await
+            if let Ok(updated_session) = result {
+                session = updated_session
+            }
+        }
+    };
+
+    send_new_session_email(&session).await
 }

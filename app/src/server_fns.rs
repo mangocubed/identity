@@ -85,7 +85,7 @@ async fn require_no_login() -> ServFnResult<()> {
 
 #[server(client = ServFnClient)]
 pub async fn attempt_to_login(input: LoginInput) -> FormResult {
-    require_no_login().await.map_err(|error| FormError::from(error))?;
+    require_no_login().await.map_err(FormError::from)?;
 
     let user = {
         let result = commands::authenticate_user(&input).await;
@@ -98,8 +98,8 @@ pub async fn attempt_to_login(input: LoginInput) -> FormResult {
         }
     };
 
-    let user_agent = extract_user_agent().await.map_err(|error| FormError::from(error))?;
-    let ip_addr = extract_client_ip_addr().await.map_err(|error| FormError::from(error))?;
+    let user_agent = extract_user_agent().await.map_err(FormError::from)?;
+    let ip_addr = extract_client_ip_addr().await.map_err(FormError::from)?;
 
     let result = commands::insert_session(&user, &user_agent, ip_addr).await;
 
@@ -127,14 +127,14 @@ pub async fn attempt_to_logout() -> ServFnResult {
 
 #[server(client = ServFnClient)]
 pub async fn attempt_to_register(input: RegisterInput) -> FormResult {
-    require_no_login().await.map_err(|error| FormError::from(error))?;
+    require_no_login().await.map_err(FormError::from)?;
 
     let result = commands::insert_user(&input).await;
 
     match result {
         Ok(user) => {
-            let user_agent = extract_user_agent().await.map_err(|error| FormError::from(error))?;
-            let ip_addr = extract_client_ip_addr().await.map_err(|error| FormError::from(error))?;
+            let user_agent = extract_user_agent().await.map_err(FormError::from)?;
+            let ip_addr = extract_client_ip_addr().await.map_err(FormError::from)?;
 
             let result = commands::insert_session(&user, &user_agent, ip_addr).await;
 

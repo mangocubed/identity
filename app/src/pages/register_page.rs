@@ -4,13 +4,12 @@ use sdk::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField, Sele
 use sdk::constants::{PRIVACY_URL, TERMS_URL};
 use sdk::hooks::use_form_provider;
 use sdk::icons::InformationCircleOutline;
-use sdk::{DataStorage, data_storage};
 use serde_json::Value;
 
-use crate::constants::KEY_SESSION_TOKEN;
 use crate::hooks::use_current_user;
 use crate::routes::Routes;
 use crate::server_fns::{attempt_to_register, can_register_user};
+use crate::set_session_token;
 
 #[component]
 pub fn RegisterPage() -> Element {
@@ -41,7 +40,7 @@ pub fn RegisterPage() -> Element {
         Form {
             on_success: move |value| {
                 if let Value::String(token) = value {
-                    data_storage().set(KEY_SESSION_TOKEN, &token);
+                    set_session_token(&token);
                 }
             },
             TextField {

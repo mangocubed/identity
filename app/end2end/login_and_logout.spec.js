@@ -14,7 +14,7 @@ test("should redirect to login page when is not logged in", async ({ page }) => 
 test("should login and logout a user", async ({ page }) => {
     const user = await loginAndGoToHome(page);
 
-    await page.getByRole("button", { name: `@${user.username}` }).click();
+    await page.locator("div.dropdown", { hasText: `@${user.username}` }).click();
     await page.locator("a", { hasText: "Logout" }).click();
 
     await expect(page.getByText("Are you sure you want to logout?")).toBeVisible();

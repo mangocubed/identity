@@ -64,12 +64,18 @@ pub async fn send_new_session_email(session: &Session<'_>) -> Result<(), apalis:
     let message = format!(
         "Hello @{},
 
-        Someone has started a user.
+Someone has started a new session from:
 
-        If you recognize this action, you can ignore this message.
+Application: {}
+Location: {}
 
-        If not, please contact us at the following email address: {}",
-        user.username, MAILER_CONFIG.support_email_address
+If you recognize this action, you can ignore this message.
+
+If not, please contact us at the following email address: {}",
+        user.username,
+        session.user_agent,
+        session.location(),
+        MAILER_CONFIG.support_email_address,
     );
 
     send_email(&user.email, "New session started", &message).await

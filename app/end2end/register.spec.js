@@ -34,6 +34,10 @@ test("should register a new user", async ({ page }) => {
     await expect(page.getByText("User created successfully")).toBeVisible();
 
     await page.getByRole("button", { name: "Ok" }).click();
+
+    await expect(page).toHaveURL("/");
+    await expect(page.locator("h1", { hasText: "Home" })).toBeVisible();
+    await expect(page.locator("div.dropdown", { hasText: `@${username}` })).toBeVisible();
 });
 
 test("should fail to register a new user", async ({ page }) => {

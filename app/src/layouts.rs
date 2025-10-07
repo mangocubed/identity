@@ -1,12 +1,12 @@
 use dioxus::prelude::*;
 
-use sdk::components::{Brand, ConfirmationModal, Footer, Navbar, NavbarEnd, NavbarStart};
+use sdk::components::{Brand, ConfirmationModal, Dropdown, DropdownContent, Footer, Navbar, NavbarEnd, NavbarStart};
 use sdk::constants::{COPYRIGHT, PRIVACY_URL, TERMS_URL};
 use sdk::hooks::use_resource_with_loader;
 use sdk::icons::ChevronDownMini;
-use sdk::{DataStorage, data_storage};
 
-use crate::constants::{KEY_SESSION_TOKEN, SOURCE_CODE_URL};
+use crate::constants::SOURCE_CODE_URL;
+use crate::delete_session_token;
 use crate::hooks::use_current_user;
 use crate::routes::Routes;
 use crate::server_fns::{attempt_to_logout, is_logged_in};
@@ -91,9 +91,9 @@ pub fn UserLayout() -> Element {
                 }
 
                 NavbarEnd {
-                    div { class: "dropdown dropdown-end",
-                        div { class: "flex gap-2", tabindex: 0,
-                            div { class: "text-left text-xs",
+                    Dropdown { class: "dropdown-end",
+                        div { class: "flex gap-2 items-center", tabindex: 0,
+                            div { class: "text-left text-sm",
                                 div { class: "mb-1 font-bold", {user.display_name.clone()} }
                                 div { class: "opacity-70",
                                     "@"
@@ -104,15 +104,15 @@ pub fn UserLayout() -> Element {
                             ChevronDownMini {}
                         }
 
-                        ul {
-                            class: "menu menu-sm dropdown-content bg-base-200 rounded-box shadow mt-3 p-2 w-max z-1",
-                            tabindex: 0,
-                            li {
-                                a {
-                                    onclick: move |_| {
-                                        *show_logout_confirmation.write() = true;
-                                    },
-                                    "Logout"
+                        DropdownContent { class: "mt-4",
+                            ul { class: "menu p-2", tabindex: 0,
+                                li {
+                                    a {
+                                        onclick: move |_| {
+                                            *show_logout_confirmation.write() = true;
+                                        },
+                                        "Logout"
+                                    }
                                 }
                             }
                         }
@@ -123,7 +123,7 @@ pub fn UserLayout() -> Element {
                         on_accept: move |()| {
                             async move {
                                 if attempt_to_logout().await.is_ok() {
-                                    data_storage().delete(KEY_SESSION_TOKEN);
+                                    delete_session_token();
                                     navigator.push(Routes::login());
                                     current_user.restart();
                                 }
@@ -135,6 +135,6 @@ pub fn UserLayout() -> Element {
             }
         }
 
-        Outlet::<Routes> {}
+        main { class: "main grow", Outlet::<Routes> {} }
     }
 }

@@ -17,5 +17,4 @@ serde = { version = "1.0.228", features = ["derive"] }
 tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
 uuid = { version = "1.18.1", features = ["serde"] }
 identity-core = { path = "core" }
-# sdk = { git = "https://github.com/mangocubed/sdk.git", tag = "v0.0.0-alpha.4" }
-sdk = { path = "../sdk" }
+sdk = { git = "https://github.com/mangocubed/sdk.git", tag = "v0.0.0-alpha.5" }
