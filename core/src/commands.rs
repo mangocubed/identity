@@ -10,11 +10,21 @@ use validator::{Validate, ValidationErrors};
 use sdk::constants::ERROR_ALREADY_EXISTS;
 use sdk::generate_random_string;
 
-use crate::config::USERS_CONFIG;
+use crate::config::{APPLICATIONS_CONFIG, USERS_CONFIG};
 use crate::db_pool;
-use crate::inputs::{LoginInput, RegisterInput};
+use crate::inputs::{ApplicationInput, LoginInput, RegisterInput};
 use crate::jobs_storage::jobs_storage;
-use crate::models::{Session, User};
+use crate::models::{Application, Session, User};
+
+pub async fn authenticate_application<'a>(id: Uuid, secret: &str) -> sqlx::Result<Application<'a>> {
+    let application = get_application_by_id(id).await?;
+
+    if application.verify_secret(secret) {
+        Ok(application)
+    } else {
+        Err(sqlx::Error::RowNotFound)
+    }
+}
 
 pub async fn authenticate_user<'a>(input: &LoginInput) -> Result<User<'a>, ValidationErrors> {
     input.validate()?;
@@ -40,6 +50,15 @@ pub async fn authenticate_user<'a>(input: &LoginInput) -> Result<User<'a>, Valid
 
 pub async fn can_insert_user() -> bool {
     get_users_count().await.unwrap_or_default() < USERS_CONFIG.limit.into()
+}
+
+pub async fn delete_application(application: Application<'_>) -> sqlx::Result<()> {
+    let db_pool = db_pool().await;
+
+    sqlx::query!("DELETE FROM applications WHERE id = $1", application.id)
+        .execute(db_pool)
+        .await
+        .map(|_| ())
 }
 
 pub async fn finish_session(session: &Session<'_>) -> sqlx::Result<()> {
@@ -70,6 +89,22 @@ fn encrypt_password(value: &str) -> String {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
     argon2.hash_password(value.as_bytes(), &salt).unwrap().to_string()
+}
+
+pub async fn get_all_applications<'a>() -> sqlx::Result<Vec<Application<'a>>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(Application, "SELECT * FROM applications")
+        .fetch_all(db_pool)
+        .await
+}
+
+pub async fn get_application_by_id<'a>(id: Uuid) -> sqlx::Result<Application<'a>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(Application, "SELECT * FROM applications WHERE id = $1 LIMIT 1", id)
+        .fetch_one(db_pool)
+        .await
 }
 
 pub async fn get_session_by_id<'a>(id: Uuid) -> sqlx::Result<Session<'a>> {
@@ -124,6 +159,26 @@ async fn get_users_count() -> sqlx::Result<i64> {
         .fetch_one(db_pool)
         .await
         .map(|row| row.count)
+}
+
+pub async fn insert_application<'a>(input: &ApplicationInput) -> Result<(Application<'a>, String), ValidationErrors> {
+    input.validate()?;
+
+    let db_pool = db_pool().await;
+
+    let secret = generate_random_string(APPLICATIONS_CONFIG.secret_length);
+
+    sqlx::query_as!(
+        Application,
+        "INSERT INTO applications (name, redirect_url, encrypted_secret) VALUES ($1, $2, $3) RETURNING *",
+        input.name,                // $1
+        input.redirect_url,        // $2
+        encrypt_password(&secret), // $3
+    )
+    .fetch_one(db_pool)
+    .await
+    .map(|application| (application, secret))
+    .map_err(|_| ValidationErrors::new())
 }
 
 pub async fn insert_session<'a>(user: &User<'_>, user_agent: &str, ip_addr: IpAddr) -> sqlx::Result<Session<'a>> {

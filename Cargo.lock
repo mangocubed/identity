@@ -2223,6 +2223,7 @@ dependencies = [
  "clap",
  "identity-core",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -2241,6 +2242,7 @@ dependencies = [
  "serde",
  "sqlx",
  "tokio",
+ "url",
  "uuid",
  "validator",
 ]

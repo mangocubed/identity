@@ -19,6 +19,7 @@ sqlx = { version = "0.8.6", features = [
 ], optional = true }
 tokio = { workspace = true, optional = true }
 uuid = { workspace = true }
+url = { version = "2.5.7", optional = true }
 validator = "0.20.0"
 sdk = { workspace = true }
 
@@ -36,6 +37,7 @@ server = [
     "dep:rust_iso3166",
     "dep:sqlx",
     "dep:tokio",
+    "dep:url",
     "validator/derive",
     "sdk/server",
 ]

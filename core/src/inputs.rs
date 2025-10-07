@@ -44,6 +44,15 @@ fn validate_username(value: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
+#[cfg(feature = "server")]
+#[derive(Validate)]
+pub struct ApplicationInput {
+    #[validate(length(min = 1, message = "Can't be blank"))]
+    pub name: String,
+    #[validate(length(min = 1, message = "Can't be blank"), url(message = "Is invalid"))]
+    pub redirect_url: String,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[cfg_attr(feature = "server", derive(Validate))]
 pub struct LoginInput {
