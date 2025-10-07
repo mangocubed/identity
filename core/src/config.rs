@@ -4,12 +4,25 @@ use serde::{Deserialize, Serialize};
 
 use sdk::config::extract_config_from_env;
 
+pub(crate) static APPLICATIONS_CONFIG: LazyLock<ApplicationsConfig> =
+    LazyLock::new(|| extract_config_from_env("APPLICATIONS_"));
 pub(crate) static DATABASE_CONFIG: LazyLock<DatabaseConfig> = LazyLock::new(|| extract_config_from_env("DATABASE_"));
 pub static IP_GEOLOCATION_CONFIG: LazyLock<IpGeolocationConfig> =
     LazyLock::new(|| extract_config_from_env("IP_GEOLOCATION_"));
 pub static MAILER_CONFIG: LazyLock<MailerConfig> = LazyLock::new(|| extract_config_from_env("MAILER_"));
 pub(crate) static MONITOR_CONFIG: LazyLock<MonitorConfig> = LazyLock::new(|| extract_config_from_env("MONITOR_"));
 pub(crate) static USERS_CONFIG: LazyLock<UsersConfig> = LazyLock::new(|| extract_config_from_env("USERS_"));
+
+#[derive(Deserialize, Serialize)]
+pub(crate) struct ApplicationsConfig {
+    pub secret_length: u8,
+}
+
+impl Default for ApplicationsConfig {
+    fn default() -> Self {
+        Self { secret_length: 32 }
+    }
+}
 
 #[derive(Deserialize, Serialize)]
 pub(crate) struct DatabaseConfig {

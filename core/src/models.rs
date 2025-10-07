@@ -1,9 +1,29 @@
 use std::borrow::Cow;
 
 use chrono::{DateTime, NaiveDate, Utc};
+use url::Url;
 use uuid::Uuid;
 
 use crate::commands::{get_user_by_id, verify_password};
+
+pub struct Application<'a> {
+    pub id: Uuid,
+    pub name: Cow<'a, str>,
+    pub redirect_url: Cow<'a, str>,
+    pub encrypted_secret: Cow<'a, str>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+impl Application<'_> {
+    pub fn redirect_url(&self) -> Url {
+        Url::parse(&self.redirect_url).expect("Could not get Redirect URL")
+    }
+
+    pub fn verify_secret(&self, secret: &str) -> bool {
+        verify_password(&self.encrypted_secret, secret)
+    }
+}
 
 pub struct Session<'a> {
     pub id: Uuid,
