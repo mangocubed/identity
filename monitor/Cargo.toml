@@ -5,7 +5,7 @@ edition.workspace = true
 
 [dependencies]
 apalis = { workspace = true }
-lettre = { version = "0.11.18", features = [
+lettre = { version = "0.11.19", features = [
     "smtp-transport",
     "tokio1-native-tls",
 ] }
