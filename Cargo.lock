@@ -104,6 +104,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.100"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
+
+[[package]]
 name = "apalis"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2205,14 +2211,18 @@ name = "identity-app"
 version = "0.0.0-alpha.0"
 dependencies = [
  "axum",
+ "axum-extra",
  "chrono",
  "dioxus",
+ "futures",
+ "headers",
  "identity-core",
  "rust_iso3166",
  "sdk",
  "serde",
  "serde_json",
  "tokio",
+ "url",
  "uuid",
 ]
 
@@ -2234,8 +2244,6 @@ dependencies = [
  "apalis-redis",
  "argon2",
  "chrono",
- "fake",
- "rand 0.9.2",
  "regex",
  "rust_iso3166",
  "sdk",
@@ -3511,18 +3519,24 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sdk"
-version = "0.0.0-alpha.5"
-source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.5#12643b4e38677428d069e6ced341d04d449e0d44"
+version = "0.0.0-alpha.6"
+source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.6#07a7367d136977d60af4e5f95bb9dfcfaf09ca97"
 dependencies = [
+ "anyhow",
  "axum-extra",
+ "chrono",
  "dioxus",
+ "fake",
  "figment",
  "futures",
  "headers",
  "http",
  "rand 0.9.2",
+ "reqwest",
  "serde",
  "serde_json",
+ "url",
+ "uuid",
  "validator",
  "web-sys",
 ]
@@ -4768,6 +4782,7 @@ version = "1.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2f87b8aa10b915a06587d0dec516c282ff295b475d94abf425d62b57710070a2"
 dependencies = [
+ "getrandom 0.3.3",
  "js-sys",
  "serde",
  "wasm-bindgen",

@@ -15,12 +15,16 @@ pub(crate) static USERS_CONFIG: LazyLock<UsersConfig> = LazyLock::new(|| extract
 
 #[derive(Deserialize, Serialize)]
 pub(crate) struct ApplicationsConfig {
+    pub token_length: u8,
     pub secret_length: u8,
 }
 
 impl Default for ApplicationsConfig {
     fn default() -> Self {
-        Self { secret_length: 32 }
+        Self {
+            token_length: 32,
+            secret_length: 32,
+        }
     }
 }
 
@@ -78,21 +82,6 @@ impl Default for MailerConfig {
 }
 
 #[derive(Deserialize, Serialize)]
-pub(crate) struct UsersConfig {
-    pub session_token_length: u8,
-    pub limit: u8,
-}
-
-impl Default for UsersConfig {
-    fn default() -> Self {
-        Self {
-            session_token_length: 64,
-            limit: 10,
-        }
-    }
-}
-
-#[derive(Deserialize, Serialize)]
 pub(crate) struct MonitorConfig {
     pub redis_url: String,
 }
@@ -103,6 +92,21 @@ impl Default for MonitorConfig {
 
         Self {
             redis_url: format!("redis://127.0.0.1:6379/{db_number}"),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub(crate) struct UsersConfig {
+    pub session_token_length: u8,
+    pub limit: u8,
+}
+
+impl Default for UsersConfig {
+    fn default() -> Self {
+        Self {
+            session_token_length: 64,
+            limit: 10,
         }
     }
 }

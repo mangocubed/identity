@@ -3,7 +3,7 @@ use std::net::IpAddr;
 use argon2::password_hash::SaltString;
 use argon2::password_hash::rand_core::OsRng;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
-use chrono::NaiveDate;
+use chrono::{DateTime, NaiveDate, Utc};
 use uuid::Uuid;
 use validator::{Validate, ValidationErrors};
 
@@ -14,7 +14,7 @@ use crate::config::{APPLICATIONS_CONFIG, USERS_CONFIG};
 use crate::db_pool;
 use crate::inputs::{ApplicationInput, LoginInput, RegisterInput};
 use crate::jobs_storage::jobs_storage;
-use crate::models::{Application, Session, User};
+use crate::models::{Application, Authorization, Session, User};
 
 pub async fn authenticate_application<'a>(id: Uuid, secret: &str) -> sqlx::Result<Application<'a>> {
     let application = get_application_by_id(id).await?;
@@ -48,6 +48,26 @@ pub async fn authenticate_user<'a>(input: &LoginInput) -> Result<User<'a>, Valid
     }
 }
 
+pub async fn authorization_exists(token: &str) -> bool {
+    if token.is_empty() {
+        return false;
+    }
+
+    let db_pool = db_pool().await;
+
+    sqlx::query!(
+        "SELECT id FROM authorizations
+        WHERE
+            expires_at > current_timestamp AND revoked_at IS NULL
+            AND (token = $1 OR (previous_token = $1 AND refreshed_at > current_timestamp - INTERVAL '1 minute'))
+        LIMIT 1",
+        token
+    )
+    .fetch_one(db_pool)
+    .await
+    .is_ok()
+}
+
 pub async fn can_insert_user() -> bool {
     get_users_count().await.unwrap_or_default() < USERS_CONFIG.limit.into()
 }
@@ -64,16 +84,28 @@ pub async fn delete_application(application: Application<'_>) -> sqlx::Result<()
 pub async fn finish_session(session: &Session<'_>) -> sqlx::Result<()> {
     let db_pool = db_pool().await;
 
-    sqlx::query!(
+    let result = sqlx::query!(
         "UPDATE sessions SET finished_at = current_timestamp WHERE finished_at IS NULL AND id = $1",
         session.id
     )
     .execute(db_pool)
-    .await
-    .map(|_| ())
+    .await;
+
+    match result {
+        Ok(_) => {
+            jobs_storage().await.push_finished_session(session).await;
+
+            Ok(())
+        }
+        Err(err) => Err(err),
+    }
 }
 
 async fn email_exists(value: &str) -> bool {
+    if value.is_empty() {
+        return false;
+    }
+
     let db_pool = db_pool().await;
 
     sqlx::query!(
@@ -107,16 +139,32 @@ pub async fn get_application_by_id<'a>(id: Uuid) -> sqlx::Result<Application<'a>
         .await
 }
 
-pub async fn get_session_by_id<'a>(id: Uuid) -> sqlx::Result<Session<'a>> {
+pub async fn get_authorization_by_token(token: &str) -> sqlx::Result<Authorization<'_>> {
+    if token.is_empty() {
+        return Err(sqlx::Error::RowNotFound);
+    }
+
     let db_pool = db_pool().await;
 
     sqlx::query_as!(
-        Session,
-        "SELECT * FROM sessions WHERE finished_at IS NULL AND id = $1 LIMIT 1",
-        id
+        Authorization,
+        "SELECT * FROM authorizations
+        WHERE
+            expires_at > current_timestamp AND revoked_at IS NULL
+            AND (token = $1 OR (previous_token = $1 AND refreshed_at > current_timestamp - INTERVAL '1 minute'))
+        LIMIT 1",
+        token
     )
     .fetch_one(db_pool)
     .await
+}
+
+pub async fn get_session_by_id<'a>(id: Uuid) -> sqlx::Result<Session<'a>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(Session, "SELECT * FROM sessions WHERE id = $1 LIMIT 1", id)
+        .fetch_one(db_pool)
+        .await
 }
 
 pub async fn get_session_by_token<'a>(token: &str) -> sqlx::Result<Session<'a>> {
@@ -144,7 +192,9 @@ pub async fn get_user_by_session_token<'a>(token: &str) -> sqlx::Result<User<'a>
 
     sqlx::query_as!(
         User,
-        "SELECT * FROM users WHERE id = (SELECT user_id FROM sessions WHERE finished_at IS NULL AND token = $1 LIMIT 1)
+        "SELECT * FROM users
+        WHERE
+            disabled_at IS NULL AND id = (SELECT user_id FROM sessions WHERE finished_at IS NULL AND token = $1 LIMIT 1)
         LIMIT 1",
         token
     )
@@ -263,6 +313,85 @@ pub async fn insert_user<'a>(input: &RegisterInput) -> Result<User<'a>, Validati
     }
 }
 
+pub async fn insert_or_refresh_authorization<'a>(
+    application: &Application<'a>,
+    user: &User<'_>,
+    session: &Session<'_>,
+    expires_at: DateTime<Utc>,
+) -> sqlx::Result<Authorization<'a>> {
+    if session.finished_at.is_some() || session.user_id != user.id {
+        return Err(sqlx::Error::InvalidArgument("Invalid session".to_owned()));
+    }
+
+    let db_pool = db_pool().await;
+
+    let token = generate_random_string(APPLICATIONS_CONFIG.token_length);
+
+    sqlx::query_as!(
+        Authorization,
+        "INSERT INTO authorizations AS a (application_id, user_id, session_id, token, expires_at) VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (application_id, user_id, session_id) DO UPDATE SET
+            token = $4,
+            previous_token = a.token,
+            expires_at = $5,
+            refreshed_at = current_timestamp,
+            revoked_at = NULL
+        RETURNING *",
+        application.id, // $1
+        user.id,        // $2
+        session.id,     // $3
+        token,          // $4
+        expires_at      // $5
+    )
+    .fetch_one(db_pool)
+    .await
+}
+
+pub async fn refresh_authorization<'a>(
+    authorization: &Authorization<'_>,
+    expires_at: DateTime<Utc>,
+) -> sqlx::Result<Authorization<'a>> {
+    let db_pool = db_pool().await;
+
+    let token = generate_random_string(APPLICATIONS_CONFIG.token_length);
+
+    sqlx::query_as!(
+        Authorization,
+        "UPDATE authorizations AS a SET
+            token = $2, previous_token = a.token, expires_at = $3, refreshed_at = current_timestamp, revoked_at = NULL
+        WHERE id = $1 RETURNING *",
+        authorization.id, // $1
+        token,            // $2
+        expires_at        // $3
+    )
+    .fetch_one(db_pool)
+    .await
+}
+
+pub async fn revoke_authorization<'a>(authorization: &Authorization<'_>) -> sqlx::Result<Authorization<'a>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        Authorization,
+        "UPDATE authorizations AS a SET revoked_at = current_timestamp WHERE id = $1 RETURNING *",
+        authorization.id, // $1
+    )
+    .fetch_one(db_pool)
+    .await
+}
+
+pub async fn revoke_authorizations_by_session(session: &Session<'_>) -> sqlx::Result<()> {
+    let db_pool = db_pool().await;
+
+    sqlx::query!(
+        "UPDATE authorizations AS a SET revoked_at = current_timestamp WHERE session_id = $1",
+        session.id, // $1
+    )
+    .execute(db_pool)
+    .await
+    .map(|_| ())
+}
+
 pub async fn update_session_location<'a>(
     session: &Session<'_>,
     country_alpha2: &str,
@@ -285,6 +414,10 @@ pub async fn update_session_location<'a>(
 }
 
 async fn username_exists(value: &str) -> bool {
+    if value.is_empty() {
+        return false;
+    }
+
     let db_pool = db_pool().await;
 
     sqlx::query!(
@@ -311,6 +444,32 @@ mod tests {
     use crate::test_utils::*;
 
     use super::*;
+
+    #[tokio::test]
+    async fn should_authenticate_user() {
+        let password = fake_password();
+        let user = insert_test_user(Some(&password)).await;
+        let input = LoginInput {
+            username_or_email: user.username.to_string(),
+            password: password.clone(),
+        };
+
+        let result = authenticate_user(&input).await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn should_not_authenticate_user_with_invalid_input() {
+        let input = LoginInput {
+            username_or_email: fake_username(),
+            password: fake_password(),
+        };
+
+        let result = authenticate_user(&input).await;
+
+        assert!(result.is_err());
+    }
 
     #[tokio::test]
     async fn should_find_existing_email() {
@@ -346,7 +505,7 @@ mod tests {
             email: fake_email(),
             password: fake_password(),
             full_name: fake_name(),
-            birthdate: fake_birthdate(),
+            birthdate: fake_birthdate().to_string(),
             country_alpha2: fake_country_alpha2(),
         };
 
@@ -371,7 +530,7 @@ mod tests {
             email: fake_email(),
             password: fake_password(),
             full_name: fake_name(),
-            birthdate: fake_birthdate(),
+            birthdate: fake_birthdate().to_string(),
             country_alpha2: fake_country_alpha2(),
         };
 
@@ -388,7 +547,7 @@ mod tests {
             email: user.email.to_string(),
             password: fake_password(),
             full_name: fake_name(),
-            birthdate: fake_birthdate(),
+            birthdate: fake_birthdate().to_string(),
             country_alpha2: fake_country_alpha2(),
         };
 

@@ -2,23 +2,24 @@ use dioxus::prelude::*;
 
 use sdk::components::{Brand, ConfirmationModal, Dropdown, DropdownContent, Footer, Navbar, NavbarEnd, NavbarStart};
 use sdk::constants::{COPYRIGHT, PRIVACY_URL, TERMS_URL};
-use sdk::hooks::use_resource_with_loader;
 use sdk::icons::ChevronDownMini;
 
 use crate::constants::SOURCE_CODE_URL;
-use crate::delete_session_token;
 use crate::hooks::use_current_user;
+use crate::local_data::{delete_redirect_to, get_redirect_to};
+use crate::local_data::{delete_session_token, set_redirect_to};
 use crate::routes::Routes;
-use crate::server_fns::{attempt_to_logout, is_logged_in};
+use crate::server_fns::attempt_to_logout;
 
 #[component]
-pub fn GuestLayout() -> Element {
-    let is_logged_in = use_resource_with_loader("logged-in".to_owned(), is_logged_in);
+pub fn LoginLayout() -> Element {
     let navigator = use_navigator();
+    let current_user = use_current_user();
 
     use_effect(move || {
-        if let Some(Ok(true)) = is_logged_in() {
-            navigator.push(Routes::home());
+        if let Some(Some(_)) = &*current_user.read() {
+            navigator.push(get_redirect_to());
+            delete_redirect_to();
         }
     });
 
@@ -72,11 +73,13 @@ pub fn GuestLayout() -> Element {
 #[component]
 pub fn UserLayout() -> Element {
     let navigator = use_navigator();
+    let router = router();
     let mut current_user = use_current_user();
     let mut show_logout_confirmation = use_signal(|| false);
 
     use_effect(move || {
         if let Some(None) = *current_user.read() {
+            set_redirect_to(&router.full_route_string());
             navigator.push(Routes::login());
         }
     });

@@ -7,6 +7,7 @@ Authentication provider and user account manager.
 | Name                           | Type    | Default                                              |
 | ------------------------------ | ------- | ---------------------------------------------------- |
 | APP_TOKEN                      | String  |                                                      |
+| APPLICATIONS_TOKEN_LENGTH      | Integer | 32                                                   |
 | APPLICATIONS_SECRET_LENGTH     | Integer | 32                                                   |
 | DATABASE_MAX_CONNECTIONS       | Integer | 5                                                    |
 | DATABASE_URL                   | String  | postgres://mango3:mango3@127.0.0.1:5432/identity_dev |

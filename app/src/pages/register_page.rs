@@ -7,13 +7,13 @@ use sdk::icons::InformationCircleOutline;
 use serde_json::Value;
 
 use crate::hooks::use_current_user;
+use crate::local_data::set_session_token;
 use crate::routes::Routes;
 use crate::server_fns::{attempt_to_register, can_register_user};
-use crate::set_session_token;
 
 #[component]
 pub fn RegisterPage() -> Element {
-    use_form_provider("register".to_owned(), attempt_to_register);
+    use_form_provider("register", attempt_to_register);
 
     let navigator = use_navigator();
     let mut current_user = use_current_user();
@@ -32,7 +32,6 @@ pub fn RegisterPage() -> Element {
 
         FormSuccessModal {
             on_close: move |_| {
-                navigator.push(Routes::home());
                 current_user.restart();
             },
         }

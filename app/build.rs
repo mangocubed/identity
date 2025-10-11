@@ -3,6 +3,8 @@ use std::process::Command;
 use chrono::{SecondsFormat, Utc};
 
 fn main() {
+    sdk::setup_build_env();
+
     let git_rev_short = {
         let output = Command::new("git")
             .args(["rev-parse", "--short", "HEAD"])

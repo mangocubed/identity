@@ -25,6 +25,26 @@ impl Application<'_> {
     }
 }
 
+pub struct Authorization<'a> {
+    pub id: Uuid,
+    pub application_id: Uuid,
+    pub user_id: Uuid,
+    pub session_id: Uuid,
+    pub token: Cow<'a, str>,
+    pub previous_token: Option<String>,
+    pub expires_at: DateTime<Utc>,
+    pub refreshed_at: Option<DateTime<Utc>>,
+    pub revoked_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+impl Authorization<'_> {
+    pub async fn user(&self) -> User<'_> {
+        get_user_by_id(self.user_id).await.expect("Could not get user")
+    }
+}
+
 pub struct Session<'a> {
     pub id: Uuid,
     pub user_id: Uuid,

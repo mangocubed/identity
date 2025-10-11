@@ -4,13 +4,12 @@ use sdk::components::AppProvider;
 use sdk::hooks::use_resource_with_loader;
 
 #[cfg(not(feature = "server"))]
-use sdk::serv_fn::{remove_serv_fn_header, set_serv_fn_header};
-#[cfg(not(feature = "server"))]
-use sdk::{DataStorage, data_storage};
+use sdk::serv_fn::set_serv_fn_header;
 
 mod constants;
 mod hooks;
 mod layouts;
+mod local_data;
 mod pages;
 mod presenters;
 mod routes;
@@ -18,9 +17,6 @@ mod server_fns;
 
 use routes::Routes;
 use server_fns::get_current_user;
-
-#[cfg(not(feature = "server"))]
-use constants::{HEADER_AUTHORIZATION, KEY_SESSION_TOKEN};
 
 const FAVICON_ICO: Asset = asset!("assets/favicon.ico");
 const STYLE_CSS: Asset = asset!("assets/style.css");
@@ -30,9 +26,17 @@ const STYLE_CSS: Asset = asset!("assets/style.css");
 async fn main() {
     use std::net::SocketAddr;
 
+    use axum::routing::{get, post};
+
+    use routes::priv_api;
+
     dioxus::logger::initialize_default();
 
-    let app = axum::Router::new().serve_dioxus_application(ServeConfig::new().unwrap(), App);
+    let app = axum::Router::new()
+        .route("/priv-api/refresh-auth", post(priv_api::post_refresh_auth))
+        .route("/priv-api/user-info", get(priv_api::get_user_info))
+        .route("/priv-api/verify-auth", get(priv_api::get_verify_auth))
+        .serve_dioxus_application(ServeConfig::new().unwrap(), App);
 
     let addr = dioxus::cli_config::fullstack_address_or_localhost();
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
@@ -44,37 +48,20 @@ async fn main() {
 
 #[cfg(not(feature = "server"))]
 fn main() {
-    if let Some(session_token) = data_storage().get(KEY_SESSION_TOKEN) {
+    use crate::constants::HEADER_AUTHORIZATION;
+    use crate::local_data::get_session_token;
+
+    if let Some(session_token) = get_session_token() {
         set_serv_fn_header(HEADER_AUTHORIZATION, &format!("Bearer {session_token}"));
     }
 
     dioxus::launch(App);
 }
 
-#[cfg(feature = "server")]
-fn delete_session_token() {}
-
-#[cfg(not(feature = "server"))]
-fn delete_session_token() {
-    data_storage().delete(KEY_SESSION_TOKEN);
-    remove_serv_fn_header(HEADER_AUTHORIZATION);
-}
-
-#[cfg(feature = "server")]
-fn set_session_token(_token: &str) {}
-
-#[cfg(not(feature = "server"))]
-fn set_session_token(token: &str) {
-    data_storage().set(KEY_SESSION_TOKEN, token);
-    set_serv_fn_header(HEADER_AUTHORIZATION, &format!("Bearer {token}"));
-}
-
 #[component]
 fn App() -> Element {
     let mut is_starting = use_signal(|| true);
-    let current_user = use_resource_with_loader("current-user".to_owned(), async || {
-        get_current_user().await.ok().flatten()
-    });
+    let current_user = use_resource_with_loader("current-user", async || get_current_user().await.ok().flatten());
 
     use_context_provider(|| current_user);
 

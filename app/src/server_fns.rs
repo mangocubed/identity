@@ -2,6 +2,8 @@
 use std::net::IpAddr;
 
 use dioxus::prelude::*;
+use url::Url;
+use uuid::Uuid;
 
 use sdk::serv_fn::{FormResult, ServFnClient, ServFnResult};
 
@@ -23,15 +25,15 @@ use crate::constants::{HEADER_REAL_IP, HEADER_USER_AGENT};
 
 #[cfg(feature = "server")]
 async fn extract_client_ip_addr() -> ServFnResult<IpAddr> {
+    use std::net::SocketAddr;
+
+    use axum::extract::ConnectInfo;
+
     let real_ip = extract_header(HEADER_REAL_IP).await?.map(|ip| ip.parse());
 
     if let Some(Ok(real_ip)) = real_ip {
         return Ok(real_ip);
     }
-
-    use std::net::SocketAddr;
-
-    use axum::extract::ConnectInfo;
 
     let ConnectInfo(addr) = extract::<ConnectInfo<SocketAddr>, _>()
         .await
@@ -66,6 +68,13 @@ async fn extract_user_agent() -> ServFnResult<String> {
 }
 
 #[cfg(feature = "server")]
+pub async fn is_logged_in() -> ServFnResult<bool> {
+    require_app_token().await?;
+
+    Ok(extract_session().await?.is_some())
+}
+
+#[cfg(feature = "server")]
 async fn require_login() -> ServFnResult<()> {
     if is_logged_in().await? {
         Ok(())
@@ -81,6 +90,34 @@ async fn require_no_login() -> ServFnResult<()> {
     } else {
         Err(ServFnError::forbidden().into())
     }
+}
+
+#[server(client = ServFnClient)]
+pub async fn attempt_to_authorize(client_id: Uuid) -> ServFnResult<Url> {
+    use chrono::{Duration, Utc};
+
+    require_login().await?;
+
+    let application = commands::get_application_by_id(client_id)
+        .await
+        .map_err(|_| ServFnError::not_found())?;
+
+    let session = extract_session().await?.expect("Could not get session");
+    let user = extract_user().await?.expect("Could not get user");
+
+    let authorization =
+        commands::insert_or_refresh_authorization(&application, &user, &session, Utc::now() + Duration::hours(1))
+            .await
+            .expect("Could not get authorization");
+
+    let mut redirect_url = application.redirect_url();
+
+    redirect_url.set_query(Some(&format!(
+        "token={}&expires_at={}",
+        authorization.token, authorization.expires_at
+    )));
+
+    Ok(redirect_url)
 }
 
 #[server(client = ServFnClient)]
@@ -162,11 +199,4 @@ pub async fn get_current_user() -> ServFnResult<Option<UserPresenter>> {
     };
 
     Ok(Some(user.into()))
-}
-
-#[server(client = ServFnClient)]
-pub async fn is_logged_in() -> ServFnResult<bool> {
-    require_app_token().await?;
-
-    Ok(extract_session().await?.is_some())
 }
