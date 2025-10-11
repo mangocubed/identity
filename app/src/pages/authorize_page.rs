@@ -15,24 +15,20 @@ pub fn AuthorizePage(client_id: Uuid) -> Element {
         match authorize() {
             Some(Ok(url)) => {
                 let _ = navigator.push(url.to_string());
-
                 rsx! {
                     PageTitle { "Redirecting..." }
-
                     H1 { "Redirecting..." }
                 }
             }
             Some(Err(_)) => {
                 rsx! {
                     PageTitle { "Could not authorize application" }
-
                     H1 { "Could not authorize application" }
                 }
             }
             None => {
                 rsx! {
                     PageTitle { "Authorizing application..." }
-
                     H1 { "Authorizing application..." }
                 }
             }
