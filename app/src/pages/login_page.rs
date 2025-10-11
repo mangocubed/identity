@@ -5,15 +5,14 @@ use sdk::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField, Text
 use sdk::hooks::use_form_provider;
 
 use crate::hooks::use_current_user;
+use crate::local_data::set_session_token;
 use crate::routes::Routes;
 use crate::server_fns::{attempt_to_login, can_register_user};
-use crate::set_session_token;
 
 #[component]
 pub fn LoginPage() -> Element {
-    use_form_provider("login".to_owned(), attempt_to_login);
+    use_form_provider("login", attempt_to_login);
 
-    let navigator = use_navigator();
     let mut current_user = use_current_user();
     let can_register_user = use_resource(can_register_user);
 
@@ -24,7 +23,6 @@ pub fn LoginPage() -> Element {
 
         FormSuccessModal {
             on_close: move |_| {
-                navigator.push(Routes::home());
                 current_user.restart();
             },
         }

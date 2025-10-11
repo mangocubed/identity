@@ -10,7 +10,7 @@ use identity_core::jobs_storage::jobs_storage;
 mod jobs;
 mod mailer;
 
-use jobs::{new_session_job, new_user_job};
+use jobs::{finished_session_job, new_session_job, new_user_job};
 
 #[tokio::main]
 async fn main() {
@@ -20,6 +20,12 @@ async fn main() {
     let mut sigterm = tokio::signal::unix::signal(SignalKind::terminate()).expect("Could not create sigterm listener");
 
     let jobs_storage = jobs_storage().await;
+
+    let finished_session_worker = WorkerBuilder::new("finished-session")
+        .layer(ErrorHandlingLayer::new())
+        .enable_tracing()
+        .backend(jobs_storage.finished_session.clone())
+        .build_fn(finished_session_job);
 
     let new_session_worker = WorkerBuilder::new("new-session")
         .layer(ErrorHandlingLayer::new())
@@ -34,6 +40,7 @@ async fn main() {
         .build_fn(new_user_job);
 
     Monitor::new()
+        .register(finished_session_worker)
         .register(new_session_worker)
         .register(new_user_worker)
         .on_event(|e| {

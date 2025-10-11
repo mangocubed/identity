@@ -19,6 +19,7 @@ pub async fn jobs_storage<'a>() -> &'a JobsStorage {
 
 #[derive(Clone, Debug)]
 pub struct JobsStorage {
+    pub finished_session: RedisStorage<FinishedSession>,
     pub new_session: RedisStorage<NewSession>,
     pub new_user: RedisStorage<NewUser>,
 }
@@ -33,9 +34,18 @@ impl JobsStorage {
 
     async fn new() -> Self {
         Self {
+            finished_session: Self::storage().await,
             new_session: Self::storage().await,
             new_user: Self::storage().await,
         }
+    }
+
+    pub(crate) async fn push_finished_session(&self, session: &Session<'_>) {
+        self.finished_session
+            .clone()
+            .push(FinishedSession { session_id: session.id })
+            .await
+            .expect("Could not store job");
     }
 
     pub(crate) async fn push_new_session(&self, session: &Session<'_>, ip_addr: IpAddr) {
@@ -56,6 +66,11 @@ impl JobsStorage {
             .await
             .expect("Could not store job");
     }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct FinishedSession {
+    pub session_id: Uuid,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
