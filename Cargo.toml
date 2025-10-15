@@ -15,7 +15,7 @@ apalis-redis = "0.7.3"
 chrono = { version = "0.4.42", features = ["serde"] }
 rust_iso3166 = "0.1.14"
 serde = { version = "1.0.228", features = ["derive"] }
-tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
 uuid = { version = "1.18.1", features = ["serde"] }
 identity-core = { path = "core" }
 sdk = { git = "https://github.com/mangocubed/sdk.git", tag = "v0.0.0-alpha.6" }
