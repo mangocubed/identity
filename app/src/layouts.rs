@@ -1,15 +1,16 @@
 use dioxus::prelude::*;
 
-use sdk::components::{Brand, ConfirmationModal, Dropdown, DropdownContent, Footer, Navbar, NavbarEnd, NavbarStart};
+use sdk::app::components::*;
+use sdk::app::icons::ChevronDownMini;
+use sdk::app::run_with_spinner;
 use sdk::constants::{COPYRIGHT, PRIVACY_URL, TERMS_URL};
-use sdk::icons::ChevronDownMini;
 
 use crate::constants::SOURCE_CODE_URL;
 use crate::hooks::use_current_user;
 use crate::local_data::{delete_redirect_to, get_redirect_to};
 use crate::local_data::{delete_session_token, set_redirect_to};
+use crate::requests;
 use crate::routes::Routes;
-use crate::server_fns::attempt_to_logout;
 
 #[component]
 pub fn LoginLayout() -> Element {
@@ -125,11 +126,11 @@ pub fn UserLayout() -> Element {
                         is_open: show_logout_confirmation,
                         on_accept: move |()| {
                             async move {
-                                if attempt_to_logout().await.is_ok() {
-                                    delete_session_token();
-                                    navigator.push(Routes::login());
-                                    current_user.restart();
-                                }
+                                let _ = run_with_spinner("logout", requests::logout).await;
+
+                                delete_session_token();
+                                current_user.restart();
+
                             }
                         },
                         "Are you sure you want to logout?"

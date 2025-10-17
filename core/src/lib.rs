@@ -1,33 +1,22 @@
-#[cfg(feature = "server")]
 use sqlx::PgPool;
-#[cfg(feature = "server")]
 use sqlx::postgres::PgPoolOptions;
-#[cfg(feature = "server")]
 use tokio::sync::OnceCell;
 
 pub mod inputs;
 
-#[cfg(feature = "server")]
 pub mod commands;
-#[cfg(feature = "server")]
 pub mod config;
-#[cfg(feature = "server")]
 mod constants;
-#[cfg(feature = "server")]
 pub mod jobs_storage;
-#[cfg(feature = "server")]
 pub mod models;
 
 #[cfg(test)]
 mod test_utils;
 
-#[cfg(feature = "server")]
 use config::DATABASE_CONFIG;
 
-#[cfg(feature = "server")]
 static DB_POOL_CELL: OnceCell<PgPool> = OnceCell::const_new();
 
-#[cfg(feature = "server")]
 async fn db_pool<'a>() -> &'a PgPool {
     DB_POOL_CELL
         .get_or_init(|| async {

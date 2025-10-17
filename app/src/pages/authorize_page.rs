@@ -1,18 +1,18 @@
 use dioxus::prelude::*;
-use sdk::hooks::use_resource_with_loader;
 use uuid::Uuid;
 
-use sdk::components::{H1, PageTitle};
+use sdk::app::components::{H1, PageTitle};
+use sdk::app::hooks::use_resource_with_spinner;
 
-use crate::server_fns::attempt_to_authorize;
+use crate::requests;
 
 #[component]
 pub fn AuthorizePage(client_id: Uuid) -> Element {
     let navigator = use_navigator();
-    let authorize = use_resource_with_loader("authorize", move || attempt_to_authorize(client_id));
+    let authorize = use_resource_with_spinner("authorize", move || requests::authorize(client_id));
 
     rsx! {
-        match authorize() {
+        match &*authorize.read() {
             Some(Ok(url)) => {
                 let _ = navigator.push(url.to_string());
                 rsx! {

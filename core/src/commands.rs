@@ -8,7 +8,7 @@ use uuid::Uuid;
 use validator::{Validate, ValidationErrors};
 
 use sdk::constants::ERROR_ALREADY_EXISTS;
-use sdk::generate_random_string;
+use sdk::core::generate_random_string;
 
 use crate::config::{APPLICATIONS_CONFIG, USERS_CONFIG};
 use crate::db_pool;
