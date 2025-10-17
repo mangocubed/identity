@@ -91,7 +91,7 @@ async fn main() {
         .route("/private/user-info", get(get_user_info))
         .route("/private/verify-auth", get(get_verify_auth));
 
-    let address = std::env::var("AUTH_API_ADDRESS").unwrap_or("127.0.0.1:8082".to_owned());
+    let address = std::env::var("API_ADDRESS").unwrap_or("127.0.0.1:8082".to_owned());
 
     let listener = tokio::net::TcpListener::bind(&address).await.unwrap();
 

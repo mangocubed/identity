@@ -9,7 +9,7 @@ Authentication provider and user account manager.
 | APP_REQUEST_ADDRESS            | String  | 127.0.0.1:8081                                       |
 | APP_REQUEST_URL                | String  | http://127.0.0.1:8081                                |
 | APP_TOKEN                      | String  |                                                      |
-| AUTH_API_ADDRESS               | String  | 127.0.0.1:8082                                       |
+| API_ADDRESS                    | String  | 127.0.0.1:8082                                       |
 | APPLICATIONS_TOKEN_LENGTH      | Integer | 32                                                   |
 | APPLICATIONS_SECRET_LENGTH     | Integer | 32                                                   |
 | DATABASE_MAX_CONNECTIONS       | Integer | 5                                                    |
