@@ -4,39 +4,24 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-apalis = { workspace = true, optional = true }
-apalis-redis = { workspace = true, optional = true }
-argon2 = { version = "0.5.3", optional = true }
-chrono = { workspace = true, optional = true }
-regex = { version = "1.12.1", optional = true }
-rust_iso3166 = { workspace = true, optional = true }
+apalis = { workspace = true }
+apalis-redis = { workspace = true }
 serde = { workspace = true }
+argon2 = { version = "0.5.3" }
+chrono = { workspace = true }
+regex = "1.12.2"
+rust_iso3166 = { workspace = true }
 sqlx = { version = "0.8.6", features = [
     "chrono",
     "postgres",
     "runtime-tokio",
     "uuid",
-], optional = true }
-tokio = { workspace = true, optional = true }
+] }
+tokio = { workspace = true }
 uuid = { workspace = true }
-url = { version = "2.5.7", optional = true }
-validator = "0.20.0"
-sdk = { workspace = true }
+url = { version = "2.5.7" }
+validator = { version = "0.20.0", features = ["derive"] }
+sdk = { workspace = true, features = ["core"] }
 
 [dev-dependencies]
 sdk = { workspace = true, features = ["test-utils"] }
-
-[features]
-server = [
-    "dep:apalis",
-    "dep:apalis-redis",
-    "dep:argon2",
-    "dep:chrono",
-    "dep:regex",
-    "dep:rust_iso3166",
-    "dep:sqlx",
-    "dep:tokio",
-    "dep:url",
-    "validator/derive",
-    "sdk/server",
-]

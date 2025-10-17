@@ -1,20 +1,20 @@
 use dioxus::prelude::*;
 use serde_json::Value;
 
-use sdk::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField, TextField};
-use sdk::hooks::use_form_provider;
+use sdk::app::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField, TextField};
+use sdk::app::hooks::use_form_provider;
 
-use crate::hooks::use_current_user;
+use crate::hooks::{use_can_register, use_current_user};
 use crate::local_data::set_session_token;
+use crate::requests;
 use crate::routes::Routes;
-use crate::server_fns::{attempt_to_login, can_register_user};
 
 #[component]
 pub fn LoginPage() -> Element {
-    use_form_provider("login", attempt_to_login);
+    use_form_provider("login", requests::login);
 
     let mut current_user = use_current_user();
-    let can_register_user = use_resource(can_register_user);
+    let can_register = use_can_register();
 
     rsx! {
         PageTitle { "Login" }
@@ -47,7 +47,7 @@ pub fn LoginPage() -> Element {
             }
         }
 
-        if can_register_user() == Some(Ok(true)) {
+        if *can_register.read() == Some(Ok(true)) {
             div { class: "login-links",
                 Link {
                     class: "btn btn-block btn-outline",

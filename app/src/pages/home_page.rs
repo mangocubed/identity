@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use sdk::components::{H1, PageTitle};
+use sdk::app::components::{H1, PageTitle};
 
 #[component]
 pub fn HomePage() -> Element {

@@ -1,26 +1,26 @@
 use dioxus::prelude::*;
 
-use sdk::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField, SelectField, TextField};
+use sdk::app::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField, SelectField, TextField};
+use sdk::app::hooks::use_form_provider;
+use sdk::app::icons::InformationCircleOutline;
 use sdk::constants::{PRIVACY_URL, TERMS_URL};
-use sdk::hooks::use_form_provider;
-use sdk::icons::InformationCircleOutline;
 use serde_json::Value;
 
-use crate::hooks::use_current_user;
+use crate::hooks::{use_can_register, use_current_user};
 use crate::local_data::set_session_token;
+use crate::requests;
 use crate::routes::Routes;
-use crate::server_fns::{attempt_to_register, can_register_user};
 
 #[component]
 pub fn RegisterPage() -> Element {
-    use_form_provider("register", attempt_to_register);
+    use_form_provider("register", requests::register);
 
     let navigator = use_navigator();
     let mut current_user = use_current_user();
-    let can_register_user = use_resource(can_register_user);
+    let can_register = use_can_register();
 
     use_effect(move || {
-        if can_register_user() == Some(Ok(false)) {
+        if *can_register.read() == Some(Ok(false)) {
             navigator.push(Routes::login());
         }
     });

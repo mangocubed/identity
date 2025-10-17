@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use serde::{Deserialize, Serialize};
 
-use sdk::config::extract_config_from_env;
+use sdk::core::config::extract_config_from_env;
 
 pub(crate) static APPLICATIONS_CONFIG: LazyLock<ApplicationsConfig> =
     LazyLock::new(|| extract_config_from_env("APPLICATIONS_"));

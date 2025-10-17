@@ -1,10 +1,7 @@
 use dioxus::prelude::*;
 
-use sdk::components::AppProvider;
-use sdk::hooks::use_resource_with_loader;
-
-#[cfg(not(feature = "server"))]
-use sdk::serv_fn::set_serv_fn_header;
+use sdk::app::components::AppProvider;
+use sdk::app::hooks::use_resource_with_spinner;
 
 mod constants;
 mod hooks;
@@ -12,11 +9,13 @@ mod layouts;
 mod local_data;
 mod pages;
 mod presenters;
+mod requests;
 mod routes;
-mod server_fns;
+
+#[cfg(feature = "server")]
+mod server;
 
 use routes::Routes;
-use server_fns::get_current_user;
 
 const FAVICON_ICO: Asset = asset!("assets/favicon.ico");
 const STYLE_CSS: Asset = asset!("assets/style.css");
@@ -24,35 +23,35 @@ const STYLE_CSS: Asset = asset!("assets/style.css");
 #[cfg(feature = "server")]
 #[tokio::main]
 async fn main() {
-    use std::net::SocketAddr;
+    use axum::routing::{delete, get, post};
 
-    use axum::routing::{get, post};
+    use constants::*;
+    use server::requests;
 
-    use routes::priv_api;
-
-    dioxus::logger::initialize_default();
-
-    let app = axum::Router::new()
-        .route("/priv-api/refresh-auth", post(priv_api::post_refresh_auth))
-        .route("/priv-api/user-info", get(priv_api::get_user_info))
-        .route("/priv-api/verify-auth", get(priv_api::get_verify_auth))
-        .serve_dioxus_application(ServeConfig::new().unwrap(), App);
-
-    let addr = dioxus::cli_config::fullstack_address_or_localhost();
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
-
-    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>())
-        .await
-        .unwrap();
+    let _ = tokio::join!(
+        sdk::app::launch_request_server(|router| {
+            router
+                .route(PATH_API_AUTHORIZE, post(requests::post_authorize))
+                .route(PATH_API_CAN_REGISTER, get(requests::get_can_register))
+                .route(PATH_API_CURRENT_USER, get(requests::get_current_user))
+                .route(PATH_API_LOGIN, post(requests::post_login))
+                .route(PATH_API_LOGOUT, delete(requests::delete_logout))
+                .route(PATH_API_REGISTER, post(requests::post_register))
+        }),
+        tokio::task::spawn_blocking(|| {
+            dioxus::launch(App);
+        }),
+    );
 }
 
 #[cfg(not(feature = "server"))]
 fn main() {
-    use crate::constants::HEADER_AUTHORIZATION;
+    use sdk::app::set_request_bearer;
+
     use crate::local_data::get_session_token;
 
     if let Some(session_token) = get_session_token() {
-        set_serv_fn_header(HEADER_AUTHORIZATION, &format!("Bearer {session_token}"));
+        set_request_bearer(&session_token);
     }
 
     dioxus::launch(App);
@@ -61,7 +60,7 @@ fn main() {
 #[component]
 fn App() -> Element {
     let mut is_starting = use_signal(|| true);
-    let current_user = use_resource_with_loader("current-user", async || get_current_user().await.ok().flatten());
+    let current_user = use_resource_with_spinner("current-user", async || requests::current_user().await.ok());
 
     use_context_provider(|| current_user);
 
