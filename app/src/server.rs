@@ -1,4 +1,4 @@
-pub mod requests {
+pub mod handlers {
     use std::net::{IpAddr, SocketAddr};
 
     use axum::Json;
@@ -86,7 +86,7 @@ pub mod requests {
 
         let user = extract_user(&headers).await?;
 
-        Ok(UserPresenter::from(user))
+        Ok(Json(UserPresenter::from(user)))
     }
 
     pub async fn post_authorize(headers: HeaderMap, Json(params): Json<AuthorizeParams>) -> Result<impl IntoResponse> {
@@ -124,16 +124,9 @@ pub mod requests {
     ) -> impl IntoResponse {
         require_no_session(&headers).await?;
 
-        let user = {
-            let result = commands::authenticate_user(&input).await;
-
-            match result {
-                Ok(user) => user,
-                Err(errors) => {
-                    return Err(ActionError::new("Failed to authenticate user", Some(errors)));
-                }
-            }
-        };
+        let user = commands::authenticate_user(&input)
+            .await
+            .map_err(|errors| ActionError::new("Failed to authenticate user", Some(errors)))?;
 
         let user_agent = extract_user_agent(&headers);
         let ip_addr = extract_client_ip_addr(&headers, connect_info);

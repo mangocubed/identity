@@ -2,13 +2,6 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[cfg(feature = "server")]
-use axum::Json;
-#[cfg(feature = "server")]
-use axum::http::StatusCode;
-#[cfg(feature = "server")]
-use axum::response::{IntoResponse, Response};
-
-#[cfg(feature = "server")]
 use identity_core::models::User;
 
 #[derive(Deserialize, Serialize)]
@@ -28,12 +21,5 @@ impl From<User<'_>> for UserPresenter {
             display_name: user.display_name.to_string(),
             initials: user.initials(),
         }
-    }
-}
-
-#[cfg(feature = "server")]
-impl IntoResponse for UserPresenter {
-    fn into_response(self) -> Response {
-        (StatusCode::OK, Json(self)).into_response()
     }
 }

@@ -26,17 +26,17 @@ async fn main() {
     use axum::routing::{delete, get, post};
 
     use constants::*;
-    use server::requests;
+    use server::handlers::*;
 
     let _ = tokio::join!(
         sdk::app::launch_request_server(|router| {
             router
-                .route(PATH_API_AUTHORIZE, post(requests::post_authorize))
-                .route(PATH_API_CAN_REGISTER, get(requests::get_can_register))
-                .route(PATH_API_CURRENT_USER, get(requests::get_current_user))
-                .route(PATH_API_LOGIN, post(requests::post_login))
-                .route(PATH_API_LOGOUT, delete(requests::delete_logout))
-                .route(PATH_API_REGISTER, post(requests::post_register))
+                .route(PATH_API_AUTHORIZE, post(post_authorize))
+                .route(PATH_API_CAN_REGISTER, get(get_can_register))
+                .route(PATH_API_CURRENT_USER, get(get_current_user))
+                .route(PATH_API_LOGIN, post(post_login))
+                .route(PATH_API_LOGOUT, delete(delete_logout))
+                .route(PATH_API_REGISTER, post(post_register))
         }),
         tokio::task::spawn_blocking(|| {
             dioxus::launch(App);

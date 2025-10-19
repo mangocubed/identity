@@ -10,6 +10,8 @@ use axum_extra::TypedHeader;
 use chrono::{Duration, Utc};
 use headers::authorization::{Authorization, Bearer};
 use serde::Deserialize;
+use tower_http::trace::TraceLayer;
+use tracing::Level;
 use uuid::Uuid;
 
 use sdk::constants::{RESPONSE_BAD_REQUEST, RESPONSE_OK, RESPONSE_UNAUTHORIZED};
@@ -86,10 +88,21 @@ pub async fn post_refresh_auth(Json(params): Json<AuthParams<'_>>) -> Result<imp
 
 #[tokio::main]
 async fn main() {
+    let tracing_level = if cfg!(debug_assertions) {
+        Level::DEBUG
+    } else {
+        Level::INFO
+    };
+
+    tracing_subscriber::fmt().with_max_level(tracing_level).init();
+
+    let trace_layer = TraceLayer::new_for_http();
+
     let router = Router::new()
         .route("/private/refresh-auth", post(post_refresh_auth))
         .route("/private/user-info", get(get_user_info))
-        .route("/private/verify-auth", get(get_verify_auth));
+        .route("/private/verify-auth", get(get_verify_auth))
+        .layer(trace_layer);
 
     let address = std::env::var("API_ADDRESS").unwrap_or("127.0.0.1:8082".to_owned());
 
