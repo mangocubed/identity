@@ -45,7 +45,8 @@ export default defineConfig({
     webServer: {
         cwd: "..",
         command: `npm run build && cargo build --package identity-cli --release && \
-            dx serve --package identity-app --release --web --verbose`,
+            dx build --package identity-app --web --release --verbose && \
+            dx serve --package identity-app --web --release --verbose`,
         port: 8080,
         timeout: 3600000,
         reuseExistingServer: !process.env.CI,
