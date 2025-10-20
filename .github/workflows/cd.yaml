@@ -7,10 +7,34 @@ on:
     workflow_dispatch:
 
 env:
+    APP_REQUEST_URL: ${{ vars.APP_REQUEST_URL }}
+    APP_TITLE: "Mango³ ID"
     CARGO_TERM_COLOR: always
     DATABASE_URL: postgres://mango3:mango3@127.0.0.1:5432/identity_test
 
 jobs:
+    build_api:
+        runs-on: ubuntu-24.04
+        services:
+            postgres:
+                image: postgres:17-alpine
+                env:
+                    POSTGRES_USER: mango3
+                    POSTGRES_PASSWORD: mango3
+                    POSTGRES_DB: identity_test
+                ports:
+                    - 5432:5432
+                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        steps:
+            - uses: actions/checkout@v5
+            - uses: ./.github/actions/setup-dioxus
+            - run: cargo build --package identity-api --release
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: identity_api_build
+                  path: ./target/release/identity-api
+                  retention-days: 1
+
     build_app:
         runs-on: ubuntu-24.04
         services:
@@ -29,6 +53,8 @@ jobs:
             - uses: ./.github/actions/setup-node
             - run: npm run build
             - run: dx bundle --package identity-app --web --release --verbose
+              env:
+                  APP_TOKEN: ${{ secrets.APP_TOKEN }}
             - uses: actions/upload-artifact@v4
               with:
                   name: identity_app_build
@@ -86,8 +112,12 @@ jobs:
             - uses: actions/checkout@v5
             - uses: actions/download-artifact@v5
               with:
+                  name: identity_api_build
+                  path: builds/
+            - uses: actions/download-artifact@v5
+              with:
                   name: identity_app_build
-                  path: builds/app/
+                  path: builds/identity-app/
             - uses: actions/download-artifact@v5
               with:
                   name: identity_cli_build
