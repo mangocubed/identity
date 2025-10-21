@@ -13,7 +13,7 @@ chrono = "0.4.42"
 [dependencies]
 axum = { workspace = true, optional = true }
 chrono = { workspace = true, optional = true }
-dioxus = { version = "0.7.0-rc.2", features = ["fullstack", "router"] }
+dioxus = { version = "0.7.0-rc.3", features = ["fullstack", "router"] }
 rust_iso3166 = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
