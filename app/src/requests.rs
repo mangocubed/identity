@@ -20,10 +20,6 @@ pub async fn authorize(client_id: Uuid) -> ServerResult<Url> {
         .await
 }
 
-pub async fn can_register() -> ServerResult<bool> {
-    Request::get(PATH_API_CAN_REGISTER).send().await
-}
-
 pub async fn current_user() -> ServerResult<UserPresenter> {
     Request::get(PATH_API_CURRENT_USER).send().await
 }

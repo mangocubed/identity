@@ -47,7 +47,7 @@ pub fn LoginPage() -> Element {
             }
         }
 
-        if *can_register.read() == Some(Ok(true)) {
+        if *can_register.read() == Some(true) {
             div { class: "login-links",
                 Link {
                     class: "btn btn-block btn-outline",

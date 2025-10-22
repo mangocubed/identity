@@ -106,7 +106,7 @@ jobs:
                   retention-days: 1
 
     deploy:
-        needs: [build_app, build_cli, build_monitor]
+        needs: [build_api, build_app, build_cli, build_monitor]
         runs-on: ubuntu-24.04
         steps:
             - uses: actions/checkout@v5

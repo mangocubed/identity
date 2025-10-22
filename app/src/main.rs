@@ -11,6 +11,7 @@ mod pages;
 mod presenters;
 mod requests;
 mod routes;
+mod server_fns;
 
 #[cfg(feature = "server")]
 mod server;
@@ -32,7 +33,6 @@ async fn main() {
         sdk::app::launch_request_server(|router| {
             router
                 .route(PATH_API_AUTHORIZE, post(post_authorize))
-                .route(PATH_API_CAN_REGISTER, get(get_can_register))
                 .route(PATH_API_CURRENT_USER, get(get_current_user))
                 .route(PATH_API_LOGIN, post(post_login))
                 .route(PATH_API_LOGOUT, delete(delete_logout))
@@ -46,9 +46,11 @@ async fn main() {
 
 #[cfg(not(feature = "server"))]
 fn main() {
-    use sdk::app::set_request_bearer;
+    use sdk::app::{set_request_bearer, set_request_header_app_token};
 
     use crate::local_data::get_session_token;
+
+    set_request_header_app_token();
 
     if let Some(session_token) = get_session_token() {
         set_request_bearer(&session_token);

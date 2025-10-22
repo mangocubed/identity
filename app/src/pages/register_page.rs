@@ -20,7 +20,7 @@ pub fn RegisterPage() -> Element {
     let can_register = use_can_register();
 
     use_effect(move || {
-        if *can_register.read() == Some(Ok(false)) {
+        if *can_register.read() == Some(false) {
             navigator.push(Routes::login());
         }
     });
