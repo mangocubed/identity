@@ -16,7 +16,7 @@ pub fn extract_bearer(headers: &HeaderMap) -> Result<Bearer, HttpError> {
 }
 
 #[cfg(feature = "server")]
-pub async fn require_app_token<'a>(headers: &HeaderMap) -> Result<(), HttpError> {
+pub async fn require_app_token(headers: &HeaderMap) -> Result<(), HttpError> {
     sdk::app::require_app_token(headers)
         .await
         .or_else(|_| HttpError::forbidden("Forbidden"))
@@ -32,7 +32,7 @@ async fn extract_session<'a>(headers: &HeaderMap) -> Result<Session<'a>, HttpErr
 }
 
 #[cfg(feature = "server")]
-async fn require_no_session<'a>(headers: &HeaderMap) -> Result<(), HttpError> {
+async fn require_no_session(headers: &HeaderMap) -> Result<()> {
     require_app_token(headers).await?;
 
     if extract_session(headers).await.is_err() {

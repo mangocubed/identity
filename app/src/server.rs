@@ -75,12 +75,6 @@ pub mod handlers {
         Ok(StatusCode::NO_CONTENT)
     }
 
-    pub async fn get_can_register(headers: HeaderMap) -> Result<impl IntoResponse> {
-        require_no_session(&headers).await?;
-
-        Ok(commands::can_insert_user().await.to_string())
-    }
-
     pub async fn get_current_user(headers: HeaderMap) -> Result<impl IntoResponse> {
         require_app_token(&headers).await?;
 
