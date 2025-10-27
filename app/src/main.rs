@@ -46,17 +46,13 @@ async fn main() {
 
 #[cfg(not(feature = "server"))]
 fn main() {
-    use sdk::app::{set_request_bearer, set_request_header_app_token};
-
-    use crate::local_data::get_session_token;
-
-    set_request_header_app_token();
+    use local_data::get_session_token;
 
     if let Some(session_token) = get_session_token() {
-        set_request_bearer(&session_token);
+        sdk::app::set_request_bearer(&session_token);
     }
 
-    dioxus::launch(App);
+    sdk::app::launch(App);
 }
 
 #[component]

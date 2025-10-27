@@ -9,6 +9,7 @@ Authentication provider and user account manager.
 | API_ADDRESS                    | String  | 127.0.0.1:8082                                       | No          |
 | APP_REQUEST_ADDRESS            | String  | 127.0.0.1:8081                                       | No          |
 | APP_REQUEST_URL                | String  | http://127.0.0.1:8081                                | Yes         |
+| APP_SERVER_URL                 | String  |                                                      | Yes         |
 | APP_OLD_TOKENS                 | Array   | []                                                   | No          |
 | APP_TOKEN                      | String  |                                                      | Yes         |
 | APP_TITLE                      | String  | Mango³                                               | Yes         |
