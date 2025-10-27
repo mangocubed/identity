@@ -6,7 +6,6 @@ use uuid::Uuid;
 use sdk::app::{ActionResult, Request, ServerResult};
 
 use crate::constants::*;
-use crate::presenters::UserPresenter;
 
 #[derive(Deserialize, Serialize)]
 pub struct AuthorizeParams {
@@ -18,10 +17,6 @@ pub async fn authorize(client_id: Uuid) -> ServerResult<Url> {
         .json(&AuthorizeParams { client_id })
         .send()
         .await
-}
-
-pub async fn current_user() -> ServerResult<UserPresenter> {
-    Request::get(PATH_API_CURRENT_USER).send().await
 }
 
 pub async fn login(input: Value) -> ActionResult {

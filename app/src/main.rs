@@ -24,7 +24,7 @@ const STYLE_CSS: Asset = asset!("assets/style.css");
 #[cfg(feature = "server")]
 #[tokio::main]
 async fn main() {
-    use axum::routing::{delete, get, post};
+    use axum::routing::{delete, post};
 
     use constants::*;
     use server::handlers::*;
@@ -33,7 +33,6 @@ async fn main() {
         sdk::app::launch_request_server(|router| {
             router
                 .route(PATH_API_AUTHORIZE, post(post_authorize))
-                .route(PATH_API_CURRENT_USER, get(get_current_user))
                 .route(PATH_API_LOGIN, post(post_login))
                 .route(PATH_API_LOGOUT, delete(delete_logout))
                 .route(PATH_API_REGISTER, post(post_register))
@@ -58,7 +57,7 @@ fn main() {
 #[component]
 fn App() -> Element {
     let mut is_starting = use_signal(|| true);
-    let current_user = use_resource_with_spinner("current-user", async || requests::current_user().await.ok());
+    let current_user = use_resource_with_spinner("current-user", async || server_fns::current_user().await.ok());
 
     use_context_provider(|| current_user);
 

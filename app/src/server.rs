@@ -15,7 +15,6 @@ pub mod handlers {
     use identity_core::inputs::{LoginInput, RegisterInput};
     use identity_core::models::{Session, User};
 
-    use crate::presenters::UserPresenter;
     use crate::requests::AuthorizeParams;
 
     fn extract_client_ip_addr(headers: &HeaderMap, connect_info: ConnectInfo<SocketAddr>) -> IpAddr {
@@ -73,14 +72,6 @@ pub mod handlers {
             .map_err(|_| RESPONSE_INTERNAL_SERVER_ERROR)?;
 
         Ok(StatusCode::NO_CONTENT)
-    }
-
-    pub async fn get_current_user(headers: HeaderMap) -> Result<impl IntoResponse> {
-        require_app_token(&headers).await?;
-
-        let user = extract_user(&headers).await?;
-
-        Ok(Json(UserPresenter::from(user)))
     }
 
     pub async fn post_authorize(headers: HeaderMap, Json(params): Json<AuthorizeParams>) -> Result<impl IntoResponse> {
