@@ -3743,8 +3743,8 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sdk"
-version = "0.0.0-alpha.11"
-source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.11#24cc17f8971f2e28a7ce3bafefb991ea5de4c02d"
+version = "0.0.0-alpha.12"
+source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.12#f9bb1aa09bd5cef50358a88732e8b23a5164a8f5"
 dependencies = [
  "anyhow",
  "axum",

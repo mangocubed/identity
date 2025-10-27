@@ -55,6 +55,14 @@ pub struct LoginInput {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+pub struct PasswordInput {
+    #[validate(length(min = 1, max = 256, message = "Can't be blank"))]
+    pub current_password: String,
+    #[validate(length(min = 6, max = 128, message = "Must have at least 6 characters"))]
+    pub new_password: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct RegisterInput {
     #[validate(
         length(min = 3, max = 16, message = "Must have at least 3 characters"),

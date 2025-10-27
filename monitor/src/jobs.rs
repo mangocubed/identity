@@ -4,9 +4,9 @@ use serde::Deserialize;
 
 use identity_core::commands;
 use identity_core::config::IP_GEOLOCATION_CONFIG;
-use identity_core::jobs_storage::{FinishedSession, NewSession, NewUser};
+use identity_core::jobs_storage::{FinishedSession, NewSession, NewUser, PasswordChanged};
 
-use crate::mailer::{send_new_session_email, send_new_user_email};
+use crate::mailer::{send_new_session_email, send_new_user_email, send_password_changed_email};
 
 #[derive(Deserialize)]
 struct Location<'a> {
@@ -66,4 +66,10 @@ pub async fn new_session_job(job: NewSession) -> Result<(), apalis::prelude::Err
     };
 
     send_new_session_email(&session).await
+}
+
+pub async fn password_changed_job(job: PasswordChanged) -> Result<(), apalis::prelude::Error> {
+    let user = commands::get_user_by_id(job.user_id).await.expect("Could not get user");
+
+    send_password_changed_email(&user).await
 }

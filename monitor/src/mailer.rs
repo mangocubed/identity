@@ -80,3 +80,18 @@ If not, please contact us at the following email address: {}",
 
     send_email(&user.email, "New session started", &message).await
 }
+
+pub async fn send_password_changed_email(user: &User<'_>) -> Result<(), apalis::prelude::Error> {
+    let message = format!(
+        "Hello @{},
+
+Your password has been changed.
+
+If you recognize this action, you can ignore this message.
+
+If not, please contact us at the following email address: {}",
+        user.username, MAILER_CONFIG.support_email_address
+    );
+
+    send_email(&user.email, "Password changed", &message).await
+}
