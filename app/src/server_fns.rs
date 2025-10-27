@@ -8,7 +8,9 @@ use http::HeaderMap;
 #[cfg(feature = "server")]
 use identity_core::commands;
 #[cfg(feature = "server")]
-use identity_core::models::Session;
+use identity_core::models::{Session, User};
+
+use crate::presenters::UserPresenter;
 
 #[cfg(feature = "server")]
 pub fn extract_bearer(headers: &HeaderMap) -> Result<Bearer, HttpError> {
@@ -32,6 +34,15 @@ async fn extract_session<'a>(headers: &HeaderMap) -> Result<Session<'a>, HttpErr
 }
 
 #[cfg(feature = "server")]
+async fn extract_user<'a>(headers: &HeaderMap) -> Result<User<'a>, HttpError> {
+    let bearer = extract_bearer(headers)?;
+
+    commands::get_user_by_session_token(bearer.token())
+        .await
+        .or_else(|_| HttpError::unauthorized("Unauthorized"))
+}
+
+#[cfg(feature = "server")]
 async fn require_no_session(headers: &HeaderMap) -> Result<()> {
     require_app_token(headers).await?;
 
@@ -40,6 +51,15 @@ async fn require_no_session(headers: &HeaderMap) -> Result<()> {
     } else {
         Err(HttpError::forbidden("Forbidden")?)
     }
+}
+
+#[get("/api/current-user", headers: HeaderMap)]
+pub async fn current_user() -> Result<UserPresenter> {
+    require_app_token(&headers).await?;
+
+    let user = extract_user(&headers).await?;
+
+    Ok(UserPresenter::from(user))
 }
 
 #[get("/api/can-register", headers: HeaderMap)]
