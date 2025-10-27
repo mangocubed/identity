@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 use sdk::app::components::AppProvider;
 use sdk::app::hooks::use_resource_with_spinner;
 
+mod components;
 mod constants;
 mod hooks;
 mod layouts;

@@ -1,9 +1,15 @@
 use dioxus::prelude::*;
+use serde_json::Value;
 
 #[cfg(feature = "server")]
 use headers::authorization::Bearer;
 #[cfg(feature = "server")]
 use http::HeaderMap;
+
+use sdk::app::ActionResult;
+
+#[cfg(feature = "server")]
+use sdk::app::{ActionError, ActionSuccess};
 
 #[cfg(feature = "server")]
 use identity_core::commands;
@@ -50,6 +56,20 @@ async fn require_no_session(headers: &HeaderMap) -> Result<()> {
         Ok(())
     } else {
         Err(HttpError::forbidden("Forbidden")?)
+    }
+}
+
+#[post("/api/change-password", headers: HeaderMap)]
+pub async fn change_password(input: Value) -> ActionResult {
+    require_app_token(&headers).await?;
+
+    let user = extract_user(&headers).await?;
+
+    let result = commands::update_user_password(&user, &serde_json::from_value(input)?).await;
+
+    match result {
+        Ok(_) => Ok(ActionSuccess::new("Password changed successfully", Value::Null)),
+        Err(errors) => Err(ActionError::new("Failed to change password", Some(errors))),
     }
 }
 

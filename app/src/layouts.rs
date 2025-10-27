@@ -1,10 +1,11 @@
 use dioxus::prelude::*;
 
 use sdk::app::components::*;
-use sdk::app::icons::ChevronDownMini;
+use sdk::app::icons::{ChevronDownMini, HomeOutline, InformationCircleOutline, PasswordOutline};
 use sdk::app::run_with_spinner;
 use sdk::constants::{COPYRIGHT, PRIVACY_URL, TERMS_URL};
 
+use crate::components::AboutModal;
 use crate::constants::SOURCE_CODE_URL;
 use crate::hooks::use_current_user;
 use crate::local_data::{delete_redirect_to, get_redirect_to};
@@ -76,6 +77,7 @@ pub fn UserLayout() -> Element {
     let navigator = use_navigator();
     let router = router();
     let mut current_user = use_current_user();
+    let mut show_about = use_signal(|| false);
     let mut show_logout_confirmation = use_signal(|| false);
 
     use_effect(move || {
@@ -137,8 +139,55 @@ pub fn UserLayout() -> Element {
                     }
                 }
             }
-        }
 
-        main { class: "main grow", Outlet::<Routes> {} }
+            div { class: "flex m-4 min-h-[calc(100vh-6rem)]",
+                div { class: "shrink-0 bg-base-200 rounded-box md:w-56 flex flex-col items-between",
+                    ul { class: "menu md:w-56",
+                        li {
+                            class: "max-md:tooltip max-md:tooltip-right",
+                            "data-tip": "Home",
+                            Link { to: Routes::home(),
+                                HomeOutline {}
+
+                                span { class: "max-md:hidden", "Home" }
+                            }
+                        }
+
+                        div { class: "divider m-1" }
+
+                        li {
+                            class: "max-md:tooltip max-md:tooltip-right",
+                            "data-tip": "Change password",
+                            Link { to: Routes::change_password(),
+                                PasswordOutline {}
+
+                                span { class: "max-md:hidden", "Change password" }
+                            }
+                        }
+                    }
+
+                    ul { class: "menu md:w-56 mt-auto",
+                        li {
+                            class: "max-md:tooltip max-md:tooltip-right",
+                            "data-tip": "About",
+                            a {
+                                onclick: move |_| {
+                                    *show_about.write() = true;
+                                },
+                                InformationCircleOutline {}
+
+                                span { class: "max-md:hidden", "About" }
+                            }
+                        }
+                    }
+                }
+
+                main { class: "main grow max-w-[calc(100%-48px)] md:max-w-[calc(100%-208px)]",
+                    Outlet::<Routes> {}
+                }
+
+                AboutModal { is_open: show_about }
+            }
+        }
     }
 }

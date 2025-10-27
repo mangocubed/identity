@@ -7,12 +7,12 @@ use chrono::{DateTime, NaiveDate, Utc};
 use uuid::Uuid;
 use validator::{Validate, ValidationErrors};
 
-use sdk::constants::ERROR_ALREADY_EXISTS;
+use sdk::constants::{ERROR_ALREADY_EXISTS, ERROR_IS_INVALID};
 use sdk::core::generate_random_string;
 
 use crate::config::{APPLICATIONS_CONFIG, USERS_CONFIG};
 use crate::db_pool;
-use crate::inputs::{ApplicationInput, LoginInput, RegisterInput};
+use crate::inputs::{ApplicationInput, LoginInput, PasswordInput, RegisterInput};
 use crate::jobs_storage::jobs_storage;
 use crate::models::{Application, Authorization, Session, User};
 
@@ -309,7 +309,7 @@ pub async fn insert_user<'a>(input: &RegisterInput) -> Result<User<'a>, Validati
 
             Ok(user)
         }
-        Err(_) => Err(ValidationErrors::new()),
+        Err(_) => Err(validation_errors),
     }
 }
 
@@ -411,6 +411,40 @@ pub async fn update_session_location<'a>(
     )
     .fetch_one(db_pool)
     .await
+}
+
+pub async fn update_user_password(user: &User<'_>, input: &PasswordInput) -> Result<(), ValidationErrors> {
+    input.validate()?;
+
+    let mut validation_errors = ValidationErrors::new();
+
+    if !user.verify_password(&input.current_password) {
+        validation_errors.add("current_password", ERROR_IS_INVALID.clone());
+    }
+
+    if !validation_errors.is_empty() {
+        return Err(validation_errors);
+    }
+
+    let db_pool = db_pool().await;
+
+    let result = sqlx::query_as!(
+        User,
+        r#"UPDATE users SET encrypted_password = $2 WHERE disabled_at IS NULL AND id = $1"#,
+        user.id,                               // $1
+        encrypt_password(&input.new_password), // $2
+    )
+    .execute(db_pool)
+    .await;
+
+    match result {
+        Ok(_) => {
+            jobs_storage().await.push_password_changed(user).await;
+
+            Ok(())
+        }
+        Err(_) => Err(validation_errors),
+    }
 }
 
 async fn username_exists(value: &str) -> bool {

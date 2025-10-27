@@ -22,6 +22,7 @@ pub struct JobsStorage {
     pub finished_session: RedisStorage<FinishedSession>,
     pub new_session: RedisStorage<NewSession>,
     pub new_user: RedisStorage<NewUser>,
+    pub password_changed: RedisStorage<PasswordChanged>,
 }
 
 impl JobsStorage {
@@ -37,6 +38,7 @@ impl JobsStorage {
             finished_session: Self::storage().await,
             new_session: Self::storage().await,
             new_user: Self::storage().await,
+            password_changed: Self::storage().await,
         }
     }
 
@@ -66,6 +68,14 @@ impl JobsStorage {
             .await
             .expect("Could not store job");
     }
+
+    pub(crate) async fn push_password_changed(&self, user: &User<'_>) {
+        self.password_changed
+            .clone()
+            .push(PasswordChanged { user_id: user.id })
+            .await
+            .expect("Could not store job");
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -81,5 +91,10 @@ pub struct NewSession {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct NewUser {
+    pub user_id: Uuid,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct PasswordChanged {
     pub user_id: Uuid,
 }
