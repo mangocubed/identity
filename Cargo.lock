@@ -326,6 +326,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "axum-extra"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "460c45604cb25834835e3b4d3468510322852783dac36261d642424d75562ff3"
+dependencies = [
+ "axum",
+ "axum-core",
+ "bytes",
+ "futures-core",
+ "futures-util",
+ "headers",
+ "http",
+ "http-body",
+ "http-body-util",
+ "mime",
+ "pin-project-lite",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
 name = "axum-macros"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -594,8 +616,8 @@ checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
 
 [[package]]
 name = "const-serialize"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "const-serialize-macro",
  "serde",
@@ -603,8 +625,8 @@ dependencies = [
 
 [[package]]
 name = "const-serialize-macro"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -926,8 +948,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-asset-resolver",
  "dioxus-cli-config",
@@ -958,15 +980,14 @@ dependencies = [
 
 [[package]]
 name = "dioxus-asset-resolver"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-cli-config",
  "http",
  "infer",
  "jni",
  "js-sys",
- "manganis-core",
  "ndk",
  "ndk-context",
  "ndk-sys",
@@ -979,16 +1000,16 @@ dependencies = [
 
 [[package]]
 name = "dioxus-cli-config"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "wasm-bindgen",
 ]
 
 [[package]]
 name = "dioxus-config-macro"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -996,13 +1017,13 @@ dependencies = [
 
 [[package]]
 name = "dioxus-config-macros"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 
 [[package]]
 name = "dioxus-core"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "anyhow",
  "const_format",
@@ -1023,8 +1044,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-core-macro"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "convert_case",
  "dioxus-rsx",
@@ -1035,13 +1056,13 @@ dependencies = [
 
 [[package]]
 name = "dioxus-core-types"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 
 [[package]]
 name = "dioxus-devtools"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -1060,8 +1081,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-devtools-types"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-core",
  "serde",
@@ -1070,8 +1091,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-document"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -1088,15 +1109,15 @@ dependencies = [
 
 [[package]]
 name = "dioxus-fullstack"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "anyhow",
  "async-stream",
  "async-tungstenite",
  "axum",
  "axum-core",
- "axum-extra",
+ "axum-extra 0.10.3",
  "base64",
  "bytes",
  "ciborium",
@@ -1152,8 +1173,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-fullstack-core"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "anyhow",
  "axum-core",
@@ -1179,8 +1200,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-fullstack-macro"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "const_format",
  "convert_case",
@@ -1192,8 +1213,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-history"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-core",
  "tracing",
@@ -1201,8 +1222,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-hooks"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-core",
  "dioxus-signals",
@@ -1217,8 +1238,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-html"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1243,8 +1264,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-html-internal-macro"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -1254,8 +1275,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-interpreter-js"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-core",
  "dioxus-core-types",
@@ -1272,8 +1293,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-liveview"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "axum",
  "dioxus-cli-config",
@@ -1299,8 +1320,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-logger"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-cli-config",
  "tracing",
@@ -1310,8 +1331,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-router"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -1330,8 +1351,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-router-macro"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "base16",
  "digest",
@@ -1344,8 +1365,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-rsx"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "proc-macro2",
  "proc-macro2-diagnostics",
@@ -1355,8 +1376,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-server"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1412,8 +1433,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-signals"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -1427,8 +1448,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-ssr"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "askama_escape",
  "dioxus-core",
@@ -1438,8 +1459,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-stores"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-core",
  "dioxus-signals",
@@ -1448,8 +1469,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-stores-macro"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -1459,8 +1480,8 @@ dependencies = [
 
 [[package]]
 name = "dioxus-web"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -1851,8 +1872,8 @@ dependencies = [
 
 [[package]]
 name = "generational-box"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "parking_lot",
  "tracing",
@@ -2347,7 +2368,7 @@ name = "identity-api"
 version = "0.0.0-alpha.0"
 dependencies = [
  "axum",
- "axum-extra",
+ "axum-extra 0.12.0",
  "chrono",
  "headers",
  "identity-core",
@@ -2540,9 +2561,9 @@ checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
 
 [[package]]
 name = "js-sys"
-version = "0.3.81"
+version = "0.3.82"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec48937a97411dcb524a265206ccd4c90bb711fca92b2792c407f268825b9305"
+checksum = "b011eec8cc36da2aab2d5cff675ec18454fad408585853910a202391cf9f8e65"
 dependencies = [
  "once_cell",
  "wasm-bindgen",
@@ -2560,8 +2581,8 @@ dependencies = [
 
 [[package]]
 name = "lazy-js-bundle"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 
 [[package]]
 name = "lazy_static"
@@ -2710,8 +2731,8 @@ dependencies = [
 
 [[package]]
 name = "manganis"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "const-serialize",
  "manganis-core",
@@ -2720,8 +2741,8 @@ dependencies = [
 
 [[package]]
 name = "manganis-core"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "const-serialize",
  "dioxus-cli-config",
@@ -2731,8 +2752,8 @@ dependencies = [
 
 [[package]]
 name = "manganis-macro"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "dunce",
  "macro-string",
@@ -3745,8 +3766,8 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sdk"
-version = "0.0.0-alpha.13"
-source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.13#258ef3459f9d6db315f1f84568aa71ee880ade9b"
+version = "0.0.0-alpha.14"
+source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.14#10c3b6cb246d07cca35b30166aecb0645b44c68c"
 dependencies = [
  "anyhow",
  "axum",
@@ -4294,8 +4315,8 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "subsecond"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "js-sys",
  "libc",
@@ -4312,8 +4333,8 @@ dependencies = [
 
 [[package]]
 name = "subsecond-types"
-version = "0.7.0-rc.3"
-source = "git+https://github.com/javierEd/dioxus.git?rev=3203448#320344878235d15d04a407d4cdb53c11c5779635"
+version = "0.7.0"
+source = "git+https://github.com/javierEd/dioxus.git?rev=6eeaa02#6eeaa022b520d43ec9e2e7784a2bb6e3d7b8a3db"
 dependencies = [
  "serde",
 ]
@@ -5089,9 +5110,9 @@ checksum = "b8dad83b4f25e74f184f64c43b150b91efe7647395b42289f38e50566d82855b"
 
 [[package]]
 name = "wasm-bindgen"
-version = "0.2.104"
+version = "0.2.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1da10c01ae9f1ae40cbfac0bac3b1e724b320abfcf52229f80b547c0d250e2d"
+checksum = "da95793dfc411fbbd93f5be7715b0578ec61fe87cb1a42b12eb625caa5c5ea60"
 dependencies = [
  "cfg-if",
  "once_cell",
@@ -5101,24 +5122,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "wasm-bindgen-backend"
-version = "0.2.104"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "671c9a5a66f49d8a47345ab942e2cb93c7d1d0339065d4f8139c486121b43b19"
-dependencies = [
- "bumpalo",
- "log",
- "proc-macro2",
- "quote",
- "syn",
- "wasm-bindgen-shared",
-]
-
-[[package]]
 name = "wasm-bindgen-futures"
-version = "0.4.54"
+version = "0.4.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e038d41e478cc73bae0ff9b36c60cff1c98b8f38f8d7e8061e79ee63608ac5c"
+checksum = "551f88106c6d5e7ccc7cd9a16f312dd3b5d36ea8b4954304657d5dfba115d4a0"
 dependencies = [
  "cfg-if",
  "js-sys",
@@ -5129,9 +5136,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-version = "0.2.104"
+version = "0.2.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ca60477e4c59f5f2986c50191cd972e3a50d8a95603bc9434501cf156a9a119"
+checksum = "04264334509e04a7bf8690f2384ef5265f05143a4bff3889ab7a3269adab59c2"
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -5139,22 +5146,22 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-version = "0.2.104"
+version = "0.2.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f07d2f20d4da7b26400c9f4a0511e6e0345b040694e8a75bd41d578fa4421d7"
+checksum = "420bc339d9f322e562942d52e115d57e950d12d88983a14c79b86859ee6c7ebc"
 dependencies = [
+ "bumpalo",
  "proc-macro2",
  "quote",
  "syn",
- "wasm-bindgen-backend",
  "wasm-bindgen-shared",
 ]
 
 [[package]]
 name = "wasm-bindgen-shared"
-version = "0.2.104"
+version = "0.2.105"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bad67dc8b2a1a6e5448428adec4c3e84c43e561d8c9ee8a9e5aabeb193ec41d1"
+checksum = "76f218a38c84bcb33c25ec7059b07847d465ce0e0a76b995e134a45adcb6af76"
 dependencies = [
  "unicode-ident",
 ]
@@ -5174,9 +5181,9 @@ dependencies = [
 
 [[package]]
 name = "web-sys"
-version = "0.3.81"
+version = "0.3.82"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9367c417a924a74cae129e6a2ae3b47fabb1f8995595ab474029da749a8be120"
+checksum = "3a1f95c0d03a47f4ae1f7a64643a6bb97465d9b740f0fa8f90ea33915c99a9a1"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
