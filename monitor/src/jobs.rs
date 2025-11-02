@@ -6,7 +6,7 @@ use identity_core::commands;
 use identity_core::config::IP_GEOLOCATION_CONFIG;
 use identity_core::jobs_storage::{FinishedSession, NewSession, NewUser, PasswordChanged};
 
-use crate::mailer::{send_new_session_email, send_new_user_email, send_password_changed_email};
+use crate::mailer::{admin_emails, send_new_session_email, send_password_changed_email, send_welcome_email};
 
 #[derive(Deserialize)]
 struct Location<'a> {
@@ -33,7 +33,9 @@ pub async fn finished_session_job(job: FinishedSession) -> Result<(), apalis::pr
 pub async fn new_user_job(job: NewUser) -> Result<(), apalis::prelude::Error> {
     let user = commands::get_user_by_id(job.user_id).await.expect("Could not get user");
 
-    send_new_user_email(&user).await
+    let _ = admin_emails::send_new_user_email(&user).await;
+
+    send_welcome_email(&user).await
 }
 
 pub async fn new_session_job(job: NewSession) -> Result<(), apalis::prelude::Error> {
