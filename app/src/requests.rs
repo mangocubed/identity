@@ -26,7 +26,3 @@ pub async fn login(input: Value) -> ActionResult {
 pub async fn logout() -> ServerResult {
     Request::delete(PATH_API_LOGOUT).send().await
 }
-
-pub async fn register(input: Value) -> ActionResult {
-    Request::post(PATH_API_REGISTER).json(&input).send().await
-}

@@ -1,6 +1,11 @@
+#[cfg(feature = "server")]
+use std::net::{IpAddr, SocketAddr};
+
 use dioxus::prelude::*;
 use serde_json::Value;
 
+#[cfg(feature = "server")]
+use axum::extract::ConnectInfo;
 #[cfg(feature = "server")]
 use headers::authorization::Bearer;
 #[cfg(feature = "server")]
@@ -10,6 +15,8 @@ use sdk::app::ActionResult;
 
 #[cfg(feature = "server")]
 use sdk::app::{ActionError, ActionSuccess};
+#[cfg(feature = "server")]
+use sdk::constants::{HEADER_USER_AGENT, HEADER_X_REAL_IP};
 
 #[cfg(feature = "server")]
 use identity_core::commands;
@@ -21,6 +28,29 @@ use crate::presenters::UserPresenter;
 #[cfg(feature = "server")]
 pub fn extract_bearer(headers: &HeaderMap) -> Result<Bearer, HttpError> {
     sdk::app::extract_bearer(headers).or_else(|_| HttpError::unauthorized("Unauthorized"))
+}
+
+#[cfg(feature = "server")]
+fn extract_client_ip_addr(headers: &HeaderMap, connect_info: ConnectInfo<SocketAddr>) -> IpAddr {
+    let real_ip = headers
+        .get(HEADER_X_REAL_IP)
+        .and_then(|ip| ip.to_str().ok())
+        .and_then(|ip| ip.parse().ok());
+
+    if let Some(real_ip) = real_ip {
+        return real_ip;
+    }
+
+    connect_info.0.ip()
+}
+
+#[cfg(feature = "server")]
+fn extract_user_agent(headers: &HeaderMap) -> String {
+    headers
+        .get(HEADER_USER_AGENT)
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or("Unknown")
+        .to_owned()
 }
 
 #[cfg(feature = "server")]
@@ -49,7 +79,7 @@ async fn extract_user<'a>(headers: &HeaderMap) -> Result<User<'a>, HttpError> {
 }
 
 #[cfg(feature = "server")]
-async fn require_no_session(headers: &HeaderMap) -> Result<()> {
+async fn require_no_session(headers: &HeaderMap) -> Result<(), HttpError> {
     require_app_token(headers).await?;
 
     if extract_session(headers).await.is_err() {
@@ -87,4 +117,25 @@ pub async fn can_register() -> Result<bool> {
     require_no_session(&headers).await?;
 
     Ok(commands::can_insert_user().await)
+}
+
+#[post("/api/register", headers: HeaderMap, connect_info: ConnectInfo<SocketAddr>)]
+pub async fn register(input: Value) -> ActionResult {
+    require_no_session(&headers).await?;
+
+    let result = commands::insert_user(&serde_json::from_value(input)?).await;
+
+    match result {
+        Ok(user) => {
+            let user_agent = extract_user_agent(&headers);
+            let ip_addr = extract_client_ip_addr(&headers, connect_info);
+
+            let result = commands::insert_session(&user, &user_agent, ip_addr).await;
+
+            let session_token = result.ok().map(|session| session.token);
+
+            Ok(ActionSuccess::new("User created successfully", session_token.into()))
+        }
+        Err(errors) => Err(ActionError::new("Failed to create user", Some(errors))),
+    }
 }
