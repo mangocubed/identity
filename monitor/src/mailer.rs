@@ -99,16 +99,16 @@ If not, please contact us at the following email address: {}",
 pub mod admin_emails {
     use super::*;
 
-    pub async fn send_new_user_email(user: &User) -> Result<(), apalis::prelude::Error> {
-        let mut message = format!(
+    pub async fn send_new_user_email(user: &User<'_>) -> Result<(), apalis::prelude::Error> {
+        let message = format!(
             "Hello,
 
 Someone has created a new user account with the following username: @{}",
-            new_user.username
+            user.username
         );
 
         send_email(
-            MAILER_CONFIG.support_email_address,
+            &MAILER_CONFIG.support_email_address,
             "(Admin) New user account created",
             &message,
         )
