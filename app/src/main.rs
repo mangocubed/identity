@@ -25,6 +25,8 @@ const STYLE_CSS: Asset = asset!("assets/style.css");
 #[cfg(feature = "server")]
 #[tokio::main]
 async fn main() {
+    use std::net::SocketAddr;
+
     use axum::routing::{delete, post};
 
     use constants::*;
@@ -36,11 +38,18 @@ async fn main() {
                 .route(PATH_API_AUTHORIZE, post(post_authorize))
                 .route(PATH_API_LOGIN, post(post_login))
                 .route(PATH_API_LOGOUT, delete(delete_logout))
-                .route(PATH_API_REGISTER, post(post_register))
         }),
-        tokio::task::spawn_blocking(|| {
-            dioxus::launch(App);
-        }),
+        async {
+            let address = dioxus::cli_config::fullstack_address_or_localhost();
+
+            let router = axum::Router::new().serve_dioxus_application(ServeConfig::new(), App);
+
+            let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+
+            axum::serve(listener, router.into_make_service_with_connect_info::<SocketAddr>())
+                .await
+                .unwrap();
+        },
     );
 }
 

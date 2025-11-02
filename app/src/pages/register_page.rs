@@ -8,12 +8,12 @@ use serde_json::Value;
 
 use crate::hooks::{use_can_register, use_current_user};
 use crate::local_data::set_session_token;
-use crate::requests;
 use crate::routes::Routes;
+use crate::server_fns;
 
 #[component]
 pub fn RegisterPage() -> Element {
-    use_form_provider("register", requests::register);
+    use_form_provider("register", server_fns::register);
 
     let navigator = use_navigator();
     let mut current_user = use_current_user();

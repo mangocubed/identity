@@ -9,4 +9,3 @@ pub const KEY_SESSION_TOKEN: &str = "_session_token";
 pub const PATH_API_AUTHORIZE: &str = "/api/authorize";
 pub const PATH_API_LOGIN: &str = "/api/login";
 pub const PATH_API_LOGOUT: &str = "/api/logout";
-pub const PATH_API_REGISTER: &str = "/api/register";

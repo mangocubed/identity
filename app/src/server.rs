@@ -12,7 +12,7 @@ pub mod handlers {
     use sdk::constants::*;
 
     use identity_core::commands;
-    use identity_core::inputs::{LoginInput, RegisterInput};
+    use identity_core::inputs::LoginInput;
     use identity_core::models::{Session, User};
 
     use crate::requests::AuthorizeParams;
@@ -124,30 +124,6 @@ pub mod handlers {
                 session.token.into(),
             )),
             Err(_) => Err(ActionError::new("Failed to authenticate user", None)),
-        }
-    }
-
-    pub async fn post_register(
-        headers: HeaderMap,
-        connect_info: ConnectInfo<SocketAddr>,
-        Json(input): Json<RegisterInput>,
-    ) -> impl IntoResponse {
-        require_no_session(&headers).await?;
-
-        let result = commands::insert_user(&input).await;
-
-        match result {
-            Ok(user) => {
-                let user_agent = extract_user_agent(&headers);
-                let ip_addr = extract_client_ip_addr(&headers, connect_info);
-
-                let result = commands::insert_session(&user, &user_agent, ip_addr).await;
-
-                let session_token = result.ok().map(|session| session.token);
-
-                Ok(ActionSuccess::new("User created successfully", session_token.into()))
-            }
-            Err(errors) => Err(ActionError::new("Failed to create user", Some(errors))),
         }
     }
 }
