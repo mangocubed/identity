@@ -13,7 +13,7 @@ chrono = "0.4.42"
 [dependencies]
 axum = { workspace = true, optional = true }
 chrono = { workspace = true, optional = true }
-dioxus = { git = "https://github.com/javierEd/dioxus.git", rev = "3203448", features = [
+dioxus = { git = "https://github.com/javierEd/dioxus.git", rev = "6eeaa02", features = [
     "fullstack",
     "router",
 ] }
