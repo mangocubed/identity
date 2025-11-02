@@ -45,7 +45,7 @@ async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), apalis::p
     Ok(())
 }
 
-pub async fn send_new_user_email(user: &User<'_>) -> Result<(), apalis::prelude::Error> {
+pub async fn send_welcome_email(user: &User<'_>) -> Result<(), apalis::prelude::Error> {
     let message = format!(
         "Hello @{},
 
@@ -94,4 +94,22 @@ If not, please contact us at the following email address: {}",
     );
 
     send_email(&user.email, "Password changed", &message).await
+}
+
+pub mod admin_emails {
+    pub async fn send_new_user_email(user: &User) -> Result<(), apalis::prelude::Error> {
+        let mut message = format!(
+            "Hello,
+
+Someone has created a new user account with the following username: @{}",
+            new_user.username
+        );
+
+        send_email(
+            MAILER_CONFIG.support_email_address,
+            "(Admin) New user account created",
+            &message,
+        )
+        .await
+    }
 }
