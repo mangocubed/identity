@@ -97,6 +97,8 @@ If not, please contact us at the following email address: {}",
 }
 
 pub mod admin_emails {
+    use super::*;
+
     pub async fn send_new_user_email(user: &User) -> Result<(), apalis::prelude::Error> {
         let mut message = format!(
             "Hello,
