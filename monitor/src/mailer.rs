@@ -3,7 +3,8 @@ use lettre::{AsyncSmtpTransport, AsyncTransport, Tokio1Executor};
 use lettre::{Message, transport::smtp::authentication::Credentials};
 
 use identity_core::config::MAILER_CONFIG;
-use identity_core::models::{Session, User};
+use identity_core::enums::ConfirmationAction;
+use identity_core::models::{Confirmation, Session, User};
 
 async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), apalis::prelude::Error> {
     if !MAILER_CONFIG.enable {
@@ -45,17 +46,30 @@ async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), apalis::p
     Ok(())
 }
 
-pub async fn send_welcome_email(user: &User<'_>) -> Result<(), apalis::prelude::Error> {
+pub async fn send_new_confirmation_email(
+    confirmation: &Confirmation<'_>,
+    code: &str,
+) -> Result<(), apalis::prelude::Error> {
+    let user = confirmation.user().await;
+
     let message = format!(
-        "Hello @{},
+        "Hello {},
 
-        Welcome to Mango³.
+Use this code to {}:
 
-        If you have any questions, please contact us at the following email address: {}",
-        user.username, MAILER_CONFIG.support_email_address
+{}
+
+If you don't recognize this action, you can ignore this message.",
+        user.username,
+        match confirmation.action {
+            ConfirmationAction::Email => "confirm your email",
+            ConfirmationAction::Login => "confirm your login",
+            ConfirmationAction::PasswordReset => "reset your password",
+        },
+        code,
     );
 
-    send_email(&user.email, "Welcome to Mango³", &message).await
+    send_email(&user.email, "Confirmation code", &message).await
 }
 
 pub async fn send_new_session_email(session: &Session<'_>) -> Result<(), apalis::prelude::Error> {
@@ -94,6 +108,19 @@ If not, please contact us at the following email address: {}",
     );
 
     send_email(&user.email, "Password changed", &message).await
+}
+
+pub async fn send_welcome_email(user: &User<'_>) -> Result<(), apalis::prelude::Error> {
+    let message = format!(
+        "Hello @{},
+
+        Welcome to Mango³.
+
+        If you have any questions, please contact us at the following email address: {}",
+        user.username, MAILER_CONFIG.support_email_address
+    );
+
+    send_email(&user.email, "Welcome to Mango³", &message).await
 }
 
 pub mod admin_emails {

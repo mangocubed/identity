@@ -98,6 +98,7 @@ impl Default for MonitorConfig {
 
 #[derive(Deserialize, Serialize)]
 pub(crate) struct UsersConfig {
+    pub confirmation_code_length: u8,
     pub session_token_length: u8,
     pub limit: u8,
 }
@@ -105,6 +106,7 @@ pub(crate) struct UsersConfig {
 impl Default for UsersConfig {
     fn default() -> Self {
         Self {
+            confirmation_code_length: 6,
             session_token_length: 64,
             limit: 10,
         }

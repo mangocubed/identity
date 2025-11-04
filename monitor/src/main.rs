@@ -10,7 +10,7 @@ use identity_core::jobs_storage::jobs_storage;
 mod jobs;
 mod mailer;
 
-use jobs::{finished_session_job, new_session_job, new_user_job, password_changed_job};
+use jobs::{finished_session_job, new_confirmation_job, new_session_job, new_user_job, password_changed_job};
 
 #[tokio::main]
 async fn main() {
@@ -26,6 +26,12 @@ async fn main() {
         .enable_tracing()
         .backend(jobs_storage.finished_session.clone())
         .build_fn(finished_session_job);
+
+    let new_confirmation_worker = WorkerBuilder::new("new-confirmation")
+        .layer(ErrorHandlingLayer::new())
+        .enable_tracing()
+        .backend(jobs_storage.new_confirmation.clone())
+        .build_fn(new_confirmation_job);
 
     let new_session_worker = WorkerBuilder::new("new-session")
         .layer(ErrorHandlingLayer::new())
@@ -47,6 +53,7 @@ async fn main() {
 
     Monitor::new()
         .register(finished_session_worker)
+        .register(new_confirmation_worker)
         .register(new_session_worker)
         .register(new_user_worker)
         .register(password_changed_worker)
