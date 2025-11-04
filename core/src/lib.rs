@@ -5,6 +5,7 @@ use tokio::sync::OnceCell;
 pub mod commands;
 pub mod config;
 mod constants;
+pub mod enums;
 pub mod inputs;
 pub mod jobs_storage;
 pub mod models;

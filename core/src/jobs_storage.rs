@@ -7,7 +7,7 @@ use tokio::sync::OnceCell;
 use uuid::Uuid;
 
 use crate::config::MONITOR_CONFIG;
-use crate::models::{Session, User};
+use crate::models::{Confirmation, Session, User};
 
 static JOBS_STORAGE_CELL: OnceCell<JobsStorage> = OnceCell::const_new();
 
@@ -20,6 +20,7 @@ pub async fn jobs_storage<'a>() -> &'a JobsStorage {
 #[derive(Clone, Debug)]
 pub struct JobsStorage {
     pub finished_session: RedisStorage<FinishedSession>,
+    pub new_confirmation: RedisStorage<NewConfirmation>,
     pub new_session: RedisStorage<NewSession>,
     pub new_user: RedisStorage<NewUser>,
     pub password_changed: RedisStorage<PasswordChanged>,
@@ -36,6 +37,7 @@ impl JobsStorage {
     async fn new() -> Self {
         Self {
             finished_session: Self::storage().await,
+            new_confirmation: Self::storage().await,
             new_session: Self::storage().await,
             new_user: Self::storage().await,
             password_changed: Self::storage().await,
@@ -46,6 +48,17 @@ impl JobsStorage {
         self.finished_session
             .clone()
             .push(FinishedSession { session_id: session.id })
+            .await
+            .expect("Could not store job");
+    }
+
+    pub(crate) async fn push_new_confirmation(&self, confirmation: &Confirmation<'_>, code: &str) {
+        self.new_confirmation
+            .clone()
+            .push(NewConfirmation {
+                confirmation_id: confirmation.id,
+                code: code.to_owned(),
+            })
             .await
             .expect("Could not store job");
     }
@@ -81,6 +94,12 @@ impl JobsStorage {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct FinishedSession {
     pub session_id: Uuid,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct NewConfirmation {
+    pub confirmation_id: Uuid,
+    pub code: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

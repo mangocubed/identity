@@ -4,9 +4,9 @@ use serde::Deserialize;
 
 use identity_core::commands;
 use identity_core::config::IP_GEOLOCATION_CONFIG;
-use identity_core::jobs_storage::{FinishedSession, NewSession, NewUser, PasswordChanged};
+use identity_core::jobs_storage::{FinishedSession, NewConfirmation, NewSession, NewUser, PasswordChanged};
 
-use crate::mailer::{admin_emails, send_new_session_email, send_password_changed_email, send_welcome_email};
+use crate::mailer::*;
 
 #[derive(Deserialize)]
 struct Location<'a> {
@@ -30,12 +30,12 @@ pub async fn finished_session_job(job: FinishedSession) -> Result<(), apalis::pr
     Ok(())
 }
 
-pub async fn new_user_job(job: NewUser) -> Result<(), apalis::prelude::Error> {
-    let user = commands::get_user_by_id(job.user_id).await.expect("Could not get user");
+pub async fn new_confirmation_job(job: NewConfirmation) -> Result<(), apalis::prelude::Error> {
+    let confirmation = commands::get_confirmation_by_id(job.confirmation_id)
+        .await
+        .expect("Could not get confirmation");
 
-    let _ = admin_emails::send_new_user_email(&user).await;
-
-    send_welcome_email(&user).await
+    send_new_confirmation_email(&confirmation, &job.code).await
 }
 
 pub async fn new_session_job(job: NewSession) -> Result<(), apalis::prelude::Error> {
@@ -68,6 +68,14 @@ pub async fn new_session_job(job: NewSession) -> Result<(), apalis::prelude::Err
     };
 
     send_new_session_email(&session).await
+}
+
+pub async fn new_user_job(job: NewUser) -> Result<(), apalis::prelude::Error> {
+    let user = commands::get_user_by_id(job.user_id).await.expect("Could not get user");
+
+    let _ = admin_emails::send_new_user_email(&user).await;
+
+    send_welcome_email(&user).await
 }
 
 pub async fn password_changed_job(job: PasswordChanged) -> Result<(), apalis::prelude::Error> {

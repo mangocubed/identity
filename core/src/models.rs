@@ -5,6 +5,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::commands::{get_user_by_id, verify_password};
+use crate::enums::ConfirmationAction;
 
 pub struct Application<'a> {
     pub id: Uuid,
@@ -42,6 +43,26 @@ pub struct Authorization<'a> {
 impl Authorization<'_> {
     pub async fn user(&self) -> User<'_> {
         get_user_by_id(self.user_id).await.expect("Could not get user")
+    }
+}
+
+pub struct Confirmation<'a> {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub action: ConfirmationAction,
+    pub(crate) encrypted_code: Cow<'a, str>,
+    pub pending_attempts: i16,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+impl Confirmation<'_> {
+    pub async fn user(&self) -> User<'_> {
+        get_user_by_id(self.user_id).await.expect("Could not get user")
+    }
+
+    pub fn verify_code(&self, code: &str) -> bool {
+        verify_password(&self.encrypted_code, code)
     }
 }
 

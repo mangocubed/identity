@@ -30,5 +30,6 @@ Authentication provider and user account manager.
 | STORAGE_IMAGE_FILTER_TYPE      | String  | CatmullRom                                           | No          |
 | STORAGE_MAX_SIZE_MIB_PER_FILE  | Integer | 100                                                  | No          |
 | STORAGE_PATH                   | String  | ./storage                                            | No          |
+| USERS_CONFIRMATION_CODE_LENGTH | Integer | 6                                                    | No          |
 | USERS_SESSION_TOKEN_LENGTH     | Integer | 64                                                   | No          |
 | USERS_LIMIT                    | Integer | 10                                                   | No          |

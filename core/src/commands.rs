@@ -12,9 +12,10 @@ use sdk::core::generate_random_string;
 
 use crate::config::{APPLICATIONS_CONFIG, USERS_CONFIG};
 use crate::db_pool;
+use crate::enums::ConfirmationAction;
 use crate::inputs::{ApplicationInput, LoginInput, PasswordInput, RegisterInput};
 use crate::jobs_storage::jobs_storage;
-use crate::models::{Application, Authorization, Session, User};
+use crate::models::{Application, Authorization, Confirmation, Session, User};
 
 pub async fn authenticate_application<'a>(id: Uuid, secret: &str) -> sqlx::Result<Application<'a>> {
     let application = get_application_by_id(id).await?;
@@ -79,6 +80,50 @@ pub async fn delete_application(application: Application<'_>) -> sqlx::Result<()
         .execute(db_pool)
         .await
         .map(|_| ())
+}
+
+pub async fn finish_confirmation<F, IF, T>(
+    confirmation: &Confirmation<'_>,
+    code: &str,
+    on_success: F,
+) -> sqlx::Result<T>
+where
+    F: Fn() -> IF,
+    IF: std::future::IntoFuture<Output = sqlx::Result<T>>,
+{
+    let db_pool = db_pool().await;
+
+    if !confirmation.verify_code(code) {
+        let _ = sqlx::query!(
+            "UPDATE confirmations
+            SET
+                canceled_at = CASE pending_attempts WHEN 1 THEN current_timestamp ELSE NULL END,
+                pending_attempts = pending_attempts - 1
+            WHERE id = $1",
+            confirmation.id
+        )
+        .execute(db_pool)
+        .await;
+
+        return Err(sqlx::Error::InvalidArgument("code".to_owned()));
+    }
+
+    let result = on_success().await;
+
+    match result {
+        Ok(success) => {
+            let _ = sqlx::query!(
+                "UPDATE confirmations SET finished_at = current_timestamp
+                WHERE finished_at IS NULL AND canceled_at IS NULL AND id = $1",
+                confirmation.id
+            )
+            .execute(db_pool)
+            .await;
+
+            Ok(success)
+        }
+        Err(error) => Err(error),
+    }
 }
 
 pub async fn finish_session(session: &Session<'_>) -> sqlx::Result<()> {
@@ -159,6 +204,58 @@ pub async fn get_authorization_by_token(token: &str) -> sqlx::Result<Authorizati
     .await
 }
 
+pub async fn get_confirmation_by_id<'a>(id: Uuid) -> sqlx::Result<Confirmation<'a>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        Confirmation,
+        r#"SELECT
+            id,
+            user_id,
+            action as "action!: ConfirmationAction",
+            encrypted_code,
+            pending_attempts,
+            created_at,
+            updated_at
+        FROM confirmations
+        WHERE
+            id = $1 AND pending_attempts > 0 AND expires_at > current_timestamp AND finished_at IS NULL
+            AND canceled_at IS NULL
+        LIMIT 1"#,
+        id
+    )
+    .fetch_one(db_pool)
+    .await
+}
+
+pub async fn get_confirmation_by_user<'a>(
+    user: &User<'_>,
+    action: ConfirmationAction,
+) -> sqlx::Result<Confirmation<'a>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        Confirmation,
+        r#"SELECT
+            id,
+            user_id,
+            action as "action!: ConfirmationAction",
+            encrypted_code,
+            pending_attempts,
+            created_at,
+            updated_at
+        FROM confirmations
+        WHERE
+            user_id = $1 AND action = $2 AND pending_attempts > 0 AND expires_at > current_timestamp
+            AND finished_at IS NULL AND canceled_at IS NULL
+        LIMIT 1"#,
+        user.id,                      // $1
+        action as ConfirmationAction, // $2
+    )
+    .fetch_one(db_pool)
+    .await
+}
+
 pub async fn get_session_by_id<'a>(id: Uuid) -> sqlx::Result<Session<'a>> {
     let db_pool = db_pool().await;
 
@@ -229,6 +326,50 @@ pub async fn insert_application<'a>(input: &ApplicationInput) -> Result<(Applica
     .await
     .map(|application| (application, secret))
     .map_err(|_| ValidationErrors::new())
+}
+
+pub async fn insert_confirmation<'a>(user: &User<'_>, action: ConfirmationAction) -> sqlx::Result<Confirmation<'a>> {
+    let db_pool = db_pool().await;
+
+    let _ = sqlx::query!(
+        "UPDATE confirmations SET canceled_at = current_timestamp
+        WHERE user_id = $1 AND action = $2 AND finished_at IS NULL AND canceled_at IS NULL",
+        user.id,                      // $1
+        action as ConfirmationAction, // $2
+    )
+    .execute(db_pool)
+    .await;
+
+    let code = generate_random_string(USERS_CONFIG.confirmation_code_length);
+
+    let encrypted_code = encrypt_password(&code);
+
+    let result = sqlx::query_as!(
+        Confirmation,
+        r#"INSERT INTO confirmations (user_id, action, encrypted_code) VALUES ($1, $2, $3)
+            RETURNING
+                id,
+                user_id,
+                action as "action!: ConfirmationAction",
+                encrypted_code,
+                pending_attempts,
+                created_at,
+                updated_at"#,
+        user.id,                      // $1
+        action as ConfirmationAction, // $2
+        encrypted_code                // $3
+    )
+    .fetch_one(db_pool)
+    .await;
+
+    match result {
+        Ok(confirmation) => {
+            jobs_storage().await.push_new_confirmation(&confirmation, &code).await;
+
+            Ok(confirmation)
+        }
+        Err(error) => Err(error),
+    }
 }
 
 pub async fn insert_session<'a>(user: &User<'_>, user_agent: &str, ip_addr: IpAddr) -> sqlx::Result<Session<'a>> {
