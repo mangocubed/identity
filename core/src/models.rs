@@ -107,6 +107,7 @@ pub struct User<'a> {
     pub id: Uuid,
     pub username: Cow<'a, str>,
     pub email: Cow<'a, str>,
+    pub email_confirmed_at: Option<DateTime<Utc>>,
     pub(crate) encrypted_password: Cow<'a, str>,
     pub display_name: Cow<'a, str>,
     pub full_name: Cow<'a, str>,
@@ -119,6 +120,10 @@ pub struct User<'a> {
 }
 
 impl User<'_> {
+    pub fn email_is_confirmed(&self) -> bool {
+        self.email_confirmed_at.is_some()
+    }
+
     pub fn initials(&self) -> String {
         self.display_name
             .split_whitespace()

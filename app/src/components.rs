@@ -1,9 +1,13 @@
 use dioxus::prelude::*;
 
-use sdk::app::components::{Brand, Modal};
+use sdk::app::components::{Brand, Form, FormSuccessModal, H3, Modal, PasswordField, TextField};
+use sdk::app::hooks::use_form_provider;
 use sdk::constants::{COPYRIGHT, PRIVACY_URL, TERMS_URL};
 
 use crate::constants::SOURCE_CODE_URL;
+use crate::hooks::use_current_user;
+use crate::routes::Routes;
+use crate::server_fns;
 
 #[component]
 pub fn AboutModal(is_open: Signal<bool>) -> Element {
@@ -44,6 +48,65 @@ pub fn AboutModal(is_open: Signal<bool>) -> Element {
             }
 
             div { class: "opacity-75", {COPYRIGHT} }
+        }
+    }
+}
+
+#[component]
+pub fn ChangeEmailForm() -> Element {
+    use_form_provider("update-email", server_fns::update_email);
+
+    let mut current_user = use_current_user();
+
+    rsx! {
+        FormSuccessModal {
+            on_close: move |_| {
+                current_user.restart();
+            },
+        }
+
+        Form {
+            TextField {
+                id: "email",
+                input_type: "email",
+                label: "Email",
+                name: "email",
+            }
+
+            PasswordField {
+                id: "password",
+                label: "Password",
+                max_length: 128,
+                name: "password",
+            }
+        }
+    }
+}
+
+#[component]
+pub fn EmailConfirmationModal(is_open: Signal<bool>) -> Element {
+    use_form_provider("confirm-email", server_fns::confirm_email);
+
+    let mut current_user = use_current_user();
+    let navigator = use_navigator();
+
+    rsx! {
+        FormSuccessModal {
+            on_close: move |_| {
+                current_user.restart();
+                navigator.push(Routes::home());
+            },
+        }
+
+        Modal { is_open,
+            H3 { "Confirm email" }
+
+            Form {
+                on_success: move |_| {
+                    is_open.set(false);
+                },
+                TextField { id: "code", name: "code", label: "Code" }
+            }
         }
     }
 }

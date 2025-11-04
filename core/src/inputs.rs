@@ -46,6 +46,23 @@ pub struct ApplicationInput {
     pub redirect_url: String,
 }
 
+#[derive(Deserialize, Validate)]
+pub struct ConfirmationInput {
+    #[validate(length(min = 1, max = 256, message = "Can't be blank"))]
+    pub code: String,
+}
+
+#[derive(Deserialize, Validate)]
+pub struct EmailInput {
+    #[validate(
+        length(min = 5, max = 256, message = "Must have at least 5 characters"),
+        email(message = "Is invalid")
+    )]
+    pub email: String,
+    #[validate(length(min = 1, max = 256, message = "Can't be blank"))]
+    pub password: String,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct LoginInput {
     #[validate(length(min = 1, max = 256, message = "Can't be blank"))]

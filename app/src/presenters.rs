@@ -8,6 +8,8 @@ use identity_core::models::User;
 pub struct UserPresenter {
     id: Uuid,
     pub username: String,
+    pub email: String,
+    pub email_is_confirmed: bool,
     pub display_name: String,
     pub initials: String,
 }
@@ -18,6 +20,8 @@ impl From<User<'_>> for UserPresenter {
         UserPresenter {
             id: user.id,
             username: user.username.to_string(),
+            email: user.email.to_string(),
+            email_is_confirmed: user.email_is_confirmed(),
             display_name: user.display_name.to_string(),
             initials: user.initials(),
         }
