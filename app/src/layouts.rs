@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use sdk::app::components::*;
-use sdk::app::icons::{ChevronDownMini, HomeOutline, InformationCircleOutline, PasswordOutline};
+use sdk::app::icons::{ChevronDownMini, EnvelopeOutline, HomeOutline, InformationCircleOutline, PasswordOutline};
 use sdk::app::run_with_spinner;
 use sdk::constants::{COPYRIGHT, PRIVACY_URL, TERMS_URL};
 
@@ -154,6 +154,16 @@ pub fn UserLayout() -> Element {
                         }
 
                         div { class: "divider m-1" }
+
+                        li {
+                            class: "max-md:tooltip max-md:tooltip-right",
+                            "data-tip": "Email",
+                            Link { to: Routes::email(),
+                                EnvelopeOutline {}
+
+                                span { class: "max-md:hidden", "Email" }
+                            }
+                        }
 
                         li {
                             class: "max-md:tooltip max-md:tooltip-right",

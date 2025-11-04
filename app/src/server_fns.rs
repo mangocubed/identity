@@ -89,7 +89,7 @@ async fn require_no_session(headers: &HeaderMap) -> Result<(), HttpError> {
     }
 }
 
-#[post("/api/change-password", headers: HeaderMap)]
+#[put("/api/change-password", headers: HeaderMap)]
 pub async fn change_password(input: Value) -> ActionResult {
     require_app_token(&headers).await?;
 
@@ -100,6 +100,20 @@ pub async fn change_password(input: Value) -> ActionResult {
     match result {
         Ok(_) => Ok(ActionSuccess::new("Password changed successfully", Value::Null)),
         Err(errors) => Err(ActionError::new("Failed to change password", Some(errors))),
+    }
+}
+
+#[put("/api/confirm-email", headers: HeaderMap)]
+pub async fn confirm_email(input: Value) -> ActionResult {
+    require_app_token(&headers).await?;
+
+    let user = extract_user(&headers).await?;
+
+    let result = commands::confirm_user_email(&user, &serde_json::from_value(input)?).await;
+
+    match result {
+        Ok(_) => Ok(ActionSuccess::new("Email confirmed successfully", Value::Null)),
+        Err(errors) => Err(ActionError::new("Failed to confirm email", Some(errors))),
     }
 }
 
@@ -137,5 +151,38 @@ pub async fn register(input: Value) -> ActionResult {
             Ok(ActionSuccess::new("User created successfully", session_token.into()))
         }
         Err(errors) => Err(ActionError::new("Failed to create user", Some(errors))),
+    }
+}
+
+#[post("/api/send-email-confirmation", headers: HeaderMap)]
+pub async fn send_email_confirmation() -> Result<()> {
+    use identity_core::enums::ConfirmationAction;
+
+    require_app_token(&headers).await?;
+
+    let user = extract_user(&headers).await?;
+
+    if user.email_is_confirmed() {
+        return HttpError::bad_request("Email already confirmed")?;
+    }
+
+    commands::insert_confirmation(&user, ConfirmationAction::Email)
+        .await
+        .or_bad_request("Failed to send email confirmation")?;
+
+    Ok(())
+}
+
+#[put("/api/update-email", headers: HeaderMap)]
+pub async fn update_email(input: Value) -> ActionResult {
+    require_app_token(&headers).await?;
+
+    let user = extract_user(&headers).await?;
+
+    let result = commands::update_user_email(&user, &serde_json::from_value(input)?).await;
+
+    match result {
+        Ok(_) => Ok(ActionSuccess::new("Email updated successfully", Value::Null)),
+        Err(errors) => Err(ActionError::new("Failed to update email", Some(errors))),
     }
 }

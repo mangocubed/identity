@@ -13,7 +13,7 @@ use sdk::core::generate_random_string;
 use crate::config::{APPLICATIONS_CONFIG, USERS_CONFIG};
 use crate::db_pool;
 use crate::enums::ConfirmationAction;
-use crate::inputs::{ApplicationInput, LoginInput, PasswordInput, RegisterInput};
+use crate::inputs::{ApplicationInput, ConfirmationInput, EmailInput, LoginInput, PasswordInput, RegisterInput};
 use crate::jobs_storage::jobs_storage;
 use crate::models::{Application, Authorization, Confirmation, Session, User};
 
@@ -73,6 +73,30 @@ pub async fn can_insert_user() -> bool {
     get_users_count().await.unwrap_or_default() < USERS_CONFIG.limit.into()
 }
 
+pub async fn confirm_user_email(user: &User<'_>, input: &ConfirmationInput) -> Result<(), ValidationErrors> {
+    let confirmation = get_confirmation_by_user(user, ConfirmationAction::Email)
+        .await
+        .map_err(|_| ValidationErrors::new())?;
+
+    finish_confirmation(&confirmation, input, async move || {
+        let db_pool = db_pool().await;
+
+        let result = sqlx::query!(
+            "UPDATE users SET email_confirmed_at = current_timestamp
+            WHERE disabled_at IS NULL AND email_confirmed_at IS NULL AND id = $1",
+            user.id, // $1
+        )
+        .execute(db_pool)
+        .await;
+
+        match result {
+            Ok(_) => Ok(()),
+            Err(_) => Err(ValidationErrors::new()),
+        }
+    })
+    .await
+}
+
 pub async fn delete_application(application: Application<'_>) -> sqlx::Result<()> {
     let db_pool = db_pool().await;
 
@@ -84,16 +108,18 @@ pub async fn delete_application(application: Application<'_>) -> sqlx::Result<()
 
 pub async fn finish_confirmation<F, IF, T>(
     confirmation: &Confirmation<'_>,
-    code: &str,
+    input: &ConfirmationInput,
     on_success: F,
-) -> sqlx::Result<T>
+) -> Result<T, ValidationErrors>
 where
     F: Fn() -> IF,
-    IF: std::future::IntoFuture<Output = sqlx::Result<T>>,
+    IF: std::future::IntoFuture<Output = Result<T, ValidationErrors>>,
 {
+    input.validate()?;
+
     let db_pool = db_pool().await;
 
-    if !confirmation.verify_code(code) {
+    if !confirmation.verify_code(&input.code) {
         let _ = sqlx::query!(
             "UPDATE confirmations
             SET
@@ -105,7 +131,11 @@ where
         .execute(db_pool)
         .await;
 
-        return Err(sqlx::Error::InvalidArgument("code".to_owned()));
+        let mut validation_errors = ValidationErrors::new();
+
+        validation_errors.add("code", ERROR_IS_INVALID.clone());
+
+        return Err(validation_errors);
     }
 
     let result = on_success().await;
@@ -122,7 +152,7 @@ where
 
             Ok(success)
         }
-        Err(error) => Err(error),
+        Err(errors) => Err(errors),
     }
 }
 
@@ -554,6 +584,42 @@ pub async fn update_session_location<'a>(
     .await
 }
 
+pub async fn update_user_email(user: &User<'_>, input: &EmailInput) -> Result<(), ValidationErrors> {
+    input.validate()?;
+
+    let mut validation_errors = ValidationErrors::new();
+
+    if user.email == input.email {
+        validation_errors.add("email", ERROR_IS_INVALID.clone());
+    } else if email_exists(&input.email).await {
+        validation_errors.add("email", ERROR_ALREADY_EXISTS.clone());
+    }
+
+    if !user.verify_password(&input.password) {
+        validation_errors.add("password", ERROR_IS_INVALID.clone());
+    }
+
+    if !validation_errors.is_empty() {
+        return Err(validation_errors);
+    }
+
+    let db_pool = db_pool().await;
+
+    let result = sqlx::query_as!(
+        User,
+        r#"UPDATE users SET email = $2, email_confirmed_at = NULL WHERE disabled_at IS NULL AND id = $1"#,
+        user.id,     // $1
+        input.email, // $2
+    )
+    .execute(db_pool)
+    .await;
+
+    match result {
+        Ok(_) => Ok(()),
+        Err(_) => Err(validation_errors),
+    }
+}
+
 pub async fn update_user_password(user: &User<'_>, input: &PasswordInput) -> Result<(), ValidationErrors> {
     input.validate()?;
 
@@ -561,9 +627,7 @@ pub async fn update_user_password(user: &User<'_>, input: &PasswordInput) -> Res
 
     if !user.verify_password(&input.current_password) {
         validation_errors.add("current_password", ERROR_IS_INVALID.clone());
-    }
 
-    if !validation_errors.is_empty() {
         return Err(validation_errors);
     }
 
