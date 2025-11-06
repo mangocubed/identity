@@ -3766,8 +3766,8 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sdk"
-version = "0.0.0-alpha.15"
-source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.15#f0fa2d94e6357fd61e4ba7b2f6e24824a46b66fb"
+version = "0.0.0-alpha.16"
+source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.16#dad2a09f369646e63dac2f485a93e036ab351b94"
 dependencies = [
  "anyhow",
  "axum",
@@ -3776,6 +3776,7 @@ dependencies = [
  "fake",
  "figment",
  "gloo-net",
+ "gloo-timers",
  "headers",
  "http",
  "rand 0.9.2",
