@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use url::Url;
 use uuid::Uuid;
 
-use sdk::app::{ActionResult, Request, ServerResult};
+use sdk::app::{Request, ServerResult};
 
 use crate::constants::*;
 
@@ -17,12 +16,4 @@ pub async fn authorize(client_id: Uuid) -> ServerResult<Url> {
         .json(&AuthorizeParams { client_id })
         .send()
         .await
-}
-
-pub async fn login(input: Value) -> ActionResult {
-    Request::post(PATH_API_LOGIN).json(&input).send().await
-}
-
-pub async fn logout() -> ServerResult {
-    Request::delete(PATH_API_LOGOUT).send().await
 }

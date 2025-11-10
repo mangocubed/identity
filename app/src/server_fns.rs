@@ -133,6 +133,39 @@ pub async fn can_register() -> Result<bool> {
     Ok(commands::can_insert_user().await)
 }
 
+#[post("/api/login", headers: HeaderMap, connect_info: ConnectInfo<SocketAddr>)]
+pub async fn login(input: Value) -> ActionResult {
+    require_no_session(&headers).await?;
+
+    let user = commands::authenticate_user(&serde_json::from_value(input)?)
+        .await
+        .map_err(|errors| ActionError::new("Failed to authenticate user", Some(errors)))?;
+
+    let user_agent = extract_user_agent(&headers);
+    let ip_addr = extract_client_ip_addr(&headers, connect_info);
+
+    let result = commands::insert_session(&user, &user_agent, ip_addr).await;
+
+    match result {
+        Ok(session) => Ok(ActionSuccess::new(
+            "User authenticated successfully",
+            session.token.into(),
+        )),
+        Err(_) => Err(ActionError::new("Failed to authenticate user", None)),
+    }
+}
+
+#[delete("/api/logout", headers: HeaderMap)]
+pub async fn logout() -> Result<()> {
+    let session = extract_session(&headers).await?;
+
+    commands::finish_session(&session)
+        .await
+        .or_internal_server_error("Internal server error")?;
+
+    Ok(())
+}
+
 #[post("/api/register", headers: HeaderMap, connect_info: ConnectInfo<SocketAddr>)]
 pub async fn register(input: Value) -> ActionResult {
     require_no_session(&headers).await?;
