@@ -10,8 +10,8 @@ use crate::constants::SOURCE_CODE_URL;
 use crate::hooks::use_current_user;
 use crate::local_data::{delete_redirect_to, get_redirect_to};
 use crate::local_data::{delete_session_token, set_redirect_to};
-use crate::requests;
 use crate::routes::Routes;
+use crate::server_fns;
 
 #[component]
 pub fn LoginLayout() -> Element {
@@ -128,7 +128,7 @@ pub fn UserLayout() -> Element {
                         is_open: show_logout_confirmation,
                         on_accept: move |()| {
                             async move {
-                                let _ = run_with_spinner("logout", requests::logout).await;
+                                let _ = run_with_spinner("logout", server_fns::logout).await;
 
                                 delete_session_token();
                                 current_user.restart();

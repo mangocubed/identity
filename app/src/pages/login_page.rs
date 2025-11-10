@@ -6,12 +6,12 @@ use sdk::app::hooks::use_form_provider;
 
 use crate::hooks::{use_can_register, use_current_user};
 use crate::local_data::set_session_token;
-use crate::requests;
 use crate::routes::Routes;
+use crate::server_fns;
 
 #[component]
 pub fn LoginPage() -> Element {
-    use_form_provider("login", requests::login);
+    use_form_provider("login", server_fns::login);
 
     let mut current_user = use_current_user();
     let can_register = use_can_register();

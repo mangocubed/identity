@@ -27,18 +27,13 @@ const STYLE_CSS: Asset = asset!("assets/style.css");
 async fn main() {
     use std::net::SocketAddr;
 
-    use axum::routing::{delete, post};
+    use axum::routing::post;
 
     use constants::*;
     use server::handlers::*;
 
     let _ = tokio::join!(
-        sdk::app::launch_request_server(|router| {
-            router
-                .route(PATH_API_AUTHORIZE, post(post_authorize))
-                .route(PATH_API_LOGIN, post(post_login))
-                .route(PATH_API_LOGOUT, delete(delete_logout))
-        }),
+        sdk::app::launch_request_server(|router| { router.route(PATH_API_AUTHORIZE, post(post_authorize)) }),
         async {
             let address = dioxus::cli_config::fullstack_address_or_localhost();
 
