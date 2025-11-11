@@ -11,6 +11,6 @@ pub fn use_can_register() -> Resource<bool> {
     })
 }
 
-pub fn use_current_user() -> Resource<Option<UserPresenter>> {
+pub fn use_current_user() -> Resource<Result<UserPresenter>> {
     use_context()
 }

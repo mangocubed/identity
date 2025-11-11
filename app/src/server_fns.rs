@@ -23,7 +23,7 @@ use identity_core::commands;
 #[cfg(feature = "server")]
 use identity_core::models::{Session, User};
 
-use crate::presenters::UserPresenter;
+use crate::presenters::{SessionPresenter, UserPresenter};
 
 #[cfg(feature = "server")]
 pub fn extract_bearer(headers: &HeaderMap) -> Result<Bearer, HttpError> {
@@ -85,7 +85,7 @@ async fn require_no_session(headers: &HeaderMap) -> Result<(), HttpError> {
     if extract_session(headers).await.is_err() {
         Ok(())
     } else {
-        Err(HttpError::forbidden("Forbidden")?)
+        HttpError::forbidden("Forbidden")
     }
 }
 
@@ -127,7 +127,7 @@ pub async fn current_user() -> Result<UserPresenter> {
 }
 
 #[get("/api/can-register", headers: HeaderMap)]
-pub async fn can_register() -> Result<bool> {
+pub async fn can_register() -> Result<bool, HttpError> {
     require_no_session(&headers).await?;
 
     Ok(commands::can_insert_user().await)
@@ -149,7 +149,7 @@ pub async fn login(input: Value) -> ActionResult {
     match result {
         Ok(session) => Ok(ActionSuccess::new(
             "User authenticated successfully",
-            session.token.into(),
+            serde_json::to_value(SessionPresenter::from(session))?,
         )),
         Err(_) => Err(ActionError::new("Failed to authenticate user", None)),
     }
@@ -157,6 +157,8 @@ pub async fn login(input: Value) -> ActionResult {
 
 #[delete("/api/logout", headers: HeaderMap)]
 pub async fn logout() -> Result<()> {
+    require_app_token(&headers).await?;
+
     let session = extract_session(&headers).await?;
 
     commands::finish_session(&session)
@@ -164,6 +166,19 @@ pub async fn logout() -> Result<()> {
         .or_internal_server_error("Internal server error")?;
 
     Ok(())
+}
+
+#[put("/api/refresh-session", headers: HeaderMap)]
+pub async fn refresh_session() -> Result<SessionPresenter> {
+    require_app_token(&headers).await?;
+
+    let session = extract_session(&headers).await?;
+
+    let session = commands::refresh_session(&session)
+        .await
+        .or_internal_server_error("Internal server error")?;
+
+    Ok(session.into())
 }
 
 #[post("/api/register", headers: HeaderMap, connect_info: ConnectInfo<SocketAddr>)]
@@ -177,11 +192,14 @@ pub async fn register(input: Value) -> ActionResult {
             let user_agent = extract_user_agent(&headers);
             let ip_addr = extract_client_ip_addr(&headers, connect_info);
 
-            let result = commands::insert_session(&user, &user_agent, ip_addr).await;
+            let session = commands::insert_session(&user, &user_agent, ip_addr)
+                .await
+                .or_internal_server_error("Internal server error")?;
 
-            let session_token = result.ok().map(|session| session.token);
-
-            Ok(ActionSuccess::new("User created successfully", session_token.into()))
+            Ok(ActionSuccess::new(
+                "User created successfully",
+                serde_json::to_value(SessionPresenter::from(session))?,
+            ))
         }
         Err(errors) => Err(ActionError::new("Failed to create user", Some(errors))),
     }

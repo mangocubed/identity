@@ -4,10 +4,9 @@ use sdk::app::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField,
 use sdk::app::hooks::use_form_provider;
 use sdk::app::icons::InformationCircleOutline;
 use sdk::constants::{PRIVACY_URL, TERMS_URL};
-use serde_json::Value;
 
 use crate::hooks::{use_can_register, use_current_user};
-use crate::local_data::set_session_token;
+use crate::local_data::set_session;
 use crate::routes::Routes;
 use crate::server_fns;
 
@@ -38,9 +37,7 @@ pub fn RegisterPage() -> Element {
 
         Form {
             on_success: move |value| {
-                if let Value::String(token) = value {
-                    set_session_token(&token);
-                }
+                set_session(serde_json::from_value(value).unwrap());
             },
             TextField {
                 id: "username",

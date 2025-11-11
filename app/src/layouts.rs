@@ -8,8 +8,7 @@ use sdk::constants::{COPYRIGHT, PRIVACY_URL, TERMS_URL};
 use crate::components::AboutModal;
 use crate::constants::SOURCE_CODE_URL;
 use crate::hooks::use_current_user;
-use crate::local_data::{delete_redirect_to, get_redirect_to};
-use crate::local_data::{delete_session_token, set_redirect_to};
+use crate::local_data::{delete_redirect_to, delete_session, get_redirect_to, set_redirect_to};
 use crate::routes::Routes;
 use crate::server_fns;
 
@@ -19,7 +18,7 @@ pub fn LoginLayout() -> Element {
     let current_user = use_current_user();
 
     use_effect(move || {
-        if let Some(Some(_)) = &*current_user.read() {
+        if let Some(Ok(_)) = &*current_user.read() {
             navigator.push(get_redirect_to());
             delete_redirect_to();
         }
@@ -81,14 +80,14 @@ pub fn UserLayout() -> Element {
     let mut show_logout_confirmation = use_signal(|| false);
 
     use_effect(move || {
-        if let Some(None) = *current_user.read() {
-            set_redirect_to(&router.full_route_string());
+        if let Some(Err(_)) = *current_user.read() {
+            set_redirect_to(router.full_route_string());
             navigator.push(Routes::login());
         }
     });
 
     rsx! {
-        if let Some(Some(user)) = &*current_user.read() {
+        if let Some(Ok(user)) = &*current_user.read() {
             Navbar {
                 NavbarStart {
                     Link { to: Routes::home(),
@@ -130,7 +129,7 @@ pub fn UserLayout() -> Element {
                             async move {
                                 let _ = run_with_spinner("logout", server_fns::logout).await;
 
-                                delete_session_token();
+                                delete_session();
                                 current_user.restart();
 
                             }
