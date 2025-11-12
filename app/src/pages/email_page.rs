@@ -32,7 +32,7 @@ pub fn EmailPage() -> Element {
                 H2 { "Current email" }
 
                 div { class: "flex justify-between",
-                    if let Some(Some(user)) = &*current_user.read() {
+                    if let Some(Ok(user)) = &*current_user.read() {
                         div { class: "font-bold", {user.email.clone()} }
 
                         if user.email_is_confirmed {

@@ -1,11 +1,10 @@
 use dioxus::prelude::*;
-use serde_json::Value;
 
 use sdk::app::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField, TextField};
 use sdk::app::hooks::use_form_provider;
 
 use crate::hooks::{use_can_register, use_current_user};
-use crate::local_data::set_session_token;
+use crate::local_data::set_session;
 use crate::routes::Routes;
 use crate::server_fns;
 
@@ -29,9 +28,7 @@ pub fn LoginPage() -> Element {
 
         Form {
             on_success: move |value| {
-                if let Value::String(token) = value {
-                    set_session_token(&token);
-                }
+                set_session(serde_json::from_value(value).unwrap());
             },
             TextField {
                 id: "username_or_email",

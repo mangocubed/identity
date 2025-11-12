@@ -198,6 +198,26 @@ fn encrypt_password(value: &str) -> String {
     argon2.hash_password(value.as_bytes(), &salt).unwrap().to_string()
 }
 
+async fn generate_session_token() -> String {
+    let db_pool = db_pool().await;
+    let mut token = String::new();
+    let mut exists = true;
+
+    while exists {
+        token = generate_random_string(USERS_CONFIG.session_token_length);
+
+        exists = sqlx::query!(
+            "SELECT id FROM sessions WHERE LOWER(token) = $1 OR LOWER(previous_token) = $1 LIMIT 1",
+            token // $1
+        )
+        .fetch_one(db_pool)
+        .await
+        .is_ok();
+    }
+
+    token
+}
+
 pub async fn get_all_applications<'a>() -> sqlx::Result<Vec<Application<'a>>> {
     let db_pool = db_pool().await;
 
@@ -295,11 +315,19 @@ pub async fn get_session_by_id<'a>(id: Uuid) -> sqlx::Result<Session<'a>> {
 }
 
 pub async fn get_session_by_token<'a>(token: &str) -> sqlx::Result<Session<'a>> {
+    if token.is_empty() {
+        return Err(sqlx::Error::RowNotFound);
+    }
+
     let db_pool = db_pool().await;
 
     sqlx::query_as!(
         Session,
-        "SELECT * FROM sessions WHERE finished_at IS NULL AND token = $1 LIMIT 1",
+        "SELECT * FROM sessions
+        WHERE
+            expires_at > current_timestamp AND finished_at IS NULL
+            AND (token = $1 OR (previous_token = $1 AND refreshed_at > current_timestamp - INTERVAL '1 minute'))
+        LIMIT 1",
         token
     )
     .fetch_one(db_pool)
@@ -405,7 +433,7 @@ pub async fn insert_confirmation<'a>(user: &User<'_>, action: ConfirmationAction
 pub async fn insert_session<'a>(user: &User<'_>, user_agent: &str, ip_addr: IpAddr) -> sqlx::Result<Session<'a>> {
     let db_pool = db_pool().await;
 
-    let token = generate_random_string(USERS_CONFIG.session_token_length);
+    let token = generate_session_token().await;
 
     let result = sqlx::query_as!(
         Session,
@@ -537,6 +565,32 @@ pub async fn refresh_authorization<'a>(
     )
     .fetch_one(db_pool)
     .await
+}
+
+pub async fn refresh_session<'a>(session: &Session<'_>) -> sqlx::Result<Session<'a>> {
+    let db_pool = db_pool().await;
+
+    let token = generate_session_token().await;
+
+    let result = sqlx::query_as!(
+        Session,
+        "UPDATE sessions
+        SET
+            previous_token = token,
+            token = $2,
+            refreshed_at = current_timestamp,
+            expires_at = current_timestamp + INTERVAL '30 days'
+        WHERE id = $1 RETURNING *",
+        session.id, // $1
+        token,      // $2
+    )
+    .fetch_one(db_pool)
+    .await;
+
+    match result {
+        Ok(session) => Ok(session),
+        Err(err) => Err(err),
+    }
 }
 
 pub async fn revoke_authorization<'a>(authorization: &Authorization<'_>) -> sqlx::Result<Authorization<'a>> {
