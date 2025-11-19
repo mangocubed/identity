@@ -96,9 +96,9 @@ checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 
 [[package]]
 name = "apalis"
-version = "0.7.3"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ea07a005e05b1672920818822ebace7a59bdf4b3176390d7be661e2b4027c42"
+checksum = "504d52557a16b7b202941660f339c9182910d498cac40f93d15f6b31e6bef290"
 dependencies = [
  "apalis-core",
  "futures",
@@ -1401,36 +1401,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dioxus-sdk"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "79a653986dc3151f00a2be4cf04f83ec6c2af24b600ab926d5fcbcd159c6dadf"
-dependencies = [
- "dioxus-sdk-storage",
-]
-
-[[package]]
-name = "dioxus-sdk-storage"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b16fc5898a5930ae2d787f2db9dedae69581133ba08cfb2cf602b5d35b3af8b"
-dependencies = [
- "cfg-if",
- "ciborium",
- "dioxus",
- "dioxus-signals",
- "directories",
- "futures-util",
- "once_cell",
- "rustc-hash 1.1.0",
- "serde",
- "tokio",
- "wasm-bindgen",
- "web-sys",
- "yazi",
-]
-
-[[package]]
 name = "dioxus-server"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1500,7 +1470,6 @@ dependencies = [
  "generational-box",
  "parking_lot",
  "rustc-hash 2.1.1",
- "serde",
  "tracing",
  "warnings",
 ]
@@ -1575,15 +1544,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "directories"
-version = "4.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f51c5d4ddabd36886dd3e1438cb358cdcb0d7c499cb99cb4ac2e38e18b5cb210"
-dependencies = [
- "dirs-sys",
-]
-
-[[package]]
 name = "dirs-next"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1591,17 +1551,6 @@ checksum = "b98cf8ebf19c3d1b223e151f99a4f9f0690dca41414773390fc824184ac833e1"
 dependencies = [
  "cfg-if",
  "dirs-sys-next",
-]
-
-[[package]]
-name = "dirs-sys"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b1d1d91c932ef41c0f2663aa8b0ca0342d444d842c06914aa0a7e352d0bada6"
-dependencies = [
- "libc",
- "redox_users",
- "winapi",
 ]
 
 [[package]]
@@ -2555,7 +2504,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b0f83760fb341a774ed326568e19f5a863af4a952def8c39f9ab92fd95b88e5"
 dependencies = [
  "equivalent",
- "hashbrown 0.15.5",
+ "hashbrown 0.16.0",
 ]
 
 [[package]]
@@ -3854,14 +3803,13 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sdk"
-version = "0.0.0-alpha.20"
-source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.20#20f93d7623731fc13118372ec2cd18436a93ab03"
+version = "0.0.0-alpha.18"
+source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.18#83f19c11f79aa1fc330651ec4f3c9e73b99d9b67"
 dependencies = [
  "anyhow",
  "axum",
  "chrono",
  "dioxus",
- "dioxus-sdk",
  "fake",
  "figment",
  "gloo-net",
@@ -5332,7 +5280,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5764,12 +5712,6 @@ name = "yansi"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049"
-
-[[package]]
-name = "yazi"
-version = "0.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c94451ac9513335b5e23d7a8a2b61a7102398b8cca5160829d313e84c9d98be1"
 
 [[package]]
 name = "yoke"
