@@ -21,7 +21,7 @@ jobs:
                     - 5432:5432
                 options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
             - uses: ./.github/actions/setup-dioxus
             - name: Check with cargo-clippy
               run: |
@@ -40,7 +40,7 @@ jobs:
     check_sql:
         runs-on: ubuntu-24.04
         steps:
-            - uses: actions/checkout@v5
+            - uses: actions/checkout@v6
             - uses: quarylabs/install-sqruff-cli-action@main
             - name: Check with sqruff
               run: sqruff lint migrations/*.sql
