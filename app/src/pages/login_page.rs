@@ -4,9 +4,9 @@ use sdk::app::components::{Form, FormSuccessModal, H1, PageTitle, PasswordField,
 use sdk::app::hooks::use_form_provider;
 
 use crate::hooks::{use_can_register, use_current_user};
-use crate::local_data::set_session;
 use crate::routes::Routes;
 use crate::server_fns;
+use crate::storage::set_session;
 
 #[component]
 pub fn LoginPage() -> Element {
@@ -28,7 +28,7 @@ pub fn LoginPage() -> Element {
 
         Form {
             on_success: move |value| {
-                set_session(serde_json::from_value(value).unwrap());
+                set_session(&serde_json::from_value(value).unwrap());
             },
             TextField {
                 id: "username_or_email",
