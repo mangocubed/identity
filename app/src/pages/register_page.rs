@@ -6,9 +6,9 @@ use sdk::app::icons::InformationCircleOutline;
 use sdk::constants::{PRIVACY_URL, TERMS_URL};
 
 use crate::hooks::{use_can_register, use_current_user};
-use crate::local_data::set_session;
 use crate::routes::Routes;
 use crate::server_fns;
+use crate::storage::set_session;
 
 #[component]
 pub fn RegisterPage() -> Element {
@@ -37,7 +37,7 @@ pub fn RegisterPage() -> Element {
 
         Form {
             on_success: move |value| {
-                set_session(serde_json::from_value(value).unwrap());
+                set_session(&serde_json::from_value(value).unwrap());
             },
             TextField {
                 id: "username",

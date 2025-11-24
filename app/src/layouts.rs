@@ -8,9 +8,9 @@ use sdk::constants::{COPYRIGHT, PRIVACY_URL, TERMS_URL};
 use crate::components::AboutModal;
 use crate::constants::SOURCE_CODE_URL;
 use crate::hooks::use_current_user;
-use crate::local_data::{delete_redirect_to, delete_session, get_redirect_to, set_redirect_to};
 use crate::routes::Routes;
 use crate::server_fns;
+use crate::storage::{delete_redirect_to, delete_session, get_redirect_to, set_redirect_to};
 
 #[component]
 pub fn LoginLayout() -> Element {
@@ -81,7 +81,7 @@ pub fn UserLayout() -> Element {
 
     use_effect(move || {
         if let Some(Err(_)) = *current_user.read() {
-            set_redirect_to(router.full_route_string());
+            set_redirect_to(&router.full_route_string());
             navigator.push(Routes::login());
         }
     });
@@ -131,7 +131,6 @@ pub fn UserLayout() -> Element {
 
                                 delete_session();
                                 current_user.restart();
-
                             }
                         },
                         "Are you sure you want to logout?"
