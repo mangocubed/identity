@@ -10,5 +10,3 @@ pub const STYLE_CSS: Asset = asset!("assets/style.css");
 
 pub const KEY_REDIRECT_TO: &str = "_identity_redirect_to";
 pub const KEY_SESSION: &str = "_identity_session";
-
-pub const PATH_API_AUTHORIZE: &str = "/api/authorize";
