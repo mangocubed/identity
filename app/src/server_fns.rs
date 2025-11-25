@@ -3,15 +3,19 @@ use std::net::{IpAddr, SocketAddr};
 
 use dioxus::prelude::*;
 use serde_json::Value;
+use url::Url;
+use uuid::Uuid;
 
 #[cfg(feature = "server")]
 use axum::extract::ConnectInfo;
+#[cfg(feature = "server")]
+use chrono::{TimeDelta, Utc};
 #[cfg(feature = "server")]
 use headers::authorization::Bearer;
 #[cfg(feature = "server")]
 use http::HeaderMap;
 
-use sdk::app::ActionResult;
+use sdk::app::{ActionResult, ServFnResult};
 
 #[cfg(feature = "server")]
 use sdk::app::{ActionError, ActionSuccess};
@@ -87,6 +91,35 @@ async fn require_no_session(headers: &HeaderMap) -> Result<(), HttpError> {
     } else {
         HttpError::forbidden("Forbidden")
     }
+}
+
+#[post("/api/authorize", headers: HeaderMap)]
+pub async fn authorize(client_id: Uuid) -> ServFnResult<Url> {
+    require_app_token(&headers).await?;
+
+    let (application, session, user) = tokio::try_join!(
+        async {
+            commands::get_application_by_id(client_id)
+                .await
+                .or_not_found("Not Found")
+        },
+        extract_session(&headers),
+        extract_user(&headers),
+    )?;
+
+    let authorization =
+        commands::insert_or_refresh_authorization(&application, &user, &session, Utc::now() + TimeDelta::hours(1))
+            .await
+            .or_internal_server_error("Internal Server Error")?;
+
+    let mut redirect_url = application.redirect_url();
+
+    redirect_url.set_query(Some(&format!(
+        "token={}&expires_at={}",
+        authorization.token, authorization.expires_at
+    )));
+
+    Ok(redirect_url)
 }
 
 #[put("/api/change-password", headers: HeaderMap)]

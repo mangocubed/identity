@@ -5,13 +5,9 @@ mod hooks;
 mod layouts;
 mod pages;
 mod presenters;
-mod requests;
 mod routes;
 mod server_fns;
 mod storage;
-
-#[cfg(feature = "server")]
-mod server;
 
 use app::App;
 
@@ -20,26 +16,15 @@ use app::App;
 async fn main() {
     use std::net::SocketAddr;
 
-    use axum::routing::post;
     use dioxus::prelude::{DioxusRouterExt, ServeConfig};
 
-    use constants::*;
-    use server::handlers::*;
+    let address = dioxus::cli_config::fullstack_address_or_localhost();
+    let router = axum::Router::new().serve_dioxus_application(ServeConfig::new(), App);
+    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
 
-    let _ = tokio::join!(
-        sdk::app::launch_request_server(|router| { router.route(PATH_API_AUTHORIZE, post(post_authorize)) }),
-        async {
-            let address = dioxus::cli_config::fullstack_address_or_localhost();
-
-            let router = axum::Router::new().serve_dioxus_application(ServeConfig::new(), App);
-
-            let listener = tokio::net::TcpListener::bind(address).await.unwrap();
-
-            axum::serve(listener, router.into_make_service_with_connect_info::<SocketAddr>())
-                .await
-                .unwrap();
-        },
-    );
+    axum::serve(listener, router.into_make_service_with_connect_info::<SocketAddr>())
+        .await
+        .unwrap();
 }
 
 #[cfg(not(feature = "server"))]

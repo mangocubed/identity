@@ -4,12 +4,12 @@ use uuid::Uuid;
 use sdk::app::components::{H1, PageTitle};
 use sdk::app::hooks::use_resource_with_spinner;
 
-use crate::requests;
+use crate::server_fns;
 
 #[component]
 pub fn AuthorizePage(client_id: Uuid) -> Element {
     let navigator = use_navigator();
-    let authorize = use_resource_with_spinner("authorize", move || requests::authorize(client_id));
+    let authorize = use_resource_with_spinner("authorize", move || server_fns::authorize(client_id));
 
     rsx! {
         match &*authorize.read() {
