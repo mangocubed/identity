@@ -4,7 +4,7 @@ use chrono::{DateTime, NaiveDate, Utc};
 use url::Url;
 use uuid::Uuid;
 
-use crate::commands::{get_user_by_id, verify_password};
+use crate::commands;
 use crate::enums::ConfirmationAction;
 
 pub struct Application<'a> {
@@ -22,7 +22,7 @@ impl Application<'_> {
     }
 
     pub fn verify_secret(&self, secret: &str) -> bool {
-        verify_password(&self.encrypted_secret, secret)
+        commands::verify_password(&self.encrypted_secret, secret)
     }
 }
 
@@ -41,8 +41,16 @@ pub struct Authorization<'a> {
 }
 
 impl Authorization<'_> {
+    pub async fn session(&self) -> Session<'_> {
+        commands::get_session_by_id(self.session_id)
+            .await
+            .expect("Could not get session")
+    }
+
     pub async fn user(&self) -> User<'_> {
-        get_user_by_id(self.user_id).await.expect("Could not get user")
+        commands::get_user_by_id(self.user_id)
+            .await
+            .expect("Could not get user")
     }
 }
 
@@ -58,11 +66,13 @@ pub struct Confirmation<'a> {
 
 impl Confirmation<'_> {
     pub async fn user(&self) -> User<'_> {
-        get_user_by_id(self.user_id).await.expect("Could not get user")
+        commands::get_user_by_id(self.user_id)
+            .await
+            .expect("Could not get user")
     }
 
     pub fn verify_code(&self, code: &str) -> bool {
-        verify_password(&self.encrypted_code, code)
+        commands::verify_password(&self.encrypted_code, code)
     }
 }
 
@@ -102,7 +112,9 @@ impl Session<'_> {
     }
 
     pub async fn user(&self) -> User<'_> {
-        get_user_by_id(self.user_id).await.expect("Could not get user")
+        commands::get_user_by_id(self.user_id)
+            .await
+            .expect("Could not get user")
     }
 }
 
@@ -136,6 +148,6 @@ impl User<'_> {
     }
 
     pub fn verify_password(&self, password: &str) -> bool {
-        verify_password(&self.encrypted_password, password)
+        commands::verify_password(&self.encrypted_password, password)
     }
 }

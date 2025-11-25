@@ -46,7 +46,7 @@ async fn main() {
 fn main() {
     use sdk::app::set_request_bearer;
 
-    use crate::storage::get_session;
+    use storage::get_session;
 
     if let Some(session) = get_session() {
         set_request_bearer(&session.token);

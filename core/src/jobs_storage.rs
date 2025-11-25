@@ -7,7 +7,7 @@ use tokio::sync::OnceCell;
 use uuid::Uuid;
 
 use crate::config::MONITOR_CONFIG;
-use crate::models::{Confirmation, Session, User};
+use crate::models::{Authorization, Confirmation, Session, User};
 
 static JOBS_STORAGE_CELL: OnceCell<JobsStorage> = OnceCell::const_new();
 
@@ -24,6 +24,7 @@ pub struct JobsStorage {
     pub new_session: RedisStorage<NewSession>,
     pub new_user: RedisStorage<NewUser>,
     pub password_changed: RedisStorage<PasswordChanged>,
+    pub refreshed_authorization: RedisStorage<RefreshedAuthorization>,
 }
 
 impl JobsStorage {
@@ -41,6 +42,7 @@ impl JobsStorage {
             new_session: Self::storage().await,
             new_user: Self::storage().await,
             password_changed: Self::storage().await,
+            refreshed_authorization: Self::storage().await,
         }
     }
 
@@ -89,6 +91,16 @@ impl JobsStorage {
             .await
             .expect("Could not store job");
     }
+
+    pub(crate) async fn push_refreshed_authorization(&self, authorization: &Authorization<'_>) {
+        self.refreshed_authorization
+            .clone()
+            .push(RefreshedAuthorization {
+                authorization_id: authorization.id,
+            })
+            .await
+            .expect("Could not store job");
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -116,4 +128,9 @@ pub struct NewUser {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PasswordChanged {
     pub user_id: Uuid,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RefreshedAuthorization {
+    pub authorization_id: Uuid,
 }
