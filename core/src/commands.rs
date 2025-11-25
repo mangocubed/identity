@@ -234,6 +234,18 @@ pub async fn get_application_by_id<'a>(id: Uuid) -> sqlx::Result<Application<'a>
         .await
 }
 
+pub async fn get_authorization_by_id<'a>(id: Uuid) -> sqlx::Result<Authorization<'a>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        Authorization,
+        "SELECT * FROM authorizations WHERE expires_at > current_timestamp AND revoked_at IS NULL AND id = $1 LIMIT 1",
+        id
+    )
+    .fetch_one(db_pool)
+    .await
+}
+
 pub async fn get_authorization_by_token(token: &str) -> sqlx::Result<Authorization<'_>> {
     if token.is_empty() {
         return Err(sqlx::Error::RowNotFound);
@@ -306,12 +318,28 @@ pub async fn get_confirmation_by_user<'a>(
     .await
 }
 
+pub async fn get_finished_session_by_id<'a>(id: Uuid) -> sqlx::Result<Session<'a>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        Session,
+        "SELECT * FROM sessions WHERE expires_at <= current_timestamp AND finished_at IS NOT NULL AND id = $1 LIMIT 1",
+        id
+    )
+    .fetch_one(db_pool)
+    .await
+}
+
 pub async fn get_session_by_id<'a>(id: Uuid) -> sqlx::Result<Session<'a>> {
     let db_pool = db_pool().await;
 
-    sqlx::query_as!(Session, "SELECT * FROM sessions WHERE id = $1 LIMIT 1", id)
-        .fetch_one(db_pool)
-        .await
+    sqlx::query_as!(
+        Session,
+        "SELECT * FROM sessions WHERE expires_at > current_timestamp AND finished_at IS NULL AND id = $1 LIMIT 1",
+        id
+    )
+    .fetch_one(db_pool)
+    .await
 }
 
 pub async fn get_session_by_token<'a>(token: &str) -> sqlx::Result<Session<'a>> {
@@ -526,7 +554,7 @@ pub async fn insert_or_refresh_authorization<'a>(
 
     let token = generate_random_string(APPLICATIONS_CONFIG.token_length);
 
-    sqlx::query_as!(
+    let result = sqlx::query_as!(
         Authorization,
         "INSERT INTO authorizations AS a (application_id, user_id, session_id, token, expires_at) VALUES ($1, $2, $3, $4, $5)
         ON CONFLICT (application_id, user_id, session_id) DO UPDATE SET
@@ -543,7 +571,16 @@ pub async fn insert_or_refresh_authorization<'a>(
         expires_at      // $5
     )
     .fetch_one(db_pool)
-    .await
+    .await;
+
+    match result {
+        Ok(authorization) => {
+            jobs_storage().await.push_refreshed_authorization(&authorization).await;
+
+            Ok(authorization)
+        }
+        Err(err) => Err(err),
+    }
 }
 
 pub async fn refresh_authorization<'a>(
@@ -554,7 +591,7 @@ pub async fn refresh_authorization<'a>(
 
     let token = generate_random_string(APPLICATIONS_CONFIG.token_length);
 
-    sqlx::query_as!(
+    let result = sqlx::query_as!(
         Authorization,
         "UPDATE authorizations AS a SET
             token = $2, previous_token = a.token, expires_at = $3, refreshed_at = current_timestamp, revoked_at = NULL
@@ -564,7 +601,16 @@ pub async fn refresh_authorization<'a>(
         expires_at        // $3
     )
     .fetch_one(db_pool)
-    .await
+    .await;
+
+    match result {
+        Ok(authorization) => {
+            jobs_storage().await.push_refreshed_authorization(&authorization).await;
+
+            Ok(authorization)
+        }
+        Err(err) => Err(err),
+    }
 }
 
 pub async fn refresh_session<'a>(session: &Session<'_>) -> sqlx::Result<Session<'a>> {
@@ -591,6 +637,19 @@ pub async fn refresh_session<'a>(session: &Session<'_>) -> sqlx::Result<Session<
         Ok(session) => Ok(session),
         Err(err) => Err(err),
     }
+}
+
+pub async fn refresh_session_expiration<'a>(session: &Session<'_>) -> sqlx::Result<Session<'a>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        Session,
+        "UPDATE sessions SET expires_at = current_timestamp + INTERVAL '30 days' WHERE finished_at IS NULL AND id = $1
+        RETURNING *",
+        session.id, // $1
+    )
+    .fetch_one(db_pool)
+    .await
 }
 
 pub async fn revoke_authorization<'a>(authorization: &Authorization<'_>) -> sqlx::Result<Authorization<'a>> {

@@ -10,8 +10,6 @@ use identity_core::jobs_storage::jobs_storage;
 mod jobs;
 mod mailer;
 
-use jobs::{finished_session_job, new_confirmation_job, new_session_job, new_user_job, password_changed_job};
-
 #[tokio::main]
 async fn main() {
     info!("Monitor starting");
@@ -25,31 +23,37 @@ async fn main() {
         .layer(ErrorHandlingLayer::new())
         .enable_tracing()
         .backend(jobs_storage.finished_session.clone())
-        .build_fn(finished_session_job);
+        .build_fn(jobs::finished_session_job);
 
     let new_confirmation_worker = WorkerBuilder::new("new-confirmation")
         .layer(ErrorHandlingLayer::new())
         .enable_tracing()
         .backend(jobs_storage.new_confirmation.clone())
-        .build_fn(new_confirmation_job);
+        .build_fn(jobs::new_confirmation_job);
 
     let new_session_worker = WorkerBuilder::new("new-session")
         .layer(ErrorHandlingLayer::new())
         .enable_tracing()
         .backend(jobs_storage.new_session.clone())
-        .build_fn(new_session_job);
+        .build_fn(jobs::new_session_job);
 
     let new_user_worker = WorkerBuilder::new("new-user")
         .layer(ErrorHandlingLayer::new())
         .enable_tracing()
         .backend(jobs_storage.new_user.clone())
-        .build_fn(new_user_job);
+        .build_fn(jobs::new_user_job);
 
     let password_changed_worker = WorkerBuilder::new("password-changed")
         .layer(ErrorHandlingLayer::new())
         .enable_tracing()
         .backend(jobs_storage.password_changed.clone())
-        .build_fn(password_changed_job);
+        .build_fn(jobs::password_changed_job);
+
+    let refreshed_authorization_worker = WorkerBuilder::new("refreshed-authorization")
+        .layer(ErrorHandlingLayer::new())
+        .enable_tracing()
+        .backend(jobs_storage.refreshed_authorization.clone())
+        .build_fn(jobs::refreshed_authorization_job);
 
     Monitor::new()
         .register(finished_session_worker)
@@ -57,6 +61,7 @@ async fn main() {
         .register(new_session_worker)
         .register(new_user_worker)
         .register(password_changed_worker)
+        .register(refreshed_authorization_worker)
         .on_event(|e| {
             let worker_id = e.id();
             match e.inner() {

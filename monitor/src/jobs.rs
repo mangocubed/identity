@@ -4,7 +4,9 @@ use serde::Deserialize;
 
 use identity_core::commands;
 use identity_core::config::IP_GEOLOCATION_CONFIG;
-use identity_core::jobs_storage::{FinishedSession, NewConfirmation, NewSession, NewUser, PasswordChanged};
+use identity_core::jobs_storage::{
+    FinishedSession, NewConfirmation, NewSession, NewUser, PasswordChanged, RefreshedAuthorization,
+};
 
 use crate::mailer::*;
 
@@ -21,7 +23,7 @@ struct IpGeo<'a> {
 }
 
 pub async fn finished_session_job(job: FinishedSession) -> Result<(), apalis::prelude::Error> {
-    let session = commands::get_session_by_id(job.session_id)
+    let session = commands::get_finished_session_by_id(job.session_id)
         .await
         .expect("Could not get session");
 
@@ -82,4 +84,15 @@ pub async fn password_changed_job(job: PasswordChanged) -> Result<(), apalis::pr
     let user = commands::get_user_by_id(job.user_id).await.expect("Could not get user");
 
     send_password_changed_email(&user).await
+}
+
+pub async fn refreshed_authorization_job(job: RefreshedAuthorization) -> Result<(), apalis::prelude::Error> {
+    let authorization = commands::get_authorization_by_id(job.authorization_id)
+        .await
+        .expect("Could not get authorization");
+    let session = authorization.session().await;
+
+    let _ = commands::refresh_session_expiration(&session).await;
+
+    Ok(())
 }

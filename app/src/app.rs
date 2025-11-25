@@ -5,8 +5,7 @@ use sdk::app::components::AppProvider;
 use sdk::app::hooks::use_resource_with_spinner;
 use sdk::app::run_with_spinner;
 
-use crate::constants::FAVICON_ICO;
-use crate::constants::STYLE_CSS;
+use crate::constants::{FAVICON_ICO, STYLE_CSS};
 use crate::routes::Routes;
 use crate::server_fns;
 use crate::storage::delete_session;
@@ -16,7 +15,7 @@ use crate::storage::set_session;
 #[component]
 pub fn App() -> Element {
     let mut is_starting = use_signal(|| true);
-    let current_user = use_resource_with_spinner("current-user", move || async move {
+    let mut current_user = use_resource_with_spinner("current-user", move || async move {
         if get_session().is_none() {
             return Err(CapturedError::msg("Unauthenticated".to_owned()));
         }
@@ -36,9 +35,11 @@ pub fn App() -> Element {
 
         let result = run_with_spinner("refresh-session", server_fns::refresh_session).await;
 
-        match result {
-            Ok(session) => set_session(&session),
-            Err(_) => delete_session(),
+        if let Ok(session) = result {
+            set_session(&session);
+        } else {
+            delete_session();
+            current_user.restart();
         }
     });
 
