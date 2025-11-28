@@ -11,7 +11,7 @@ argon2 = { version = "0.5.3" }
 chrono = { workspace = true }
 regex = "1.12.2"
 rust_iso3166 = { workspace = true }
-sqlx = { version = "0.8.6", features = [
+sqlx = { workspace = true, features = [
     "chrono",
     "postgres",
     "runtime-tokio",

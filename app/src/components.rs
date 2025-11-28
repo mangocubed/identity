@@ -2,7 +2,10 @@ use dioxus::prelude::*;
 
 use sdk::app::components::{Brand, Form, FormSuccessModal, H3, Modal, PasswordField, TextField};
 use sdk::app::hooks::use_form_provider;
+use sdk::app::icons::InformationCircleOutline;
 use sdk::constants::{COPYRIGHT, PRIVACY_URL, TERMS_URL};
+use serde_json::Value;
+use uuid::Uuid;
 
 use crate::constants::SOURCE_CODE_URL;
 use crate::hooks::use_current_user;
@@ -105,7 +108,82 @@ pub fn EmailConfirmationModal(is_open: Signal<bool>) -> Element {
                 on_success: move |_| {
                     is_open.set(false);
                 },
-                TextField { id: "code", name: "code", label: "Code" }
+                TextField {
+                    id: "confirmation_code",
+                    name: "code",
+                    label: "Confirmation code",
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn ResetPasswordModal(is_open: Signal<bool>, confirmation_id: Signal<Option<Uuid>>) -> Element {
+    use_form_provider("reset-password", server_fns::reset_password);
+
+    let navigator = use_navigator();
+
+    rsx! {
+        FormSuccessModal {
+            on_close: move |_| {
+                navigator.push(Routes::login());
+            },
+        }
+
+        Modal {
+            is_open,
+            on_close: move |_| {
+                confirmation_id.set(None);
+            },
+            H3 { "Change password" }
+
+            div { role: "alert", class: "alert mt-4",
+                InformationCircleOutline {}
+
+                div { "A confirmation code has been sent to your email address." }
+            }
+
+            Form {
+                on_success: move |_| {
+                    is_open.set(false);
+                    confirmation_id.set(None);
+                },
+                if let Some(confirmation_id) = confirmation_id() {
+                    input {
+                        r#type: "hidden",
+                        name: "confirmation_id",
+                        value: confirmation_id.to_string(),
+                    }
+                }
+
+                TextField {
+                    id: "confirmation_code",
+                    name: "confirmation_code",
+                    label: "Confirmation code",
+                }
+
+                PasswordField {
+                    id: "password",
+                    label: "Password",
+                    max_length: 128,
+                    name: "password",
+                }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn SendPasswordResetConfirmationForm(#[props(into)] on_success: Callback<Value>) -> Element {
+    use_form_provider("reset-password", server_fns::send_password_reset_confirmation);
+
+    rsx! {
+        Form { on_success,
+            TextField {
+                id: "username_or_email",
+                label: "Username or email",
+                name: "username_or_email",
             }
         }
     }

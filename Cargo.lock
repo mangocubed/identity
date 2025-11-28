@@ -2522,6 +2522,7 @@ dependencies = [
  "lettre",
  "reqwest",
  "serde",
+ "sqlx",
  "tokio",
  "tracing",
 ]

@@ -13,9 +13,15 @@ use sdk::core::generate_random_string;
 use crate::config::{APPLICATIONS_CONFIG, USERS_CONFIG};
 use crate::db_pool;
 use crate::enums::ConfirmationAction;
-use crate::inputs::{ApplicationInput, ConfirmationInput, EmailInput, LoginInput, PasswordInput, RegisterInput};
+use crate::inputs::{ApplicationInput, ConfirmationInput, EmailInput, PasswordInput, RegisterInput};
 use crate::jobs_storage::jobs_storage;
 use crate::models::{Application, Authorization, Confirmation, Session, User};
+
+mod user_commands;
+mod user_password_commands;
+
+pub use user_commands::*;
+pub use user_password_commands::*;
 
 pub async fn authenticate_application<'a>(id: Uuid, secret: &str) -> sqlx::Result<Application<'a>> {
     let application = get_application_by_id(id).await?;
@@ -24,28 +30,6 @@ pub async fn authenticate_application<'a>(id: Uuid, secret: &str) -> sqlx::Resul
         Ok(application)
     } else {
         Err(sqlx::Error::RowNotFound)
-    }
-}
-
-pub async fn authenticate_user<'a>(input: &LoginInput) -> Result<User<'a>, ValidationErrors> {
-    input.validate()?;
-
-    let db_pool = db_pool().await;
-
-    let user = sqlx::query_as!(
-        User,
-        "SELECT * FROM users WHERE disabled_at IS NULL AND (LOWER(username) = $1 OR LOWER(email) = $1)
-        LIMIT 1",
-        input.username_or_email.to_lowercase()
-    )
-    .fetch_one(db_pool)
-    .await
-    .map_err(|_| ValidationErrors::new())?;
-
-    if user.verify_password(&input.password) {
-        Ok(user)
-    } else {
-        Err(ValidationErrors::new())
     }
 }
 
@@ -74,11 +58,13 @@ pub async fn can_insert_user() -> bool {
 }
 
 pub async fn confirm_user_email(user: &User<'_>, input: &ConfirmationInput) -> Result<(), ValidationErrors> {
+    input.validate()?;
+
     let confirmation = get_confirmation_by_user(user, ConfirmationAction::Email)
         .await
         .map_err(|_| ValidationErrors::new())?;
 
-    finish_confirmation(&confirmation, input, async move || {
+    finish_confirmation(&confirmation, &input.code, async move || {
         let db_pool = db_pool().await;
 
         let result = sqlx::query!(
@@ -108,18 +94,16 @@ pub async fn delete_application(application: Application<'_>) -> sqlx::Result<()
 
 pub async fn finish_confirmation<F, IF, T>(
     confirmation: &Confirmation<'_>,
-    input: &ConfirmationInput,
+    code: &str,
     on_success: F,
 ) -> Result<T, ValidationErrors>
 where
     F: Fn() -> IF,
     IF: std::future::IntoFuture<Output = Result<T, ValidationErrors>>,
 {
-    input.validate()?;
-
     let db_pool = db_pool().await;
 
-    if !confirmation.verify_code(&input.code) {
+    if !confirmation.verify_code(code) {
         let _ = sqlx::query!(
             "UPDATE confirmations
             SET
@@ -133,7 +117,7 @@ where
 
         let mut validation_errors = ValidationErrors::new();
 
-        validation_errors.add("code", ERROR_IS_INVALID.clone());
+        validation_errors.add("confirmation_code", ERROR_IS_INVALID.clone());
 
         return Err(validation_errors);
     }
@@ -796,32 +780,6 @@ mod tests {
     use crate::test_utils::*;
 
     use super::*;
-
-    #[tokio::test]
-    async fn should_authenticate_user() {
-        let password = fake_password();
-        let user = insert_test_user(Some(&password)).await;
-        let input = LoginInput {
-            username_or_email: user.username.to_string(),
-            password: password.clone(),
-        };
-
-        let result = authenticate_user(&input).await;
-
-        assert!(result.is_ok());
-    }
-
-    #[tokio::test]
-    async fn should_not_authenticate_user_with_invalid_input() {
-        let input = LoginInput {
-            username_or_email: fake_username(),
-            password: fake_password(),
-        };
-
-        let result = authenticate_user(&input).await;
-
-        assert!(result.is_err());
-    }
 
     #[tokio::test]
     async fn should_find_existing_email() {
