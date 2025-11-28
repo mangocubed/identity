@@ -44,13 +44,19 @@ pub fn LoginPage() -> Element {
             }
         }
 
-        if *can_register.read() == Some(true) {
-            div { class: "login-links",
+        div { class: "login-links",
+            if *can_register.read() == Some(true) {
                 Link {
                     class: "btn btn-block btn-outline",
                     to: Routes::register(),
                     "I don't have an account"
                 }
+            }
+
+            Link {
+                class: "btn btn-block btn-outline",
+                to: Routes::reset_password(),
+                "I forgot my password"
             }
         }
     }

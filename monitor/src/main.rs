@@ -10,6 +10,10 @@ use identity_core::jobs_storage::jobs_storage;
 mod jobs;
 mod mailer;
 
+trait ApalisError<T> {
+    fn or_apalis_error(self) -> Result<T, apalis::prelude::Error>;
+}
+
 #[tokio::main]
 async fn main() {
     info!("Monitor starting");

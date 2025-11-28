@@ -25,6 +25,8 @@ use sdk::constants::{HEADER_USER_AGENT, HEADER_X_REAL_IP};
 #[cfg(feature = "server")]
 use identity_core::commands;
 #[cfg(feature = "server")]
+use identity_core::enums::ConfirmationAction;
+#[cfg(feature = "server")]
 use identity_core::models::{Session, User};
 
 use crate::presenters::{SessionPresenter, UserPresenter};
@@ -238,10 +240,20 @@ pub async fn register(input: Value) -> ActionResult {
     }
 }
 
+#[put("/api/reset-password", headers: HeaderMap)]
+pub async fn reset_password(input: Value) -> ActionResult {
+    require_no_session(&headers).await?;
+
+    let result = commands::reset_user_password(&serde_json::from_value(input)?).await;
+
+    match result {
+        Ok(_) => ActionSuccess::ok("Password updated successfully", Value::Null),
+        Err(errors) => ActionError::err("Failed to reset password", Some(errors)),
+    }
+}
+
 #[post("/api/send-email-confirmation", headers: HeaderMap)]
 pub async fn send_email_confirmation() -> Result<()> {
-    use identity_core::enums::ConfirmationAction;
-
     require_app_token(&headers).await?;
 
     let user = extract_user(&headers).await?;
@@ -255,6 +267,26 @@ pub async fn send_email_confirmation() -> Result<()> {
         .or_bad_request("Failed to send email confirmation")?;
 
     Ok(())
+}
+
+#[post("/api/send-password-reset-confirmation", headers: HeaderMap)]
+pub async fn send_password_reset_confirmation(input: Value) -> ActionResult {
+    require_no_session(&headers).await?;
+
+    let Some(Value::String(username_or_email)) = input.get("username_or_email") else {
+        return ActionError::err("Username or email is invalid", None);
+    };
+
+    let user = commands::get_user_by_username_or_email(username_or_email)
+        .await
+        .map_err(|_| ActionError::new("Username or email is invalid", None))?;
+
+    let result = commands::insert_confirmation(&user, ConfirmationAction::PasswordReset).await;
+
+    match result {
+        Ok(confirmation) => ActionSuccess::ok("Password reset confirmation sent", confirmation.id.to_string().into()),
+        Err(_) => ActionError::err("Failed to send password reset confirmation", None),
+    }
 }
 
 #[put("/api/update-email", headers: HeaderMap)]

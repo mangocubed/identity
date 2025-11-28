@@ -38,6 +38,14 @@ fn validate_username(value: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
+fn validation_uuid(value: &str) -> Result<(), ValidationError> {
+    if uuid::Uuid::try_parse(value).is_err() {
+        return Err(ERROR_IS_INVALID.clone());
+    }
+
+    Ok(())
+}
+
 #[derive(Validate)]
 pub struct ApplicationInput {
     #[validate(length(min = 1, message = "Can't be blank"))]
@@ -100,4 +108,14 @@ pub struct RegisterInput {
     pub birthdate: String,
     #[validate(custom(function = "validate_country_alpha2"))]
     pub country_alpha2: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+pub struct ResetPasswordInput {
+    #[validate(custom(function = "validation_uuid"))]
+    pub confirmation_id: String,
+    #[validate(length(min = 1, max = 256, message = "Can't be blank"))]
+    pub confirmation_code: String,
+    #[validate(length(min = 6, max = 128, message = "Must have at least 6 characters"))]
+    pub password: String,
 }

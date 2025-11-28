@@ -24,6 +24,8 @@ pub enum Routes {
         LoginPage {},
         #[route("/register")]
         RegisterPage {},
+        #[route("/reset-password")]
+        ResetPasswordPage {},
 }
 
 impl Routes {
@@ -45,5 +47,9 @@ impl Routes {
 
     pub fn register() -> Self {
         Self::RegisterPage {}
+    }
+
+    pub fn reset_password() -> Self {
+        Self::ResetPasswordPage {}
     }
 }

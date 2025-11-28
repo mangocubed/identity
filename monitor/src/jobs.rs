@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use apalis::prelude::BoxDynError;
 use serde::Deserialize;
 
 use identity_core::commands;
@@ -8,7 +9,17 @@ use identity_core::jobs_storage::{
     FinishedSession, NewConfirmation, NewSession, NewUser, PasswordChanged, RefreshedAuthorization,
 };
 
+use crate::ApalisError;
 use crate::mailer::*;
+
+impl<T> ApalisError<T> for sqlx::Result<T> {
+    fn or_apalis_error(self) -> Result<T, apalis::prelude::Error> {
+        match self {
+            Ok(value) => Ok(value),
+            Err(err) => Err(apalis::prelude::Error::from(Box::new(err) as BoxDynError)),
+        }
+    }
+}
 
 #[derive(Deserialize)]
 struct Location<'a> {
@@ -25,7 +36,7 @@ struct IpGeo<'a> {
 pub async fn finished_session_job(job: FinishedSession) -> Result<(), apalis::prelude::Error> {
     let session = commands::get_finished_session_by_id(job.session_id)
         .await
-        .expect("Could not get session");
+        .or_apalis_error()?;
 
     let _ = commands::revoke_authorizations_by_session(&session).await;
 
@@ -35,15 +46,13 @@ pub async fn finished_session_job(job: FinishedSession) -> Result<(), apalis::pr
 pub async fn new_confirmation_job(job: NewConfirmation) -> Result<(), apalis::prelude::Error> {
     let confirmation = commands::get_confirmation_by_id(job.confirmation_id)
         .await
-        .expect("Could not get confirmation");
+        .or_apalis_error()?;
 
     send_new_confirmation_email(&confirmation, &job.code).await
 }
 
 pub async fn new_session_job(job: NewSession) -> Result<(), apalis::prelude::Error> {
-    let mut session = commands::get_session_by_id(job.session_id)
-        .await
-        .expect("Could not get session");
+    let mut session = commands::get_session_by_id(job.session_id).await.or_apalis_error()?;
 
     if !job.ip_addr.is_loopback() && !job.ip_addr.is_multicast() && !job.ip_addr.is_unspecified() {
         let result = reqwest::get(format!(
@@ -73,7 +82,7 @@ pub async fn new_session_job(job: NewSession) -> Result<(), apalis::prelude::Err
 }
 
 pub async fn new_user_job(job: NewUser) -> Result<(), apalis::prelude::Error> {
-    let user = commands::get_user_by_id(job.user_id).await.expect("Could not get user");
+    let user = commands::get_user_by_id(job.user_id).await.or_apalis_error()?;
 
     let _ = admin_emails::send_new_user_email(&user).await;
 
@@ -81,7 +90,7 @@ pub async fn new_user_job(job: NewUser) -> Result<(), apalis::prelude::Error> {
 }
 
 pub async fn password_changed_job(job: PasswordChanged) -> Result<(), apalis::prelude::Error> {
-    let user = commands::get_user_by_id(job.user_id).await.expect("Could not get user");
+    let user = commands::get_user_by_id(job.user_id).await.or_apalis_error()?;
 
     send_password_changed_email(&user).await
 }
@@ -89,7 +98,7 @@ pub async fn password_changed_job(job: PasswordChanged) -> Result<(), apalis::pr
 pub async fn refreshed_authorization_job(job: RefreshedAuthorization) -> Result<(), apalis::prelude::Error> {
     let authorization = commands::get_authorization_by_id(job.authorization_id)
         .await
-        .expect("Could not get authorization");
+        .or_apalis_error()?;
     let session = authorization.session().await;
 
     let _ = commands::refresh_session_expiration(&session).await;
