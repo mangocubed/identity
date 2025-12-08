@@ -9,6 +9,6 @@
         "@playwright/test": "^1.57.0"
     },
     "dependencies": {
-        "sdk": "github:mangocubed/sdk#v0.0.0-alpha.21"
+        "sdk": "github:mangocubed/sdk#v0.0.0-alpha.22"
     }
 }
