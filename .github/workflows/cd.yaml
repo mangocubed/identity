@@ -28,7 +28,7 @@ jobs:
             - uses: actions/checkout@v6
             - uses: ./.github/actions/setup-dioxus
             - run: cargo build --package identity-api --release
-            - uses: actions/upload-artifact@v5
+            - uses: actions/upload-artifact@v6
               with:
                   name: identity_api_build
                   path: ./target/release/identity-api
@@ -54,7 +54,7 @@ jobs:
             - run: dx bundle --package identity-app --web --release --verbose
               env:
                   APP_TOKEN: ${{ secrets.APP_TOKEN }}
-            - uses: actions/upload-artifact@v5
+            - uses: actions/upload-artifact@v6
               with:
                   name: identity_app_build
                   path: ./target/dx/identity-app/release/web/
@@ -76,7 +76,7 @@ jobs:
             - uses: actions/checkout@v6
             - uses: ./.github/actions/setup-dioxus
             - run: cargo build --package identity-cli --release
-            - uses: actions/upload-artifact@v5
+            - uses: actions/upload-artifact@v6
               with:
                   name: identity_cli_build
                   path: ./target/release/identity-cli
@@ -98,7 +98,7 @@ jobs:
             - uses: actions/checkout@v6
             - uses: ./.github/actions/setup-dioxus
             - run: cargo build --package identity-monitor --release
-            - uses: actions/upload-artifact@v5
+            - uses: actions/upload-artifact@v6
               with:
                   name: identity_monitor_build
                   path: ./target/release/identity-monitor
