@@ -109,19 +109,19 @@ jobs:
         runs-on: ubuntu-24.04
         steps:
             - uses: actions/checkout@v6
-            - uses: actions/download-artifact@v6
+            - uses: actions/download-artifact@v7
               with:
                   name: identity_api_build
                   path: builds/
-            - uses: actions/download-artifact@v6
+            - uses: actions/download-artifact@v7
               with:
                   name: identity_app_build
                   path: builds/identity-app/
-            - uses: actions/download-artifact@v6
+            - uses: actions/download-artifact@v7
               with:
                   name: identity_cli_build
                   path: builds/
-            - uses: actions/download-artifact@v6
+            - uses: actions/download-artifact@v7
               with:
                   name: identity_monitor_build
                   path: builds/
