@@ -2505,6 +2505,7 @@ dependencies = [
  "rust_iso3166",
  "sdk",
  "serde",
+ "serde_json",
  "sqlx",
  "tokio",
  "url",
@@ -2517,10 +2518,14 @@ name = "identity-monitor"
 version = "0.0.0-alpha.3"
 dependencies = [
  "apalis",
+ "base64",
+ "hmac",
  "identity-core",
  "lettre",
  "reqwest",
  "serde",
+ "serde_json",
+ "sha2",
  "sqlx",
  "tokio",
  "tracing",
@@ -3853,8 +3858,8 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sdk"
-version = "0.0.0-alpha.21"
-source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.21#66061ecba7ffb6c88759d59ebf147fdefcedf8df"
+version = "0.0.0-alpha.23"
+source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.23#40310ba516d2be6f3919ade2e311491c646e2100"
 dependencies = [
  "anyhow",
  "axum",

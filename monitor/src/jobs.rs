@@ -1,25 +1,16 @@
 use std::borrow::Cow;
 
-use apalis::prelude::BoxDynError;
+use base64::Engine;
+use hmac::{Hmac, Mac};
 use serde::Deserialize;
+use sha2::Sha256;
 
 use identity_core::commands;
 use identity_core::config::IP_GEOLOCATION_CONFIG;
-use identity_core::jobs_storage::{
-    FinishedSession, NewConfirmation, NewSession, NewUser, PasswordChanged, RefreshedAuthorization,
-};
+use identity_core::jobs_storage::*;
 
 use crate::ApalisError;
 use crate::mailer::*;
-
-impl<T> ApalisError<T> for sqlx::Result<T> {
-    fn or_apalis_error(self) -> Result<T, apalis::prelude::Error> {
-        match self {
-            Ok(value) => Ok(value),
-            Err(err) => Err(apalis::prelude::Error::from(Box::new(err) as BoxDynError)),
-        }
-    }
-}
 
 #[derive(Deserialize)]
 struct Location<'a> {
@@ -38,7 +29,24 @@ pub async fn finished_session_job(job: FinishedSession) -> Result<(), apalis::pr
         .await
         .or_apalis_error()?;
 
-    let _ = commands::revoke_authorizations_by_session(&session).await;
+    let authorizations = session.authorizations().await;
+
+    for authorization in authorizations {
+        let application = authorization.application().await;
+
+        let _ = commands::revoke_authorization(&authorization).await;
+
+        if application.webhook_url.is_some() {
+            jobs_storage()
+                .await
+                .push_webhook_event(
+                    &application,
+                    "authorization_revoked",
+                    serde_json::json!({ "token": authorization.token }),
+                )
+                .await;
+        }
+    }
 
     Ok(())
 }
@@ -102,6 +110,38 @@ pub async fn refreshed_authorization_job(job: RefreshedAuthorization) -> Result<
     let session = authorization.session().await;
 
     let _ = commands::refresh_session_expiration(&session).await;
+
+    Ok(())
+}
+
+pub async fn webhook_event_job(job: WebhookEvent) -> Result<(), apalis::prelude::Error> {
+    let application = commands::get_application_by_id(job.application_id)
+        .await
+        .or_apalis_error()?;
+
+    let Some(webhook_url) = application.webhook_url else {
+        return Ok(());
+    };
+
+    let mut hmac = Hmac::<Sha256>::new_from_slice(application.webhook_secret.as_bytes()).or_apalis_error()?;
+
+    let message = serde_json::json!({ "event_type": job.event_type, "data": job.data });
+    let message_bytes = serde_json::to_string(&message).or_apalis_error()?;
+
+    hmac.update(message_bytes.as_bytes());
+
+    let signature = hmac.finalize();
+    let signature_base64 = base64::engine::general_purpose::STANDARD.encode(signature.into_bytes());
+
+    let _ = reqwest::Client::new()
+        .post(webhook_url)
+        .header("X-Webhook-Signature", signature_base64)
+        .json(&message)
+        .send()
+        .await
+        .or_apalis_error()?
+        .error_for_status()
+        .or_apalis_error()?;
 
     Ok(())
 }

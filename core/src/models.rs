@@ -7,11 +7,14 @@ use uuid::Uuid;
 use crate::commands;
 use crate::enums::ConfirmationAction;
 
+#[derive(Clone)]
 pub struct Application<'a> {
     pub id: Uuid,
     pub name: Cow<'a, str>,
     pub redirect_url: Cow<'a, str>,
     pub encrypted_secret: Cow<'a, str>,
+    pub webhook_url: Option<String>,
+    pub webhook_secret: Cow<'a, str>,
     pub created_at: DateTime<Utc>,
     pub updated_at: Option<DateTime<Utc>>,
 }
@@ -41,6 +44,12 @@ pub struct Authorization<'a> {
 }
 
 impl Authorization<'_> {
+    pub async fn application(&self) -> Application<'_> {
+        commands::get_application_by_id(self.application_id)
+            .await
+            .expect("Could not get application")
+    }
+
     pub async fn session(&self) -> Session<'_> {
         commands::get_session_by_id(self.session_id)
             .await
@@ -94,6 +103,12 @@ pub struct Session<'a> {
 }
 
 impl Session<'_> {
+    pub async fn authorizations(&self) -> Vec<Authorization<'_>> {
+        commands::all_authorizations_by_session(self)
+            .await
+            .expect("Could not get authorizations")
+    }
+
     pub fn location(&self) -> String {
         let Some(country) = self.country_alpha2.as_ref().and_then(|c| rust_iso3166::from_alpha2(c)) else {
             return "Unknown".to_owned();

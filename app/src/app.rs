@@ -17,7 +17,7 @@ pub fn App() -> Element {
     let mut is_starting = use_signal(|| true);
     let mut current_user = use_resource_with_spinner("current-user", move || async move {
         if get_session().is_none() {
-            return Err(CapturedError::msg("Unauthenticated".to_owned()));
+            return Err(CapturedError::msg("Unauthenticated"));
         }
 
         server_fns::current_user().await

@@ -46,14 +46,6 @@ fn validation_uuid(value: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
-#[derive(Validate)]
-pub struct ApplicationInput {
-    #[validate(length(min = 1, message = "Can't be blank"))]
-    pub name: String,
-    #[validate(length(min = 1, message = "Can't be blank"), url(message = "Is invalid"))]
-    pub redirect_url: String,
-}
-
 #[derive(Deserialize, Validate)]
 pub struct ConfirmationInput {
     #[validate(length(min = 1, max = 256, message = "Can't be blank"))]

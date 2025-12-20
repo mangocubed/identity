@@ -13,13 +13,17 @@ use sdk::core::generate_random_string;
 use crate::config::{APPLICATIONS_CONFIG, USERS_CONFIG};
 use crate::db_pool;
 use crate::enums::ConfirmationAction;
-use crate::inputs::{ApplicationInput, ConfirmationInput, EmailInput, PasswordInput, RegisterInput};
+use crate::inputs::{ConfirmationInput, EmailInput, PasswordInput, RegisterInput};
 use crate::jobs_storage::jobs_storage;
 use crate::models::{Application, Authorization, Confirmation, Session, User};
 
+mod application_commands;
+mod authorization_commands;
 mod user_commands;
 mod user_password_commands;
 
+pub use application_commands::*;
+pub use authorization_commands::*;
 pub use user_commands::*;
 pub use user_password_commands::*;
 
@@ -81,15 +85,6 @@ pub async fn confirm_user_email(user: &User<'_>, input: &ConfirmationInput) -> R
         }
     })
     .await
-}
-
-pub async fn delete_application(application: Application<'_>) -> sqlx::Result<()> {
-    let db_pool = db_pool().await;
-
-    sqlx::query!("DELETE FROM applications WHERE id = $1", application.id)
-        .execute(db_pool)
-        .await
-        .map(|_| ())
 }
 
 pub async fn finish_confirmation<F, IF, T>(
@@ -202,14 +197,6 @@ async fn generate_session_token() -> String {
     token
 }
 
-pub async fn get_all_applications<'a>() -> sqlx::Result<Vec<Application<'a>>> {
-    let db_pool = db_pool().await;
-
-    sqlx::query_as!(Application, "SELECT * FROM applications")
-        .fetch_all(db_pool)
-        .await
-}
-
 pub async fn get_application_by_id<'a>(id: Uuid) -> sqlx::Result<Application<'a>> {
     let db_pool = db_pool().await;
 
@@ -307,7 +294,7 @@ pub async fn get_finished_session_by_id<'a>(id: Uuid) -> sqlx::Result<Session<'a
 
     sqlx::query_as!(
         Session,
-        "SELECT * FROM sessions WHERE expires_at <= current_timestamp AND finished_at IS NOT NULL AND id = $1 LIMIT 1",
+        "SELECT * FROM sessions WHERE (expires_at <= current_timestamp OR finished_at IS NOT NULL) AND id = $1 LIMIT 1",
         id
     )
     .fetch_one(db_pool)
@@ -376,26 +363,6 @@ async fn get_users_count() -> sqlx::Result<i64> {
         .fetch_one(db_pool)
         .await
         .map(|row| row.count)
-}
-
-pub async fn insert_application<'a>(input: &ApplicationInput) -> Result<(Application<'a>, String), ValidationErrors> {
-    input.validate()?;
-
-    let db_pool = db_pool().await;
-
-    let secret = generate_random_string(APPLICATIONS_CONFIG.secret_length);
-
-    sqlx::query_as!(
-        Application,
-        "INSERT INTO applications (name, redirect_url, encrypted_secret) VALUES ($1, $2, $3) RETURNING *",
-        input.name,                // $1
-        input.redirect_url,        // $2
-        encrypt_password(&secret), // $3
-    )
-    .fetch_one(db_pool)
-    .await
-    .map(|application| (application, secret))
-    .map_err(|_| ValidationErrors::new())
 }
 
 pub async fn insert_confirmation<'a>(user: &User<'_>, action: ConfirmationAction) -> sqlx::Result<Confirmation<'a>> {
@@ -634,30 +601,6 @@ pub async fn refresh_session_expiration<'a>(session: &Session<'_>) -> sqlx::Resu
     )
     .fetch_one(db_pool)
     .await
-}
-
-pub async fn revoke_authorization<'a>(authorization: &Authorization<'_>) -> sqlx::Result<Authorization<'a>> {
-    let db_pool = db_pool().await;
-
-    sqlx::query_as!(
-        Authorization,
-        "UPDATE authorizations AS a SET revoked_at = current_timestamp WHERE id = $1 RETURNING *",
-        authorization.id, // $1
-    )
-    .fetch_one(db_pool)
-    .await
-}
-
-pub async fn revoke_authorizations_by_session(session: &Session<'_>) -> sqlx::Result<()> {
-    let db_pool = db_pool().await;
-
-    sqlx::query!(
-        "UPDATE authorizations AS a SET revoked_at = current_timestamp WHERE session_id = $1",
-        session.id, // $1
-    )
-    .execute(db_pool)
-    .await
-    .map(|_| ())
 }
 
 pub async fn update_session_location<'a>(
