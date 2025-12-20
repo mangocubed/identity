@@ -1,4 +1,3 @@
-use apalis::prelude::BoxDynError;
 use lettre::message::header::ContentType;
 use lettre::{AsyncSmtpTransport, AsyncTransport, Tokio1Executor};
 use lettre::{Message, transport::smtp::authentication::Credentials};
@@ -8,15 +7,6 @@ use identity_core::enums::ConfirmationAction;
 use identity_core::models::{Confirmation, Session, User};
 
 use crate::ApalisError;
-
-impl<T> ApalisError<T> for Result<T, lettre::transport::smtp::Error> {
-    fn or_apalis_error(self) -> Result<T, apalis::prelude::Error> {
-        match self {
-            Ok(value) => Ok(value),
-            Err(err) => Err(apalis::prelude::Error::from(Box::new(err) as BoxDynError)),
-        }
-    }
-}
 
 async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), apalis::prelude::Error> {
     if !MAILER_CONFIG.enable {

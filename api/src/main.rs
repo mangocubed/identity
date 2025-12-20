@@ -5,7 +5,7 @@ use axum::Json;
 use axum::Router;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Result};
-use axum::routing::{get, post};
+use axum::routing::{delete, get, put};
 use axum_extra::TypedHeader;
 use chrono::{Duration, Utc};
 use headers::authorization::{Authorization, Bearer};
@@ -19,23 +19,43 @@ use sdk::constants::{RESPONSE_BAD_REQUEST, RESPONSE_OK, RESPONSE_UNAUTHORIZED};
 use identity_core::commands;
 
 #[derive(Deserialize)]
-pub struct AuthParams<'a> {
+struct AuthParams<'a> {
     client_id: Uuid,
     client_secret: Cow<'a, str>,
     token: Cow<'a, str>,
 }
 
-pub async fn get_verify_auth(TypedHeader(bearer): TypedHeader<Authorization<Bearer>>) -> impl IntoResponse {
-    let auth_exists = commands::authorization_exists(bearer.token()).await;
+async fn delete_revoke_auth(Json(params): Json<AuthParams<'_>>) -> impl IntoResponse {
+    let (application, authorization) = tokio::try_join!(
+        commands::authenticate_application(params.client_id, &params.client_secret),
+        commands::get_authorization_by_token(&params.token),
+    )
+    .map_err(|_| RESPONSE_BAD_REQUEST)?;
 
-    if auth_exists {
-        RESPONSE_OK
-    } else {
-        RESPONSE_UNAUTHORIZED
+    if application.id != authorization.application_id {
+        return Err(RESPONSE_BAD_REQUEST);
     }
+
+    let _ = commands::revoke_authorization(&authorization).await;
+
+    Ok((StatusCode::NO_CONTENT, "\"No Content\""))
 }
 
-pub async fn get_user_info(TypedHeader(bearer): TypedHeader<Authorization<Bearer>>) -> Result<impl IntoResponse> {
+async fn get_verify_auth(Json(params): Json<AuthParams<'_>>) -> impl IntoResponse {
+    let (application, authorization) = tokio::try_join!(
+        commands::authenticate_application(params.client_id, &params.client_secret),
+        commands::get_authorization_by_token(&params.token),
+    )
+    .map_err(|_| RESPONSE_BAD_REQUEST)?;
+
+    if application.id != authorization.application_id {
+        return Err(RESPONSE_BAD_REQUEST);
+    }
+
+    Ok(RESPONSE_OK)
+}
+
+async fn get_user_info(TypedHeader(bearer): TypedHeader<Authorization<Bearer>>) -> Result<impl IntoResponse> {
     let authorization = commands::get_authorization_by_token(bearer.token())
         .await
         .map_err(|_| RESPONSE_UNAUTHORIZED)?;
@@ -60,7 +80,7 @@ pub async fn get_user_info(TypedHeader(bearer): TypedHeader<Authorization<Bearer
     ))
 }
 
-pub async fn post_refresh_auth(Json(params): Json<AuthParams<'_>>) -> Result<impl IntoResponse> {
+async fn put_refresh_auth(Json(params): Json<AuthParams<'_>>) -> Result<impl IntoResponse> {
     let (application, authorization) = tokio::try_join!(
         commands::authenticate_application(params.client_id, &params.client_secret),
         commands::get_authorization_by_token(&params.token),
@@ -99,9 +119,10 @@ async fn main() {
     let trace_layer = TraceLayer::new_for_http();
 
     let router = Router::new()
-        .route("/private/refresh-auth", post(post_refresh_auth))
-        .route("/private/user-info", get(get_user_info))
-        .route("/private/verify-auth", get(get_verify_auth))
+        .route("/auth/refresh", put(put_refresh_auth))
+        .route("/auth/revoke", delete(delete_revoke_auth))
+        .route("/user-info", get(get_user_info))
+        .route("/auth/verify", get(get_verify_auth))
         .layer(trace_layer);
 
     let address = std::env::var("API_ADDRESS").unwrap_or("127.0.0.1:8082".to_owned());

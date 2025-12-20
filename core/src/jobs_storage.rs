@@ -7,7 +7,7 @@ use tokio::sync::OnceCell;
 use uuid::Uuid;
 
 use crate::config::MONITOR_CONFIG;
-use crate::models::{Authorization, Confirmation, Session, User};
+use crate::models::{Application, Authorization, Confirmation, Session, User};
 
 static JOBS_STORAGE_CELL: OnceCell<JobsStorage> = OnceCell::const_new();
 
@@ -25,6 +25,7 @@ pub struct JobsStorage {
     pub new_user: RedisStorage<NewUser>,
     pub password_changed: RedisStorage<PasswordChanged>,
     pub refreshed_authorization: RedisStorage<RefreshedAuthorization>,
+    pub webhook_event: RedisStorage<WebhookEvent>,
 }
 
 impl JobsStorage {
@@ -43,6 +44,7 @@ impl JobsStorage {
             new_user: Self::storage().await,
             password_changed: Self::storage().await,
             refreshed_authorization: Self::storage().await,
+            webhook_event: Self::storage().await,
         }
     }
 
@@ -101,6 +103,18 @@ impl JobsStorage {
             .await
             .expect("Could not store job");
     }
+
+    pub async fn push_webhook_event(&self, application: &Application<'_>, event_type: &str, data: serde_json::Value) {
+        self.webhook_event
+            .clone()
+            .push(WebhookEvent {
+                application_id: application.id,
+                event_type: event_type.to_owned(),
+                data,
+            })
+            .await
+            .expect("Could not store job");
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -133,4 +147,11 @@ pub struct PasswordChanged {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RefreshedAuthorization {
     pub authorization_id: Uuid,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct WebhookEvent {
+    pub application_id: Uuid,
+    pub event_type: String,
+    pub data: serde_json::Value,
 }

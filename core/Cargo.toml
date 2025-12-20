@@ -11,6 +11,7 @@ argon2 = { version = "0.5.3" }
 chrono = { workspace = true }
 regex = "1.12.2"
 rust_iso3166 = { workspace = true }
+serde_json = { workspace = true }
 sqlx = { workspace = true, features = [
     "chrono",
     "postgres",

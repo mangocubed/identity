@@ -1,9 +1,7 @@
 use clap::{Parser, Subcommand};
 
-use identity_core::commands::{
-    delete_application, get_all_applications, get_application_by_id, insert_application, insert_user,
-};
-use identity_core::inputs::{ApplicationInput, RegisterInput};
+use identity_core::commands;
+use identity_core::inputs::RegisterInput;
 use identity_core::models::Application;
 use uuid::Uuid;
 
@@ -23,6 +21,8 @@ enum CliCommand {
         name: String,
         #[arg(short, long)]
         redirect_url: String,
+        #[arg(short, long, required = false)]
+        webhook_url: Option<String>,
     },
     CreateUser {
         #[arg(short, long)]
@@ -42,12 +42,36 @@ enum CliCommand {
         #[arg(short, long)]
         id: Uuid,
     },
+    UpdateApplication {
+        #[arg(short, long)]
+        id: Uuid,
+        #[arg(short, long, required = false)]
+        redirect_url: Option<String>,
+        #[arg(short, long, required = false, default_missing_value = "", num_args = 0..=1)]
+        webhook_url: Option<String>,
+    },
+    UpdateApplicationSecret {
+        #[arg(short, long)]
+        id: Uuid,
+    },
+    UpdateApplicationWebhookSecret {
+        #[arg(short, long)]
+        id: Uuid,
+    },
 }
 
 fn print_application(application: &Application) {
     println!(
-        "\nID: {}\nName: {}\nRedirect URL: {}\nCreated at: {}",
-        application.id, application.name, application.redirect_url, application.created_at
+        "\nID: {}\nName: {}\nRedirect URL: {}\nWebhook URL: {}\nCreated at: {}\nUpdated at: {}\n",
+        application.id,
+        application.name,
+        application.redirect_url,
+        application.webhook_url.clone().unwrap_or_else(|| "None".to_owned()),
+        application.created_at,
+        application
+            .updated_at
+            .map(|updated_at| updated_at.to_string())
+            .unwrap_or_else(|| "None".to_owned())
     );
 }
 
@@ -57,7 +81,7 @@ async fn main() {
 
     match &cli.command {
         CliCommand::ApplicationsList => {
-            let applications = get_all_applications().await;
+            let applications = commands::all_applications().await;
 
             match applications {
                 Ok(applications) => {
@@ -76,18 +100,19 @@ async fn main() {
                 Err(err) => println!("Failed to get applications.\n\n{err}"),
             }
         }
-        CliCommand::CreateApplication { name, redirect_url } => {
-            let result = insert_application(&ApplicationInput {
-                name: name.clone(),
-                redirect_url: redirect_url.clone(),
-            })
-            .await;
+        CliCommand::CreateApplication {
+            name,
+            redirect_url,
+            webhook_url,
+        } => {
+            let result = commands::insert_application(name, redirect_url, webhook_url.as_deref()).await;
 
             match result {
                 Ok((application, secret)) => {
                     println!("Application created successfully.");
                     print_application(&application);
                     println!("\nSecret: {}", secret);
+                    println!("\nWebhook Secret: {}", application.webhook_secret);
                 }
                 Err(err) => println!("Failed to create application.\n\n{err}"),
             }
@@ -100,7 +125,7 @@ async fn main() {
             birthdate,
             country,
         } => {
-            let result = insert_user(&RegisterInput {
+            let result = commands::insert_user(&RegisterInput {
                 username: username.clone(),
                 email: email.clone(),
                 password: password.clone(),
@@ -116,12 +141,76 @@ async fn main() {
             }
         }
         CliCommand::DeleteApplication { id } => {
-            let application = get_application_by_id(*id).await.expect("Could not get application");
-            let result = delete_application(application).await;
+            let application = commands::get_application_by_id(*id)
+                .await
+                .expect("Could not get application");
+            let result = commands::delete_application(application).await;
 
             match result {
                 Ok(_) => println!("Application deleted successfully."),
                 Err(err) => println!("Failed to delete application.\n\n{err}"),
+            }
+        }
+        CliCommand::UpdateApplication {
+            id,
+            redirect_url,
+            webhook_url,
+        } => {
+            let application = commands::get_application_by_id(*id)
+                .await
+                .expect("Could not get application");
+            let webhook_url = if let Some(webhook_url) = webhook_url {
+                if webhook_url.is_empty() {
+                    None
+                } else {
+                    Some(webhook_url.as_str())
+                }
+            } else {
+                application.webhook_url.as_deref()
+            };
+            let result = commands::update_application(
+                &application,
+                &redirect_url
+                    .clone()
+                    .unwrap_or_else(|| application.redirect_url.to_string()),
+                webhook_url,
+            )
+            .await;
+
+            match result {
+                Ok(application) => {
+                    println!("Application updated successfully.");
+                    print_application(&application);
+                }
+                Err(err) => println!("Failed to update application.\n\n{err}"),
+            }
+        }
+        CliCommand::UpdateApplicationSecret { id } => {
+            let application = commands::get_application_by_id(*id)
+                .await
+                .expect("Could not get application");
+            let result = commands::update_application_secret(&application).await;
+
+            match result {
+                Ok((_, secret)) => {
+                    println!("Application secret updated successfully.");
+                    println!("\nSecret: {}", secret);
+                }
+                Err(err) => println!("Failed to update application secret.\n\n{err}"),
+            }
+        }
+        CliCommand::UpdateApplicationWebhookSecret { id } => {
+            let application = commands::get_application_by_id(*id)
+                .await
+                .expect("Could not get application");
+            let result = commands::update_application_webhook_secret(&application).await;
+
+            match result {
+                Ok(application) => {
+                    println!("Application webhook secret updated successfully.");
+                    println!("\nWebhook secret: {}", application.webhook_secret);
+                }
+                Err(err) => println!("Failed to update application webhook secret.\n\n{err}"),
             }
         }
     }

@@ -1,7 +1,8 @@
+use std::marker::{Send, Sync};
 use std::time::Duration;
 
 use apalis::layers::{ErrorHandlingLayer, WorkerBuilderExt};
-use apalis::prelude::{Event, Monitor, WorkerBuilder, WorkerFactoryFn};
+use apalis::prelude::{BoxDynError, Event, Monitor, WorkerBuilder, WorkerFactoryFn};
 use tokio::signal::unix::SignalKind;
 use tracing::{error, info};
 
@@ -12,6 +13,15 @@ mod mailer;
 
 trait ApalisError<T> {
     fn or_apalis_error(self) -> Result<T, apalis::prelude::Error>;
+}
+
+impl<T, E: std::error::Error + Send + Sync + 'static> ApalisError<T> for Result<T, E> {
+    fn or_apalis_error(self) -> Result<T, apalis::prelude::Error> {
+        match self {
+            Ok(value) => Ok(value),
+            Err(err) => Err(apalis::prelude::Error::from(Box::new(err) as BoxDynError)),
+        }
+    }
 }
 
 #[tokio::main]
@@ -59,6 +69,12 @@ async fn main() {
         .backend(jobs_storage.refreshed_authorization.clone())
         .build_fn(jobs::refreshed_authorization_job);
 
+    let webhook_event_worker = WorkerBuilder::new("webhook-event")
+        .layer(ErrorHandlingLayer::new())
+        .enable_tracing()
+        .backend(jobs_storage.webhook_event.clone())
+        .build_fn(jobs::webhook_event_job);
+
     Monitor::new()
         .register(finished_session_worker)
         .register(new_confirmation_worker)
@@ -66,6 +82,7 @@ async fn main() {
         .register(new_user_worker)
         .register(password_changed_worker)
         .register(refreshed_authorization_worker)
+        .register(webhook_event_worker)
         .on_event(|e| {
             let worker_id = e.id();
             match e.inner() {
