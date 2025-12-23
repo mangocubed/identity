@@ -2559,7 +2559,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b0f83760fb341a774ed326568e19f5a863af4a952def8c39f9ab92fd95b88e5"
 dependencies = [
  "equivalent",
- "hashbrown 0.15.5",
+ "hashbrown 0.16.0",
 ]
 
 [[package]]
@@ -3858,12 +3858,11 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sdk"
-version = "0.0.0-alpha.24"
-source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.24#647b3ba20ab7d409e992c06b5797160f522908ae"
+version = "0.0.0-alpha.23"
+source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.23#40310ba516d2be6f3919ade2e311491c646e2100"
 dependencies = [
  "anyhow",
  "axum",
- "base64",
  "chrono",
  "dioxus",
  "dioxus-sdk",
@@ -3872,13 +3871,11 @@ dependencies = [
  "gloo-net",
  "gloo-timers",
  "headers",
- "hmac",
  "http",
  "rand 0.9.2",
  "reqwest",
  "serde",
  "serde_json",
- "sha2",
  "tokio",
  "tower-http",
  "url",
@@ -3962,9 +3959,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.145"
+version = "1.0.146"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "402a6f66d8c709116cf22f558eab210f5a50187f702eb4d7e5ef38d9a7f1c79c"
+checksum = "217ca874ae0207aac254aa02c957ded05585a90892cc8d87f9e5fa49669dadd8"
 dependencies = [
  "itoa",
  "memchr",
@@ -5339,7 +5336,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
