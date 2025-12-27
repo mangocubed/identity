@@ -11,8 +11,6 @@ use axum::extract::ConnectInfo;
 #[cfg(feature = "server")]
 use chrono::{TimeDelta, Utc};
 #[cfg(feature = "server")]
-use headers::authorization::Bearer;
-#[cfg(feature = "server")]
 use http::HeaderMap;
 
 use sdk::app::{ActionResult, ServFnResult};
