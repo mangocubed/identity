@@ -18,7 +18,7 @@ use http::HeaderMap;
 use sdk::app::{ActionResult, ServFnResult};
 
 #[cfg(feature = "server")]
-use sdk::app::{ActionError, ActionSuccess};
+use sdk::app::{ActionError, ActionSuccess, HeaderMapExt};
 #[cfg(feature = "server")]
 use sdk::constants::{HEADER_USER_AGENT, HEADER_X_REAL_IP};
 
@@ -30,11 +30,6 @@ use identity_core::enums::ConfirmationAction;
 use identity_core::models::{Session, User};
 
 use crate::presenters::{SessionPresenter, UserPresenter};
-
-#[cfg(feature = "server")]
-pub fn extract_bearer(headers: &HeaderMap) -> Result<Bearer, HttpError> {
-    sdk::app::extract_bearer(headers).or_else(|_| HttpError::unauthorized("Unauthorized"))
-}
 
 #[cfg(feature = "server")]
 fn extract_client_ip_addr(headers: &HeaderMap, connect_info: ConnectInfo<SocketAddr>) -> IpAddr {
@@ -60,15 +55,8 @@ fn extract_user_agent(headers: &HeaderMap) -> String {
 }
 
 #[cfg(feature = "server")]
-pub async fn require_app_token(headers: &HeaderMap) -> Result<(), HttpError> {
-    sdk::app::require_app_token(headers)
-        .await
-        .or_else(|_| HttpError::forbidden("Forbidden"))
-}
-
-#[cfg(feature = "server")]
 async fn extract_session<'a>(headers: &HeaderMap) -> Result<Session<'a>, HttpError> {
-    let bearer = extract_bearer(headers)?;
+    let bearer = headers.bearer()?;
 
     commands::get_session_by_token(bearer.token())
         .await
@@ -77,7 +65,7 @@ async fn extract_session<'a>(headers: &HeaderMap) -> Result<Session<'a>, HttpErr
 
 #[cfg(feature = "server")]
 async fn extract_user<'a>(headers: &HeaderMap) -> Result<User<'a>, HttpError> {
-    let bearer = extract_bearer(headers)?;
+    let bearer = headers.bearer()?;
 
     commands::get_user_by_session_token(bearer.token())
         .await
@@ -86,7 +74,7 @@ async fn extract_user<'a>(headers: &HeaderMap) -> Result<User<'a>, HttpError> {
 
 #[cfg(feature = "server")]
 async fn require_no_session(headers: &HeaderMap) -> Result<(), HttpError> {
-    require_app_token(headers).await?;
+    headers.require_app_token()?;
 
     if extract_session(headers).await.is_err() {
         Ok(())
@@ -97,7 +85,7 @@ async fn require_no_session(headers: &HeaderMap) -> Result<(), HttpError> {
 
 #[post("/api/authorize", headers: HeaderMap)]
 pub async fn authorize(client_id: Uuid) -> ServFnResult<Url> {
-    require_app_token(&headers).await?;
+    headers.require_app_token()?;
 
     let (application, session, user) = tokio::try_join!(
         async {
@@ -126,7 +114,7 @@ pub async fn authorize(client_id: Uuid) -> ServFnResult<Url> {
 
 #[put("/api/change-password", headers: HeaderMap)]
 pub async fn change_password(input: Value) -> ActionResult {
-    require_app_token(&headers).await?;
+    headers.require_app_token()?;
 
     let user = extract_user(&headers).await?;
 
@@ -140,7 +128,7 @@ pub async fn change_password(input: Value) -> ActionResult {
 
 #[put("/api/confirm-email", headers: HeaderMap)]
 pub async fn confirm_email(input: Value) -> ActionResult {
-    require_app_token(&headers).await?;
+    headers.require_app_token()?;
 
     let user = extract_user(&headers).await?;
 
@@ -154,7 +142,7 @@ pub async fn confirm_email(input: Value) -> ActionResult {
 
 #[get("/api/current-user", headers: HeaderMap)]
 pub async fn current_user() -> Result<UserPresenter> {
-    require_app_token(&headers).await?;
+    headers.require_app_token()?;
 
     let user = extract_user(&headers).await?;
 
@@ -192,7 +180,7 @@ pub async fn login(input: Value) -> ActionResult {
 
 #[delete("/api/logout", headers: HeaderMap)]
 pub async fn logout() -> Result<()> {
-    require_app_token(&headers).await?;
+    headers.require_app_token()?;
 
     let session = extract_session(&headers).await?;
 
@@ -205,7 +193,7 @@ pub async fn logout() -> Result<()> {
 
 #[put("/api/refresh-session", headers: HeaderMap)]
 pub async fn refresh_session() -> Result<SessionPresenter> {
-    require_app_token(&headers).await?;
+    headers.require_app_token()?;
 
     let session = extract_session(&headers).await?;
 
@@ -254,7 +242,7 @@ pub async fn reset_password(input: Value) -> ActionResult {
 
 #[post("/api/send-email-confirmation", headers: HeaderMap)]
 pub async fn send_email_confirmation() -> Result<()> {
-    require_app_token(&headers).await?;
+    headers.require_app_token()?;
 
     let user = extract_user(&headers).await?;
 
@@ -291,7 +279,7 @@ pub async fn send_password_reset_confirmation(input: Value) -> ActionResult {
 
 #[put("/api/update-email", headers: HeaderMap)]
 pub async fn update_email(input: Value) -> ActionResult {
-    require_app_token(&headers).await?;
+    headers.require_app_token()?;
 
     let user = extract_user(&headers).await?;
 
