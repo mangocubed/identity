@@ -3858,8 +3858,8 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "sdk"
-version = "0.0.0-alpha.24"
-source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.24#647b3ba20ab7d409e992c06b5797160f522908ae"
+version = "0.0.0-alpha.25"
+source = "git+https://github.com/mangocubed/sdk.git?tag=v0.0.0-alpha.25#63b002ee3bc79ba020641c1bcc83a20302c2dc7f"
 dependencies = [
  "anyhow",
  "axum",
@@ -3869,7 +3869,6 @@ dependencies = [
  "dioxus-sdk",
  "fake",
  "figment",
- "gloo-net",
  "gloo-timers",
  "headers",
  "hmac",
