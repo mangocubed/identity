@@ -8,7 +8,7 @@ repository.workspace = true
 
 [dependencies]
 axum = { workspace = true }
-axum-extra = { version = "0.12.3", features = ["typed-header"] }
+axum-extra = { version = "0.12.5", features = ["typed-header"] }
 chrono = { workspace = true }
 headers = "0.4.1"
 serde = { workspace = true }
