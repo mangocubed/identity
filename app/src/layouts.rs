@@ -56,9 +56,19 @@ pub fn LoginLayout() -> Element {
                     }
 
                     nav {
-                        a { class: "link", href: TERMS_URL, target: "_blank", "Terms of Service" }
+                        a {
+                            class: "link",
+                            href: TERMS_URL,
+                            target: "_blank",
+                            "Terms of Service"
+                        }
 
-                        a { class: "link", href: PRIVACY_URL, target: "_blank", "Privacy Policy" }
+                        a {
+                            class: "link",
+                            href: PRIVACY_URL,
+                            target: "_blank",
+                            "Privacy Policy"
+                        }
 
                         a {
                             class: "link",
@@ -142,7 +152,7 @@ pub fn UserLayout() -> Element {
                 }
 
                 div { class: "flex grow overflow-auto",
-                    div { class: "shrink-0 bg-base-200 rounded-box md:w-56 flex flex-col items-between",
+                    div { class: "shrink-0 bg-base-200 rounded-box md:w-56 flex flex-col items-between my-4 ml-4",
                         ul { class: "menu md:w-56",
                             li {
                                 class: "max-md:tooltip max-md:tooltip-right",
