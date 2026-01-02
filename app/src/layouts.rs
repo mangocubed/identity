@@ -25,7 +25,7 @@ pub fn LoginLayout() -> Element {
     });
 
     rsx! {
-        div { class: "flex flex-col min-h-screen",
+        div { class: "wrapper",
             Navbar {
                 NavbarStart {
                     Link { to: Routes::home(),
@@ -34,36 +34,48 @@ pub fn LoginLayout() -> Element {
                 }
             }
 
-            main { class: "main grow", Outlet::<Routes> {} }
+            div { class: "flex grow flex-col overflow-auto",
+                main { class: "main grow", Outlet::<Routes> {} }
 
-            Footer {
-                aside { class: "opacity-75",
-                    p {
-                        "Version: "
-                        {env!("CARGO_PKG_VERSION")}
-                        " ("
-                        {env!("GIT_REV_SHORT")}
-                        ")"
+                Footer {
+                    aside { class: "opacity-75",
+                        p {
+                            "Version: "
+                            {env!("CARGO_PKG_VERSION")}
+                            " ("
+                            {env!("GIT_REV_SHORT")}
+                            ")"
+                        }
+
+                        p {
+                            "Built on: "
+                            {env!("BUILD_DATETIME")}
+                        }
+
+                        p { {COPYRIGHT} }
                     }
 
-                    p {
-                        "Built on: "
-                        {env!("BUILD_DATETIME")}
-                    }
+                    nav {
+                        a {
+                            class: "link",
+                            href: TERMS_URL,
+                            target: "_blank",
+                            "Terms of Service"
+                        }
 
-                    p { {COPYRIGHT} }
-                }
+                        a {
+                            class: "link",
+                            href: PRIVACY_URL,
+                            target: "_blank",
+                            "Privacy Policy"
+                        }
 
-                nav {
-                    a { class: "link", href: TERMS_URL, target: "_blank", "Terms of Service" }
-
-                    a { class: "link", href: PRIVACY_URL, target: "_blank", "Privacy Policy" }
-
-                    a {
-                        class: "link",
-                        href: SOURCE_CODE_URL.clone(),
-                        target: "_blank",
-                        "Source code"
+                        a {
+                            class: "link",
+                            href: SOURCE_CODE_URL.clone(),
+                            target: "_blank",
+                            "Source code"
+                        }
                     }
                 }
             }
@@ -87,114 +99,116 @@ pub fn UserLayout() -> Element {
     });
 
     rsx! {
-        if let Some(Ok(user)) = &*current_user.read() {
-            Navbar {
-                NavbarStart {
-                    Link { to: Routes::home(),
-                        Brand { "ID" }
+        div { class: "wrapper",
+            if let Some(Ok(user)) = &*current_user.read() {
+                Navbar {
+                    NavbarStart {
+                        Link { to: Routes::home(),
+                            Brand { "ID" }
+                        }
                     }
-                }
 
-                NavbarEnd {
-                    Dropdown { class: "dropdown-end",
-                        div { class: "flex gap-2 items-center", tabindex: 0,
-                            div { class: "text-left text-sm",
-                                div { class: "mb-1 font-bold", {user.display_name.clone()} }
-                                div { class: "opacity-70",
-                                    "@"
-                                    {user.username.clone()}
+                    NavbarEnd {
+                        Dropdown { class: "dropdown-end",
+                            div { class: "flex gap-2 items-center", tabindex: 0,
+                                div { class: "text-left text-sm",
+                                    div { class: "mb-1 font-bold", {user.display_name.clone()} }
+                                    div { class: "opacity-70",
+                                        "@"
+                                        {user.username.clone()}
+                                    }
                                 }
+
+                                ChevronDownMini {}
                             }
 
-                            ChevronDownMini {}
-                        }
-
-                        DropdownContent { class: "mt-4",
-                            ul { class: "menu p-2", tabindex: 0,
-                                li {
-                                    a {
-                                        onclick: move |_| {
-                                            *show_logout_confirmation.write() = true;
-                                        },
-                                        "Logout"
+                            DropdownContent { class: "mt-4",
+                                ul { class: "menu p-2", tabindex: 0,
+                                    li {
+                                        a {
+                                            onclick: move |_| {
+                                                *show_logout_confirmation.write() = true;
+                                            },
+                                            "Logout"
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    ConfirmationModal {
-                        is_open: show_logout_confirmation,
-                        on_accept: move |()| {
-                            async move {
-                                let _ = run_with_spinner("logout", server_fns::logout).await;
+                        ConfirmationModal {
+                            is_open: show_logout_confirmation,
+                            on_accept: move |()| {
+                                async move {
+                                    let _ = run_with_spinner("logout", server_fns::logout).await;
 
-                                delete_session();
-                                current_user.restart();
-                            }
-                        },
-                        "Are you sure you want to logout?"
-                    }
-                }
-            }
-
-            div { class: "flex m-4 min-h-[calc(100vh-6rem)]",
-                div { class: "shrink-0 bg-base-200 rounded-box md:w-56 flex flex-col items-between",
-                    ul { class: "menu md:w-56",
-                        li {
-                            class: "max-md:tooltip max-md:tooltip-right",
-                            "data-tip": "Home",
-                            Link { to: Routes::home(),
-                                HomeOutline {}
-
-                                span { class: "max-md:hidden", "Home" }
-                            }
-                        }
-
-                        div { class: "divider m-1" }
-
-                        li {
-                            class: "max-md:tooltip max-md:tooltip-right",
-                            "data-tip": "Email",
-                            Link { to: Routes::email(),
-                                EnvelopeOutline {}
-
-                                span { class: "max-md:hidden", "Email" }
-                            }
-                        }
-
-                        li {
-                            class: "max-md:tooltip max-md:tooltip-right",
-                            "data-tip": "Change password",
-                            Link { to: Routes::change_password(),
-                                PasswordOutline {}
-
-                                span { class: "max-md:hidden", "Change password" }
-                            }
-                        }
-                    }
-
-                    ul { class: "menu md:w-56 mt-auto",
-                        li {
-                            class: "max-md:tooltip max-md:tooltip-right",
-                            "data-tip": "About",
-                            a {
-                                onclick: move |_| {
-                                    *show_about.write() = true;
-                                },
-                                InformationCircleOutline {}
-
-                                span { class: "max-md:hidden", "About" }
-                            }
+                                    delete_session();
+                                    current_user.restart();
+                                }
+                            },
+                            "Are you sure you want to logout?"
                         }
                     }
                 }
 
-                main { class: "main grow max-w-[calc(100%-48px)] md:max-w-[calc(100%-208px)]",
-                    Outlet::<Routes> {}
-                }
+                div { class: "flex grow overflow-auto",
+                    div { class: "shrink-0 bg-base-200 rounded-box md:w-56 flex flex-col items-between my-4 ml-4",
+                        ul { class: "menu md:w-56",
+                            li {
+                                class: "max-md:tooltip max-md:tooltip-right",
+                                "data-tip": "Home",
+                                Link { to: Routes::home(),
+                                    HomeOutline {}
 
-                AboutModal { is_open: show_about }
+                                    span { class: "max-md:hidden", "Home" }
+                                }
+                            }
+
+                            div { class: "divider m-1" }
+
+                            li {
+                                class: "max-md:tooltip max-md:tooltip-right",
+                                "data-tip": "Email",
+                                Link { to: Routes::email(),
+                                    EnvelopeOutline {}
+
+                                    span { class: "max-md:hidden", "Email" }
+                                }
+                            }
+
+                            li {
+                                class: "max-md:tooltip max-md:tooltip-right",
+                                "data-tip": "Change password",
+                                Link { to: Routes::change_password(),
+                                    PasswordOutline {}
+
+                                    span { class: "max-md:hidden", "Change password" }
+                                }
+                            }
+                        }
+
+                        ul { class: "menu md:w-56 mt-auto",
+                            li {
+                                class: "max-md:tooltip max-md:tooltip-right",
+                                "data-tip": "About",
+                                a {
+                                    onclick: move |_| {
+                                        *show_about.write() = true;
+                                    },
+                                    InformationCircleOutline {}
+
+                                    span { class: "max-md:hidden", "About" }
+                                }
+                            }
+                        }
+                    }
+
+                    main { class: "main grow max-w-[calc(100%-48px)] md:max-w-[calc(100%-208px)] overflow-y-scroll overflow-x-hidden",
+                        Outlet::<Routes> {}
+                    }
+
+                    AboutModal { is_open: show_about }
+                }
             }
         }
     }
