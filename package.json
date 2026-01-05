@@ -5,7 +5,7 @@
         "end2end": "npx playwright test --config app/playwright.config.js"
     },
     "devDependencies": {
-        "@faker-js/faker": "^10.1.0",
+        "@faker-js/faker": "^10.2.0",
         "@playwright/test": "^1.57.0"
     },
     "dependencies": {
