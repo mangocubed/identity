@@ -20,7 +20,7 @@ sqlx = { workspace = true, features = [
 ] }
 tokio = { workspace = true }
 uuid = { workspace = true }
-url = { version = "2.5.7" }
+url = { version = "2.5.8" }
 validator = { version = "0.20.0", features = ["derive"] }
 sdk = { workspace = true, features = ["core"] }
 
