@@ -20,7 +20,7 @@ rust_iso3166 = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true, optional = true }
-url = "2.5.8"
+url = { workspace = true }
 uuid = { workspace = true }
 identity-core = { workspace = true, optional = true }
 sdk = { workspace = true, features = ["app"] }
