@@ -27,7 +27,7 @@ use identity_core::enums::ConfirmationAction;
 #[cfg(feature = "server")]
 use identity_core::models::{Session, User};
 
-use crate::presenters::{SessionPresenter, UserPresenter};
+use crate::presenters::{SessionPresenter, UserPresenter, UserProfilePresenter};
 
 #[cfg(feature = "server")]
 fn extract_client_ip_addr(headers: &HeaderMap, connect_info: ConnectInfo<SocketAddr>) -> IpAddr {
@@ -145,6 +145,15 @@ pub async fn current_user() -> Result<UserPresenter> {
     let user = extract_user(&headers).await?;
 
     Ok(UserPresenter::from(user))
+}
+
+#[get("/api/current-user/profile", headers: HeaderMap)]
+pub async fn current_user_profile() -> Result<UserProfilePresenter> {
+    headers.require_app_token()?;
+
+    let user = extract_user(&headers).await?;
+
+    Ok(UserProfilePresenter::from(user))
 }
 
 #[get("/api/can-register", headers: HeaderMap)]
@@ -286,5 +295,19 @@ pub async fn update_email(input: Value) -> ActionResult {
     match result {
         Ok(_) => Ok(ActionSuccess::new("Email updated successfully", Value::Null)),
         Err(errors) => Err(ActionError::new("Failed to update email", Some(errors))),
+    }
+}
+
+#[put("/api/update-profile", headers: HeaderMap)]
+pub async fn update_profile(input: Value) -> ActionResult {
+    headers.require_app_token()?;
+
+    let user = extract_user(&headers).await?;
+
+    let result = commands::update_user_profile(&user, &serde_json::from_value(input)?).await;
+
+    match result {
+        Ok(_) => Ok(ActionSuccess::new("Profile updated successfully", Value::Null)),
+        Err(errors) => Err(ActionError::new("Failed to update profile", Some(errors))),
     }
 }

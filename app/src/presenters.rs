@@ -1,4 +1,4 @@
-use chrono::{DateTime, TimeDelta, Utc};
+use chrono::{DateTime, NaiveDate, TimeDelta, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -49,6 +49,26 @@ impl From<User<'_>> for UserPresenter {
             email_is_confirmed: user.email_is_confirmed(),
             display_name: user.display_name.to_string(),
             initials: user.initials(),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct UserProfilePresenter {
+    pub id: Uuid,
+    pub full_name: String,
+    pub birthdate: NaiveDate,
+    pub country_alpha2: String,
+}
+
+#[cfg(feature = "server")]
+impl From<User<'_>> for UserProfilePresenter {
+    fn from(user: User<'_>) -> Self {
+        UserProfilePresenter {
+            id: user.id,
+            full_name: user.full_name.to_string(),
+            birthdate: user.birthdate,
+            country_alpha2: user.country_alpha2.to_string(),
         }
     }
 }

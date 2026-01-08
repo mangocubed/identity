@@ -15,6 +15,8 @@ pub enum Routes {
         AuthorizePage { client_id: Uuid },
         #[route("/change-password")]
         ChangePasswordPage {},
+        #[route("/edit-profile")]
+        EditProfilePage {},
         #[route("/email")]
         EmailPage {},
     #[end_layout]
@@ -31,6 +33,10 @@ pub enum Routes {
 impl Routes {
     pub fn change_password() -> Self {
         Self::ChangePasswordPage {}
+    }
+
+    pub fn edit_profile() -> Self {
+        Self::EditProfilePage {}
     }
 
     pub fn email() -> Self {

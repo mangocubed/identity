@@ -111,3 +111,13 @@ pub struct ResetPasswordInput {
     #[validate(length(min = 6, max = 128, message = "Must have at least 6 characters"))]
     pub password: String,
 }
+
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+pub struct UserProfileInput {
+    #[validate(length(min = 2, max = 256, message = "Must have at least 2 characters"))]
+    pub full_name: String,
+    #[validate(custom(function = "validate_birthdate"))]
+    pub birthdate: String,
+    #[validate(custom(function = "validate_country_alpha2"))]
+    pub country_alpha2: String,
+}
