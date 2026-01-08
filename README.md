@@ -2,6 +2,18 @@
 
 Authentication provider and user account manager.
 
+### Build Requirements
+
+- Node.js 22.x
+- Rust 1.91.x
+- PostgreSQL 17.x
+- Redis 8.x
+
+## Run Requirements
+
+- PostgreSQL 17.x
+- Redis 8.x
+
 ## Environment variables
 
 | Name                           | Type    | Default                                              | Client-side |

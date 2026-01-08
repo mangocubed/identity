@@ -75,7 +75,7 @@ pub fn RegisterPage() -> Element {
                 name: "country_alpha2",
                 option { "Select" }
                 for country in rust_iso3166::ALL {
-                    option { value: country.alpha2, {country.name} }
+                    option { key: "{country.alpha2}", value: country.alpha2, {country.name} }
                 }
             }
 

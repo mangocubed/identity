@@ -22,7 +22,7 @@ tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"] }
 url = { version = "2.5.8", features = ["serde"] }
 uuid = { version = "1.19.0", features = ["serde"] }
 identity-core = { path = "core" }
-sdk = { git = "https://github.com/mangocubed/sdk.git", tag = "v0.0.0-alpha.25" }
+sdk = { git = "https://github.com/mangocubed/sdk.git", rev = "ea3b3e5" }
 
 [profile.release]
 opt-level = "z"
