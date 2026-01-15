@@ -8,7 +8,7 @@ repository.workspace = true
 
 [build-dependencies]
 sdk = { workspace = true, features = ["build"] }
-chrono = "0.4.42"
+chrono = "0.4.43"
 
 [dependencies]
 axum = { workspace = true, optional = true }
