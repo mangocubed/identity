@@ -3,7 +3,7 @@ resolver = "3"
 members = ["api", "app", "cli", "core", "monitor"]
 
 [workspace.package]
-version = "0.0.0-alpha.5"
+version = "0.0.0-alpha.6"
 edition = "2024"
 authors = ["Javier E. <jaedns@gmail.com>"]
 homepage = "https://id.mango3.app"
@@ -22,7 +22,7 @@ tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread"] }
 url = { version = "2.5.8", features = ["serde"] }
 uuid = { version = "1.19.0", features = ["serde"] }
 identity-core = { path = "core" }
-sdk = { git = "https://github.com/mangocubed/sdk.git", rev = "ea3b3e5" }
+sdk = { git = "https://github.com/mangocubed/sdk.git", tag = "v0.0.0-alpha.27" }
 
 [profile.release]
 opt-level = "z"
