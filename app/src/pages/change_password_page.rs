@@ -17,7 +17,6 @@ pub fn ChangePasswordPage() -> Element {
 
         H1 { "Change Password" }
 
-
         FormSuccessModal {
             on_close: move |_| {
                 navigator.push(Routes::home());

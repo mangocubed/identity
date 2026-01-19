@@ -62,7 +62,7 @@ enum CliCommand {
 
 fn print_application(application: &Application) {
     println!(
-        "\nID: {}\nName: {}\nRedirect URL: {}\nWebhook URL: {}\nCreated at: {}\nUpdated at: {}\n",
+        "\nID: {}\nName: {}\nRedirect URL: {}\nWebhook URL: {}\nCreated at: {}\nUpdated at: {}",
         application.id,
         application.name,
         application.redirect_url,
