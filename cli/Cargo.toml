@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-clap = { version = "4.5.54", features = ["derive"] }
+clap = { version = "4.5.55", features = ["derive"] }
 tokio = { workspace = true }
 uuid = { workspace = true }
 identity-core = { workspace = true }
