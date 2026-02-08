@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@plugin "daisyui";
+
+@plugin "daisyui/theme" {
+    name: "dark";
+    default: true;
+    prefersdark: true;
+    color-scheme: dark;
+
+    --color-base-100: #09090b;
+    --color-primary: #ff4c00;
+    --radius-field: 1rem;
+}
+
+@plugin "daisyui/theme" {
+    name: "light";
+    default: false;
+    prefersdark: false;
+    color-scheme: light;
+
+    --color-primary: #ff4c00;
+    --radius-field: 1rem;
+}
+
+@utility brand {
+    @apply flex gap-2 items-center;
+
+    .brand-icon {
+        @apply h-9 w-auto sm:hidden;
+    }
+
+    .brand-logo {
+        @apply h-9 w-auto max-sm:hidden;
+    }
+
+    .brand-suffix {
+        @apply text-3xl font-bold opacity-80 empty:hidden;
+    }
+
+    .brand-dev {
+        @apply text-sm opacity-70 self-start;
+    }
+}
+
+@utility footer {
+    @apply md:footer-horizontal bg-base-200 p-10;
+}
+
+@utility h1 {
+    @apply text-2xl font-bold mb-6;
+}
+
+@utility layout {
+    @apply flex grow flex-col overflow-auto;
+}
+
+@utility main {
+    @apply grow max-w-325 w-full mx-auto p-4;
+}
+
+@utility navbar {
+    @apply bg-base-300 shadow-md shadow-base-100 px-3 gap-3 z-100;
+}
+
+@utility wrapper {
+    @apply absolute flex flex-col inset-0;
+}
