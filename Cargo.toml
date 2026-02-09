@@ -10,4 +10,5 @@ homepage = "https://id.mango3.app"
 repository = "https://github.com/mangocubed/identity"
 
 [workspace.dependencies]
+tokio = { version = "1.49.0", features = ["rt-multi-thread"] }
 idenity-core = { path = "./core", default-features = false }
