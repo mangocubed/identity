@@ -43,12 +43,36 @@
     }
 }
 
+@utility btn {
+    @apply uppercase;
+}
+
+@utility btn-submit {
+    @apply btn btn-block btn-primary my-3;
+}
+
 @utility footer {
     @apply md:footer-horizontal bg-base-200 p-10;
 }
 
+@utility form {
+    @apply max-w-160 ml-auto mr-auto mt-4 mb-4 w-full;
+}
+
 @utility h1 {
     @apply text-2xl font-bold mb-6;
+}
+
+@utility input {
+    @apply border-white w-full;
+
+    @variant focus {
+        outline: none;
+    }
+
+    @variant focus-within {
+        outline: none;
+    }
 }
 
 @utility layout {
@@ -61,6 +85,14 @@
 
 @utility navbar {
     @apply bg-base-300 shadow-md shadow-base-100 px-3 gap-3 z-100;
+}
+
+@utility select {
+    @apply border-white w-full;
+
+    @variant focus {
+        outline: none;
+    }
 }
 
 @utility wrapper {

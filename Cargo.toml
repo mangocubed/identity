@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["app", "core"]
+members = ["app", "core", "monitor"]
 
 [workspace.package]
 version = "0.0.0-alpha.0"
@@ -10,5 +10,11 @@ homepage = "https://id.mango3.app"
 repository = "https://github.com/mangocubed/identity"
 
 [workspace.dependencies]
-tokio = { version = "1.49.0", features = ["rt-multi-thread"] }
-idenity-core = { path = "./core", default-features = false }
+apalis = "1.0.0-rc.3"
+chrono = { version = "0.4.43", features = ["serde"] }
+envconfig = "0.11.1"
+rust_iso3166 = "0.1.14"
+serde = "1.0.228"
+tokio = { version = "1.49.0", features = ["rt-multi-thread", "signal"] }
+validator = "0.20.0"
+identity-core = { path = "./core", default-features = false }

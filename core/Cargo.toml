@@ -7,7 +7,19 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
-envconfig = "0.11.1"
+apalis.workspace = true
+apalis-redis = "1.0.0-rc.3"
+argon2 = "0.5.3"
+cached = { version = "0.56.0", features = [
+    "async",
+    "redis_store",
+    "redis_tokio",
+] }
+chrono.workspace = true
+envconfig.workspace = true
+regex = "1.12.3"
+rust_iso3166.workspace = true
+serde.workspace = true
 sqlx = { version = "0.8.6", features = [
     "chrono",
     "postgres",
@@ -15,3 +27,5 @@ sqlx = { version = "0.8.6", features = [
     "uuid",
 ] }
 tokio.workspace = true
+uuid = { version = "1.20.0", features = ["serde"] }
+validator = { workspace = true, features = ["derive"] }

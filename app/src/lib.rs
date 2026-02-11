@@ -1,8 +1,10 @@
 pub mod app;
 
 mod components;
+mod hooks;
 mod icons;
 mod pages;
+mod server_fns;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

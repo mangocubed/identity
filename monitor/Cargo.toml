@@ -1,0 +1,20 @@
+[package]
+name = "identity-monitor"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+apalis.workspace = true
+chrono.workspace = true
+envconfig.workspace = true
+lettre = { version = "0.11.19", features = [
+    "smtp-transport",
+    "tokio1-native-tls",
+] }
+reqwest = { version = "0.13.2", features = ["json"] }
+serde.workspace = true
+tokio.workspace = true
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+url = "2.5.8"
+identity-core.workspace = true
