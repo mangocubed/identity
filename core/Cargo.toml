@@ -27,5 +27,5 @@ sqlx = { version = "0.8.6", features = [
     "uuid",
 ] }
 tokio.workspace = true
-uuid = { version = "1.20.0", features = ["serde"] }
+uuid.workspace = true
 validator = { workspace = true, features = ["derive"] }

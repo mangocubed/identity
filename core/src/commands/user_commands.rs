@@ -1,61 +1,30 @@
-use std::fmt::Display;
-
 use argon2::password_hash::SaltString;
 use argon2::password_hash::rand_core::OsRng;
 use argon2::{Argon2, PasswordHasher};
+use cached::AsyncRedisCache;
 use cached::proc_macro::io_cached;
-use cached::{AsyncRedisCache, IOCachedAsync};
-use serde::Serialize;
-use serde::de::DeserializeOwned;
-use tokio::sync::OnceCell;
 use uuid::Uuid;
 use validator::{Validate, ValidationErrors};
 
-use crate::config::CACHE_CONFIG;
-use crate::constants::{CACHE_PREFIX_GET_USER_ID_BY_EMAIL, CACHE_PREFIX_GET_USER_ID_BY_USERNAME, CACHE_PREFIX_GET_USER_BY_ID};
+use crate::constants::*;
 use crate::models::User;
-use crate::params::UserParams;
+use crate::params::{AuthenticationParams, UserParams};
 use crate::{db_pool, jobs_storage};
 
-trait OrValidationErrors<T> {
-    fn or_validation_errors(self) -> Result<T, ValidationErrors>;
-}
+use super::{OrValidationErrors, async_redis_cache};
 
-impl<T> OrValidationErrors<T> for Result<T, sqlx::Error> {
-    fn or_validation_errors(self) -> Result<T, ValidationErrors> {
-        self.map_err(|_| ValidationErrors::new())
-    }
-}
+pub async fn authenticate_user<'a>(params: AuthenticationParams) -> Result<User<'a>, ValidationErrors> {
+    params.validate()?;
 
-trait AsyncRedisCacheExt<K> {
-    async fn cache_remove(&self, prefix: &str, key: &K);
-}
-
-impl<K, V> AsyncRedisCacheExt<K> for OnceCell<AsyncRedisCache<K, V>>
-where
-    K: Display + Send + Sync,
-    V: DeserializeOwned + Display + Send + Serialize + Sync,
-{
-    async fn cache_remove(&self, prefix: &str, key: &K) {
-        let _ = self
-            .get_or_init(|| async { async_redis_cache(prefix).await })
-            .await
-            .cache_remove(key)
-            .await;
-    }
-}
-
-async fn async_redis_cache<K, V>(prefix: &str) -> AsyncRedisCache<K, V>
-where
-    K: Display + Send + Sync,
-    V: DeserializeOwned + Display + Send + Serialize + Sync,
-{
-    AsyncRedisCache::new(format!("{prefix}:"), CACHE_CONFIG.ttl())
-        .set_connection_string(&CACHE_CONFIG.redis_url)
-        .set_refresh(true)
-        .build()
+    let user = get_user_by_username_or_email(&params.username_or_email)
         .await
-        .expect("Could not get redis cache")
+        .or_validation_errors()?;
+
+    if user.verify_password(&params.password) {
+        Ok(user)
+    } else {
+        Err(Default::default())
+    }
 }
 
 fn encrypt_password(value: &str) -> String {
@@ -76,6 +45,29 @@ pub async fn get_user_by_id(id: Uuid) -> sqlx::Result<User<'static>> {
         User,
         "SELECT * FROM users WHERE disabled_at IS NULL AND id = $1 LIMIT 1",
         id
+    )
+    .fetch_one(db_pool)
+    .await
+}
+
+#[io_cached(
+    map_error = r##"|_| sqlx::Error::RowNotFound"##,
+    ty = "AsyncRedisCache<&str, User<'_>>",
+    create = r##"{ async_redis_cache(CACHE_PREFIX_GET_USER_BY_USERNAME_OR_EMAIL).await }"##
+)]
+async fn get_user_by_username_or_email(username_or_email: &str) -> sqlx::Result<User<'static>> {
+    if username_or_email.is_empty() {
+        return Err(sqlx::Error::RowNotFound);
+    }
+
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        User,
+        "SELECT * FROM users
+        WHERE disabled_at IS NULL AND (LOWER(username) = $1 OR LOWER(email) = $1)
+        LIMIT 1",
+        username_or_email.to_lowercase()
     )
     .fetch_one(db_pool)
     .await
@@ -125,7 +117,7 @@ async fn get_user_id_by_username(username: &str) -> sqlx::Result<Uuid> {
     .map(|record| record.id)
 }
 
-pub async fn insert_user(params: UserParams) -> Result<(), ValidationErrors> {
+pub async fn insert_user<'a>(params: UserParams) -> Result<User<'a>, ValidationErrors> {
     params.validate()?;
 
     let db_pool = db_pool().await;
@@ -157,7 +149,7 @@ pub async fn insert_user(params: UserParams) -> Result<(), ValidationErrors> {
 
     jobs_storage().await.push_new_user(&user).await;
 
-    Ok(())
+    Ok(user)
 }
 
 pub(crate) async fn user_email_exists(email: &str) -> bool {

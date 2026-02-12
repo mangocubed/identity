@@ -79,6 +79,10 @@
     @apply flex grow flex-col overflow-auto;
 }
 
+@utility login-links {
+    @apply max-w-160 mx-auto mt-5 flex flex-col gap-4;
+}
+
 @utility main {
     @apply grow max-w-325 w-full mx-auto p-4;
 }

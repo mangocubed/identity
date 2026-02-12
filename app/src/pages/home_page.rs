@@ -1,11 +1,8 @@
 use leptos::prelude::*;
-use leptos_meta::Title;
+
+use crate::pages::AuthenticatedPage;
 
 #[component]
 pub fn HomePage() -> impl IntoView {
-    view! {
-        <Title text="Home" />
-
-        <h1 class="h1">"Home"</h1>
-    }
+    view! { <AuthenticatedPage title="Home">{"Welcome to Mango3!"}</AuthenticatedPage> }
 }

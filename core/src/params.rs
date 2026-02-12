@@ -44,6 +44,14 @@ fn validate_username(value: &str) -> Result<(), ValidationError> {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+pub struct AuthenticationParams {
+    #[validate(length(min = 1, max = 255, message = "Can't be blank"))]
+    pub username_or_email: String,
+    #[validate(length(min = 1, max = 255, message = "Can't be blank"))]
+    pub password: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
 pub struct UserParams {
     #[validate(
         length(min = 3, max = 16, message = "Must have at least 3 characters"),

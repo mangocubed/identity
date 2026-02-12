@@ -1,6 +1,11 @@
 use leptos::prelude::*;
+use leptos::server::codee::string::FromToStringCodec;
+use leptos_use::{SameSite, UseCookieOptions, use_cookie_with_options};
 
 use crate::components::AlertType;
+use crate::constants::KEY_REDIRECT_TO;
+use crate::presenters::UserPresenter;
+use crate::server_fns::{ServerFnResult, current_user};
 
 #[derive(Clone, Copy, Default)]
 pub struct Toast {
@@ -27,12 +32,30 @@ impl Toast {
     }
 }
 
+pub fn provide_current_user_resource() {
+    provide_context(Resource::new_blocking(|| (), |_| current_user()))
+}
+
 pub fn provide_toast() -> Toast {
     let toast = Toast::default();
 
     provide_context(toast);
 
     toast
+}
+
+pub fn use_current_user_resource() -> Resource<ServerFnResult<UserPresenter>> {
+    expect_context()
+}
+
+pub fn use_redirect_to_cookie() -> (Signal<Option<String>>, WriteSignal<Option<String>>) {
+    use_cookie_with_options::<String, FromToStringCodec>(
+        KEY_REDIRECT_TO,
+        UseCookieOptions::default()
+            .http_only(true)
+            .max_age(3600000)
+            .same_site(SameSite::Strict),
+    )
 }
 
 pub fn use_toast() -> Toast {

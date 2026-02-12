@@ -3,7 +3,7 @@ use lettre::message::header::ContentType;
 use lettre::{AsyncSmtpTransport, AsyncTransport, Tokio1Executor};
 use lettre::{Message, transport::smtp::authentication::Credentials};
 
-use identity_core::models::{ User};
+use identity_core::models::{Session, User};
 
 use crate::config::MAILER_CONFIG;
 
@@ -44,6 +44,27 @@ async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), BoxDynErr
     .await?;
 
     Ok(())
+}
+
+pub async fn send_new_session_email(session: &Session) -> Result<(), BoxDynError> {
+    let user = session.user().await?;
+
+    let message = format!(
+        "Hello @{},
+
+Someone has started a new session from:
+
+Location: {}
+
+If you recognize this action, you can ignore this message.
+
+If not, please contact us at the following email address: {}",
+        user.username,
+        session.location(),
+        MAILER_CONFIG.support_email_address,
+    );
+
+    send_email(&user.email, "New session started", &message).await
 }
 
 pub async fn send_welcome_email(user: &User<'_>) -> Result<(), BoxDynError> {

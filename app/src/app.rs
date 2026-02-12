@@ -3,18 +3,18 @@ use std::time::Duration;
 use leptos::either::Either;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
-use leptos_meta::{Link, Stylesheet, Title, provide_meta_context};
+use leptos_meta::{Title, provide_meta_context};
 use leptos_router::StaticSegment;
 use leptos_router::components::{A, Route, Router, Routes};
 
 use crate::components::{Alert, Mango3Logo};
-use crate::hooks::provide_toast;
+use crate::hooks::{provide_current_user_resource, provide_toast};
 use crate::icons::Mango3Icon;
-use crate::pages::{HomePage, RegisterPage};
+use crate::pages::{HomePage, LoginPage, RegisterPage};
 
 #[cfg(feature = "ssr")]
 pub fn shell(options: LeptosOptions) -> impl IntoView {
-    use leptos_meta::MetaTags;
+    use leptos_meta::{HashedStylesheet, MetaTags};
 
     view! {
         <!DOCTYPE html>
@@ -25,9 +25,12 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                     name="viewport"
                     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit: contain"
                 />
+                <meta name="robots" content="noindex, nofollow" />
+                <link rel="icon" href="/favicon.ico" />
                 <AutoReload options=options.clone() />
-                <HydrationScripts options />
+                <HydrationScripts options=options.clone() />
                 <MetaTags />
+                <HashedStylesheet id="leptos" options=options />
             </head>
             <body>
                 <App />
@@ -39,6 +42,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
 #[component]
 pub fn App() -> impl IntoView {
     provide_meta_context();
+    provide_current_user_resource();
 
     let mut toast = provide_toast();
 
@@ -51,9 +55,6 @@ pub fn App() -> impl IntoView {
     };
 
     view! {
-        <Link rel="icon" href="/favicon.ico" />
-        <Stylesheet id="leptos" href="/pkg/application.css" />
-
         <Title formatter=|page_title: String| {
             format!(
                 "{}Mango³ ID{}",
@@ -80,8 +81,8 @@ pub fn App() -> impl IntoView {
                     </div>
 
                     <div class="navbar-end">
-                        <A attr:class="btn btn-outline" href="/register">
-                            "Register"
+                        <A attr:class="btn btn-outline" href="/login">
+                            "Login"
                         </A>
                     </div>
                 </div>
@@ -90,6 +91,7 @@ pub fn App() -> impl IntoView {
                     <main class="main">
                         <Routes fallback=|| "Page not found.".into_view()>
                             <Route path=StaticSegment("") view=HomePage />
+                            <Route path=StaticSegment("login") view=LoginPage />
                             <Route path=StaticSegment("register") view=RegisterPage />
                         </Routes>
                     </main>
