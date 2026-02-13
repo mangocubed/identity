@@ -16,5 +16,5 @@ serde.workspace = true
 tokio.workspace = true
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
-url = "2.5.8"
+url.workspace = true
 identity-core.workspace = true

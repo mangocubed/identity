@@ -25,7 +25,7 @@ Authentication provider and user account manager.
 | MAILER_SMTP_USERNAME         | String  |                                                                  | monitor     |
 | MAILER_SUPPORT_EMAIL_ADDRESS | String  | support@localhost                                                | monitor     |
 | MONITOR_REDIS_URL            | String  | redis://127.0.0.1:6379/0                                         | app,monitor |
-| SESSION_DOMAIN               | String  | localhost                                                        | app         |
+| SESSION_DOMAIN               | String  |                                                                  | app         |
 | SESSION_PRIVATE_KEY          | String  | abcdefghijklmnopqrestuvvwxyz0123456789ABCDEFGHIJKLMNOPQRESTUVVWX | app         |
 | SESSION_REDIS_URL            | String  | redis://127.0.0.1:6379/2                                         | app         |
 | SESSION_SECURE               | Boolean | false                                                            | app         |

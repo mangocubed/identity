@@ -1,11 +1,14 @@
+use std::path::PathBuf;
 use std::sync::LazyLock;
 use std::time::Duration;
 
 use envconfig::Envconfig;
+use url::Url;
 
 pub static CACHE_CONFIG: LazyLock<CacheConfig> = LazyLock::new(|| CacheConfig::init_from_env().unwrap());
 pub static DATABASE_CONFIG: LazyLock<DatabaseConfig> = LazyLock::new(|| DatabaseConfig::init_from_env().unwrap());
 pub static MONITOR_CONFIG: LazyLock<MonitorConfig> = LazyLock::new(|| MonitorConfig::init_from_env().unwrap());
+pub static STORAGE_CONFIG: LazyLock<StorageConfig> = LazyLock::new(|| StorageConfig::init_from_env().unwrap());
 
 #[derive(Envconfig)]
 pub struct CacheConfig {
@@ -36,4 +39,17 @@ pub struct DatabaseConfig {
 pub struct MonitorConfig {
     #[envconfig(from = "MONITOR_REDIS_URL", default = "redis://127.0.0.1:6379/0")]
     pub redis_url: String,
+}
+
+#[derive(Envconfig)]
+pub struct StorageConfig {
+    #[envconfig(
+        from = "STORAGE_FONT_PATH",
+        default = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+    )]
+    pub(crate) font_path: PathBuf,
+    #[envconfig(from = "STORAGE_PATH", default = "./storage/")]
+    pub(crate) path: PathBuf,
+    #[envconfig(from = "STORAGE_URL", default = "http://127.0.0.1:8000/storage/")]
+    pub(crate) url: Url,
 }

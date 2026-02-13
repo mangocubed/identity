@@ -2,13 +2,14 @@ use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
 
 use crate::components::{Alert, AlertType, PasswordField, SelectField, SubmitButton, TextField};
-use crate::hooks::{use_redirect_to_cookie, use_toast};
+use crate::hooks::{use_current_user_resource, use_redirect_to_cookie, use_toast};
 use crate::pages::GuestPage;
 use crate::server_fns::{ActionResultExt, CreateUser};
 
 #[component]
 pub fn RegisterPage() -> impl IntoView {
     let navigate = use_navigate();
+    let current_user_resource = use_current_user_resource();
     let mut toast = use_toast();
     let action = ServerAction::<CreateUser>::new();
     let action_value = action.value();
@@ -18,21 +19,27 @@ pub fn RegisterPage() -> impl IntoView {
     let error_full_name = Memo::new(move |_| action_value.read().get_field_error("full_name"));
     let error_birthdate = Memo::new(move |_| action_value.read().get_field_error("birthdate"));
     let error_country_code = Memo::new(move |_| action_value.read().get_field_error("country_code"));
-    let (get_redirect_to, _) = use_redirect_to_cookie();
+    let (get_redirect_to, set_redirect_to) = use_redirect_to_cookie();
 
-    Effect::new(move |_| {
-        if action_value.read().is_success() {
-            toast.push_alert(AlertType::Success, "User created successfully");
-            navigate(
-                &get_redirect_to.with(|value| value.clone().unwrap_or("/".to_owned())),
-                Default::default(),
-            );
-        }
-    });
+    Effect::watch(
+        move || action_value.get(),
+        move |action_value, _, _| {
+            if action_value.is_success() {
+                current_user_resource.refetch();
+                toast.push_alert(AlertType::Success, "User created successfully");
+                set_redirect_to.set(None);
+                navigate(
+                    &get_redirect_to.with_untracked(|value| value.clone().unwrap_or("/".to_owned())),
+                    Default::default(),
+                );
+            }
+        },
+        false,
+    );
 
     view! {
         <GuestPage title="Register">
-            <ActionForm action=action attr:class="form">
+            <ActionForm action=action attr:class="form" attr:autocomplete="off" attr:novalidate="true">
                 <Show when=move || action_value.read().has_errors()>
                     <Alert alert_type=AlertType::Error>"Failed to create user"</Alert>
                 </Show>
@@ -55,6 +62,12 @@ pub fn RegisterPage() -> impl IntoView {
 
                 <SelectField disabled=action.pending() label="Country" name="country_code" error=error_country_code>
                     <option value="">"Select"</option>
+                    {rust_iso3166::ALL
+                        .iter()
+                        .map(|country| {
+                            view! { <option value=country.alpha2>{country.name}</option> }
+                        })
+                        .collect::<Vec<_>>()}
                 </SelectField>
 
                 <Alert>

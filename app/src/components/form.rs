@@ -97,7 +97,7 @@ pub fn SubmitButton(
     #[prop(optional, into)] is_pending: Signal<bool>,
 ) -> impl IntoView {
     view! {
-        <button class="btn-submit" type="submit">
+        <button class="btn-submit" type="submit" disabled=is_pending>
             {move || {
                 if is_pending.get() {
                     Either::Left(view! { <span class="loading loading-spinner" /> })

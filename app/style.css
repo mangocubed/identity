@@ -51,6 +51,10 @@
     @apply btn btn-block btn-primary my-3;
 }
 
+@utility dropdown-content {
+    @apply bg-base-200 rounded-box shadow w-max z-1 border-solid border border-accent;
+}
+
 @utility footer {
     @apply md:footer-horizontal bg-base-200 p-10;
 }
@@ -85,6 +89,14 @@
 
 @utility main {
     @apply grow max-w-325 w-full mx-auto p-4;
+}
+
+@utility modal-box {
+    @apply bg-[#23232b];
+}
+
+@utility modal-close {
+    @apply btn btn-sm btn-circle btn-ghost absolute right-2 top-2;
 }
 
 @utility navbar {

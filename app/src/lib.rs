@@ -10,6 +10,7 @@ mod icons;
 mod pages;
 mod presenters;
 mod server_fns;
+mod utils;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

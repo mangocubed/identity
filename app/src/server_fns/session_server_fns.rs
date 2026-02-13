@@ -35,12 +35,16 @@ pub async fn create_session(username_or_email: String, password: String) -> Acti
 }
 
 #[server]
-pub async fn finish_session() -> Result<(), ServerFnError> {
+pub async fn finish_session() -> ActionResult {
     require_authentication().await?;
 
     let session = extract_session().await?;
 
     commands::finish_session(&session).await?;
+
+    let tower_session = extract_tower_session().await?;
+
+    tower_session.remove::<String>(KEY_SESSION_ID).await?;
 
     Ok(())
 }
