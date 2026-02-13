@@ -1,6 +1,3 @@
-use argon2::password_hash::SaltString;
-use argon2::password_hash::rand_core::OsRng;
-use argon2::{Argon2, PasswordHasher};
 use cached::AsyncRedisCache;
 use cached::proc_macro::io_cached;
 use uuid::Uuid;
@@ -11,7 +8,7 @@ use crate::models::User;
 use crate::params::{AuthenticationParams, UserParams};
 use crate::{db_pool, jobs_storage};
 
-use super::{OrValidationErrors, async_redis_cache};
+use super::{OrValidationErrors, ValidationResult, async_redis_cache, encrypt_password};
 
 pub async fn authenticate_user<'a>(params: AuthenticationParams) -> Result<User<'a>, ValidationErrors> {
     params.validate()?;
@@ -25,12 +22,6 @@ pub async fn authenticate_user<'a>(params: AuthenticationParams) -> Result<User<
     } else {
         Err(Default::default())
     }
-}
-
-fn encrypt_password(value: &str) -> String {
-    let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
-    argon2.hash_password(value.as_bytes(), &salt).unwrap().to_string()
 }
 
 #[io_cached(
@@ -117,7 +108,7 @@ async fn get_user_id_by_username(username: &str) -> sqlx::Result<Uuid> {
     .map(|record| record.id)
 }
 
-pub async fn insert_user<'a>(params: UserParams) -> Result<User<'a>, ValidationErrors> {
+pub async fn insert_user<'a>(params: UserParams) -> ValidationResult<User<'a>> {
     params.validate()?;
 
     let db_pool = db_pool().await;

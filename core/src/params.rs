@@ -1,5 +1,4 @@
 use chrono::{NaiveDate, Utc};
-use serde::{Deserialize, Serialize};
 use validator::{Validate, ValidationError};
 
 use crate::commands;
@@ -43,7 +42,15 @@ fn validate_username(value: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Validate)]
+pub struct ApplicationParams {
+    #[validate(length(min = 1, max = 255, message = "Can't be blank"))]
+    pub name: String,
+    #[validate(url(message = "Is invalid"))]
+    pub redirect_url: String,
+}
+
+#[derive(Validate)]
 pub struct AuthenticationParams {
     #[validate(length(min = 1, max = 255, message = "Can't be blank"))]
     pub username_or_email: String,
@@ -51,7 +58,7 @@ pub struct AuthenticationParams {
     pub password: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, Validate)]
+#[derive(Validate)]
 pub struct UserParams {
     #[validate(
         length(min = 3, max = 16, message = "Must have at least 3 characters"),

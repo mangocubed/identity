@@ -12,7 +12,7 @@ pub static STORAGE_CONFIG: LazyLock<StorageConfig> = LazyLock::new(|| StorageCon
 
 #[derive(Envconfig)]
 pub struct CacheConfig {
-    #[envconfig(from = "CACHE_REDIS_URL", default = "redis://127.0.0.1:6379/1")]
+    #[envconfig(from = "CACHE_REDIS_URL", default = "redis://127.0.0.1:6379/0")]
     pub redis_url: String,
     #[envconfig(from = "CACHE_TTL", default = "3600")]
     ttl: u16,
@@ -37,7 +37,7 @@ pub struct DatabaseConfig {
 
 #[derive(Envconfig)]
 pub struct MonitorConfig {
-    #[envconfig(from = "MONITOR_REDIS_URL", default = "redis://127.0.0.1:6379/0")]
+    #[envconfig(from = "MONITOR_REDIS_URL", default = "redis://127.0.0.1:6379/1")]
     pub redis_url: String,
 }
 

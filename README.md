@@ -11,7 +11,7 @@ Authentication provider and user account manager.
 
 | Name                         | Type    | Default                                                          | Packages    |
 | ---------------------------- | ------- | ---------------------------------------------------------------- | ----------- |
-| CACHE_REDIS_URL              | String  | redis://127.0.0.1:6379/1                                         | app,monitor |
+| CACHE_REDIS_URL              | String  | redis://127.0.0.1:6379/0                                         | app,monitor |
 | CACHE_TTL                    | Number  | 3600                                                             | app,monitor |
 | DATABASE_MAX_CONNECTIONS     | Number  | 5                                                                | app,monitor |
 | DATABASE_URL                 | String  | postgres://mango3:mango3@127.0.0.1:5432/identity_dev             | app,monitor |
@@ -24,8 +24,11 @@ Authentication provider and user account manager.
 | MAILER_SMTP_SECURITY         | String  | none                                                             | monitor     |
 | MAILER_SMTP_USERNAME         | String  |                                                                  | monitor     |
 | MAILER_SUPPORT_EMAIL_ADDRESS | String  | support@localhost                                                | monitor     |
-| MONITOR_REDIS_URL            | String  | redis://127.0.0.1:6379/0                                         | app,monitor |
+| MONITOR_REDIS_URL            | String  | redis://127.0.0.1:6379/1                                         | app,monitor |
 | SESSION_DOMAIN               | String  |                                                                  | app         |
 | SESSION_PRIVATE_KEY          | String  | abcdefghijklmnopqrestuvvwxyz0123456789ABCDEFGHIJKLMNOPQRESTUVVWX | app         |
 | SESSION_REDIS_URL            | String  | redis://127.0.0.1:6379/2                                         | app         |
 | SESSION_SECURE               | Boolean | false                                                            | app         |
+| STORAGE_FONT_PATH            | String  | /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf                  | app         |
+| STORAGE_PATH                 | String  | ./storage/                                                       | app         |
+| STORAGE_URL                  | String  | http://127.0.0.1:8000/storage/                                   | app         |

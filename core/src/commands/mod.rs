@@ -1,6 +1,9 @@
 use std::fmt::Display;
 
 use ab_glyph::{FontRef, PxScale};
+use argon2::password_hash::SaltString;
+use argon2::password_hash::rand_core::OsRng;
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use cached::{AsyncRedisCache, IOCachedAsync};
 use image::{ImageBuffer, Rgb, RgbImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_text_mut, text_size};
@@ -12,18 +15,22 @@ use validator::ValidationErrors;
 
 use crate::config::{CACHE_CONFIG, STORAGE_CONFIG};
 
+mod application_commands;
 mod session_commands;
 mod user_commands;
 
+pub use application_commands::*;
 pub use session_commands::*;
 pub use user_commands::*;
 
+pub type ValidationResult<T = ()> = Result<T, ValidationErrors>;
+
 trait OrValidationErrors<T> {
-    fn or_validation_errors(self) -> Result<T, ValidationErrors>;
+    fn or_validation_errors(self) -> ValidationResult<T>;
 }
 
 impl<T> OrValidationErrors<T> for Result<T, sqlx::Error> {
-    fn or_validation_errors(self) -> Result<T, ValidationErrors> {
+    fn or_validation_errors(self) -> ValidationResult<T> {
         self.map_err(|_| Default::default())
     }
 }
@@ -59,7 +66,13 @@ where
         .expect("Could not get redis cache")
 }
 
-pub fn generate_text_icon(text: &str, size: u32) -> anyhow::Result<ImageBuffer<Rgb<u8>, Vec<u8>>> {
+fn encrypt_password(value: &str) -> String {
+    let salt = SaltString::generate(&mut OsRng);
+    let argon2 = Argon2::default();
+    argon2.hash_password(value.as_bytes(), &salt).unwrap().to_string()
+}
+
+pub(crate) fn generate_text_icon(text: &str, size: u32) -> anyhow::Result<ImageBuffer<Rgb<u8>, Vec<u8>>> {
     let text = &text[0..2].to_uppercase();
     let mut rgb_image = RgbImage::new(size, size);
 
@@ -79,4 +92,14 @@ pub fn generate_text_icon(text: &str, size: u32) -> anyhow::Result<ImageBuffer<R
     draw_text_mut(&mut rgb_image, Rgb([225u8, 225u8, 225u8]), x, y, scale, &font, text);
 
     Ok(rgb_image)
+}
+
+pub(crate) fn verify_password(encrypted_password: &str, password: &str) -> bool {
+    let argon2 = Argon2::default();
+
+    let Ok(password_hash) = PasswordHash::new(encrypted_password) else {
+        return false;
+    };
+
+    argon2.verify_password(password.as_bytes(), &password_hash).is_ok()
 }

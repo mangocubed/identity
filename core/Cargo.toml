@@ -7,7 +7,7 @@ homepage.workspace = true
 repository.workspace = true
 
 [dependencies]
-ab_glyph = "0.2.29"
+ab_glyph = "0.2.32"
 anyhow.workspace = true
 apalis.workspace = true
 apalis-redis = "1.0.0-rc.3"
@@ -19,8 +19,8 @@ cached = { version = "0.56.0", features = [
 ] }
 chrono.workspace = true
 envconfig.workspace = true
-image = "0.25.6"
-imageproc = "0.25.0"
+image = "0.25.9"
+imageproc = "0.26.0"
 regex = "1.12.3"
 rust_iso3166.workspace = true
 serde.workspace = true

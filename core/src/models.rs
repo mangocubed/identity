@@ -2,7 +2,6 @@ use std::borrow::Cow;
 use std::fmt::Display;
 use std::path::PathBuf;
 
-use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -10,6 +9,27 @@ use uuid::Uuid;
 
 use crate::commands;
 use crate::config::STORAGE_CONFIG;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct Application<'a> {
+    pub id: Uuid,
+    pub name: Cow<'a, str>,
+    pub redirect_url: Cow<'a, str>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+impl Application<'_> {
+    pub fn redirect_url(&self) -> Url {
+        Url::parse(&self.redirect_url).expect("Could not get Redirect URL")
+    }
+}
+
+impl Display for Application<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.id)
+    }
+}
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Session {
@@ -115,12 +135,6 @@ impl User<'_> {
     }
 
     pub(crate) fn verify_password(&self, password: &str) -> bool {
-        let argon2 = Argon2::default();
-
-        let Ok(password_hash) = PasswordHash::new(&self.encrypted_password) else {
-            return false;
-        };
-
-        argon2.verify_password(password.as_bytes(), &password_hash).is_ok()
+        commands::verify_password(&self.encrypted_password, password)
     }
 }

@@ -88,7 +88,7 @@ pub async fn update_session_location(
     Ok(session)
 }
 
-pub async fn remove_session_cache(session: &Session) {
+async fn remove_session_cache(session: &Session) {
     GET_SESSION_BY_ID
         .cache_remove(CACHE_PREFIX_GET_SESSION_BY_ID, &session.id)
         .await;
