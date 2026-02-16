@@ -4,6 +4,8 @@ use std::net::IpAddr;
 use leptos::prelude::*;
 use leptos::server_fn::codec::JsonEncoding;
 use serde::{Deserialize, Serialize};
+use url::Url;
+use uuid::Uuid;
 use validator::ValidationErrors;
 
 #[cfg(feature = "ssr")]
@@ -12,8 +14,6 @@ use axum_client_ip::ClientIp;
 use http::status::StatusCode;
 #[cfg(feature = "ssr")]
 use leptos_axum::{ResponseOptions, extract, redirect};
-#[cfg(feature = "ssr")]
-use uuid::Uuid;
 
 #[cfg(feature = "ssr")]
 use identity_core::commands;
@@ -31,7 +31,7 @@ pub use user_server_fns::*;
 
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
 pub struct ActionError {
-    pub fields: ValidationErrors,
+    pub params: ValidationErrors,
 }
 
 impl FromServerFnError for ActionError {
@@ -67,16 +67,14 @@ impl From<sqlx_core::Error> for ActionError {
             _ => resp_opts.set_status(StatusCode::INTERNAL_SERVER_ERROR),
         }
 
-        Self {
-            fields: ValidationErrors::new(),
-        }
+        Self::default()
     }
 }
 
 #[cfg(feature = "ssr")]
 impl From<tower_sessions::session::Error> for ActionError {
     fn from(_error: tower_sessions::session::Error) -> Self {
-        Default::default()
+        Self::default()
     }
 }
 
@@ -87,7 +85,7 @@ impl From<ValidationErrors> for ActionError {
 
         resp_opts.set_status(StatusCode::UNPROCESSABLE_ENTITY);
 
-        Self { fields: errors }
+        Self { params: errors }
     }
 }
 
@@ -96,7 +94,7 @@ type ActionResult<T = ()> = Result<T, ActionError>;
 pub type ServerFnResult<T = ()> = Result<T, ServerFnError>;
 
 pub trait ActionResultExt {
-    fn get_field_error(&self, name: &str) -> Option<String>;
+    fn get_param_error(&self, name: &str) -> Option<String>;
 
     fn has_errors(&self) -> bool;
 
@@ -104,10 +102,10 @@ pub trait ActionResultExt {
 }
 
 impl ActionResultExt for Option<ActionResult> {
-    fn get_field_error(&self, name: &str) -> Option<String> {
+    fn get_param_error(&self, name: &str) -> Option<String> {
         if let Some(Err(error)) = self {
             error
-                .fields
+                .params
                 .field_errors()
                 .get(name)
                 .and_then(|error| error.first())
@@ -185,7 +183,7 @@ async fn is_authenticated() -> bool {
 }
 
 #[cfg(feature = "ssr")]
-pub async fn require_authentication() -> ServerFnResult {
+async fn require_authentication() -> ServerFnResult {
     if !is_authenticated().await {
         redirect("/login");
 
@@ -196,7 +194,7 @@ pub async fn require_authentication() -> ServerFnResult {
 }
 
 #[cfg(feature = "ssr")]
-pub async fn require_no_authentication() -> ServerFnResult {
+async fn require_no_authentication() -> ServerFnResult {
     if is_authenticated().await {
         redirect("/");
 
@@ -204,4 +202,24 @@ pub async fn require_no_authentication() -> ServerFnResult {
     }
 
     Ok(())
+}
+
+#[server]
+pub async fn create_authorization(
+    application_id: Uuid,
+    redirect_url: Url,
+    code_challenge: String,
+) -> ServerFnResult<Url> {
+    require_authentication().await?;
+
+    let application = commands::get_application_by_id(application_id).await?;
+    let session = extract_session().await?;
+    let authorization =
+        commands::insert_or_refresh_authorization(&application, &session, redirect_url, &code_challenge).await?;
+
+    let full_redirect_url = authorization.full_redirect_url();
+
+    redirect(full_redirect_url.as_ref());
+
+    Ok(full_redirect_url)
 }

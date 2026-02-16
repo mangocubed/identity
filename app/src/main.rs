@@ -50,14 +50,11 @@ async fn session_layer() -> anyhow::Result<(
 
 #[cfg(feature = "ssr")]
 #[derive(Deserialize)]
-pub struct AvatarImageParams {
+pub struct AvatarImageQuery {
     pub size: Option<u32>,
 }
 #[cfg(feature = "ssr")]
-async fn get_user_avatar_image(
-    Path(user_id): Path<Uuid>,
-    Query(params): Query<AvatarImageParams>,
-) -> impl IntoResponse {
+async fn get_user_avatar_image(Path(user_id): Path<Uuid>, Query(params): Query<AvatarImageQuery>) -> impl IntoResponse {
     use axum::body::Body;
     use http::StatusCode;
     use http::header::{CONTENT_DISPOSITION, CONTENT_LENGTH, CONTENT_TYPE};

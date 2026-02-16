@@ -5,7 +5,7 @@ use leptos_use::{SameSite, UseCookieOptions, use_cookie_with_options};
 use crate::components::AlertType;
 use crate::constants::KEY_REDIRECT_TO;
 use crate::presenters::UserPresenter;
-use crate::server_fns::{ServerFnResult, current_user};
+use crate::server_fns::{self, ServerFnResult};
 
 #[derive(Clone, Copy, Default)]
 pub struct Toast {
@@ -33,7 +33,7 @@ impl Toast {
 }
 
 pub fn provide_current_user_resource() {
-    provide_context(Resource::new_blocking(|| (), |_| current_user()))
+    provide_context(Resource::new_blocking(|| (), |_| server_fns::current_user()))
 }
 
 pub fn provide_toast() -> Toast {

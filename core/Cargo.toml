@@ -21,6 +21,7 @@ chrono.workspace = true
 envconfig.workspace = true
 image = "0.25.9"
 imageproc = "0.26.0"
+rand = "0.10.0"
 regex = "1.12.3"
 rust_iso3166.workspace = true
 serde.workspace = true

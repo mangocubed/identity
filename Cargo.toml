@@ -18,7 +18,7 @@ rust_iso3166 = "0.1.14"
 serde = "1.0.228"
 tokio = { version = "1.49.0", features = ["rt-multi-thread", "signal"] }
 url = { version = "2.5.8", features = ["serde"] }
-uuid = { version = "1.20.0", features = ["serde"] }
+uuid = { version = "1.21.0", features = ["serde"] }
 validator = "0.20.0"
 identity-core = { path = "./core", default-features = false }
 

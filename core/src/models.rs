@@ -31,6 +31,37 @@ impl Display for Application<'_> {
     }
 }
 
+pub struct Authorization<'a> {
+    pub id: Uuid,
+    pub application_id: Uuid,
+    pub session_id: Uuid,
+    pub code: Cow<'a, str>,
+    pub code_challenge: Cow<'a, str>,
+    pub redirect_url: Cow<'a, str>,
+    pub expires_at: DateTime<Utc>,
+    pub revoked_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+impl Authorization<'_> {
+    pub async fn application(&self) -> sqlx::Result<Application<'_>> {
+        commands::get_application_by_id(self.application_id).await
+    }
+
+    pub fn full_redirect_url(&self) -> Url {
+        let mut url = Url::parse(&self.redirect_url).expect("Could not get Redirect URL");
+
+        url.set_query(Some(&format!("code={}", self.code)));
+
+        url
+    }
+
+    pub async fn session(&self) -> sqlx::Result<Session> {
+        commands::get_session_by_id(self.session_id).await
+    }
+}
+
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Session {
     pub id: Uuid,

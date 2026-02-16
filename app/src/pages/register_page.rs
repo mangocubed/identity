@@ -13,12 +13,12 @@ pub fn RegisterPage() -> impl IntoView {
     let mut toast = use_toast();
     let action = ServerAction::<CreateUser>::new();
     let action_value = action.value();
-    let error_username = Memo::new(move |_| action_value.read().get_field_error("username"));
-    let error_email = Memo::new(move |_| action_value.read().get_field_error("email"));
-    let error_password = Memo::new(move |_| action_value.read().get_field_error("password"));
-    let error_full_name = Memo::new(move |_| action_value.read().get_field_error("full_name"));
-    let error_birthdate = Memo::new(move |_| action_value.read().get_field_error("birthdate"));
-    let error_country_code = Memo::new(move |_| action_value.read().get_field_error("country_code"));
+    let error_username = Memo::new(move |_| action_value.read().get_param_error("username"));
+    let error_email = Memo::new(move |_| action_value.read().get_param_error("email"));
+    let error_password = Memo::new(move |_| action_value.read().get_param_error("password"));
+    let error_full_name = Memo::new(move |_| action_value.read().get_param_error("full_name"));
+    let error_birthdate = Memo::new(move |_| action_value.read().get_param_error("birthdate"));
+    let error_country_code = Memo::new(move |_| action_value.read().get_param_error("country_code"));
     let (get_redirect_to, set_redirect_to) = use_redirect_to_cookie();
 
     Effect::watch(
@@ -39,18 +39,44 @@ pub fn RegisterPage() -> impl IntoView {
 
     view! {
         <GuestPage title="Register">
-            <ActionForm action=action attr:class="form" attr:autocomplete="off" attr:novalidate="true">
+            <ActionForm
+                action=action
+                attr:class="form"
+                attr:autocomplete="off"
+                attr:novalidate="true"
+            >
                 <Show when=move || action_value.read().has_errors()>
                     <Alert alert_type=AlertType::Error>"Failed to create user"</Alert>
                 </Show>
 
-                <TextField disabled=action.pending() label="Username" name="username" error=error_username />
+                <TextField
+                    disabled=action.pending()
+                    label="Username"
+                    name="username"
+                    error=error_username
+                />
 
-                <TextField disabled=action.pending() label="Email" input_type="email" name="email" error=error_email />
+                <TextField
+                    disabled=action.pending()
+                    label="Email"
+                    input_type="email"
+                    name="email"
+                    error=error_email
+                />
 
-                <PasswordField disabled=action.pending() label="Password" name="password" error=error_password />
+                <PasswordField
+                    disabled=action.pending()
+                    label="Password"
+                    name="password"
+                    error=error_password
+                />
 
-                <TextField disabled=action.pending() label="Full name" name="full_name" error=error_full_name />
+                <TextField
+                    disabled=action.pending()
+                    label="Full name"
+                    name="full_name"
+                    error=error_full_name
+                />
 
                 <TextField
                     disabled=action.pending()
@@ -60,7 +86,12 @@ pub fn RegisterPage() -> impl IntoView {
                     error=error_birthdate
                 />
 
-                <SelectField disabled=action.pending() label="Country" name="country_code" error=error_country_code>
+                <SelectField
+                    disabled=action.pending()
+                    label="Country"
+                    name="country_code"
+                    error=error_country_code
+                >
                     <option value="">"Select"</option>
                     {rust_iso3166::ALL
                         .iter()

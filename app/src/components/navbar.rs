@@ -61,7 +61,10 @@ pub fn Navbar() -> impl IntoView {
                         Either::Left(
                             view! {
                                 <div class="dropdown dropdown-end">
-                                    <button class="btn btn-ghost text-sm normal-case px-1" tabindex="0">
+                                    <button
+                                        class="btn btn-ghost text-sm normal-case px-1"
+                                        tabindex="0"
+                                    >
                                         <div class="avatar">
                                             <div class="rounded-full">
                                                 <img

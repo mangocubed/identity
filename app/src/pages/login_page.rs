@@ -14,8 +14,8 @@ pub fn LoginPage() -> impl IntoView {
     let mut toast = use_toast();
     let action = ServerAction::<CreateSession>::new();
     let action_value = action.value();
-    let error_username_or_email = Memo::new(move |_| action_value.read().get_field_error("username_or_email"));
-    let error_password = Memo::new(move |_| action_value.read().get_field_error("password"));
+    let error_username_or_email = Memo::new(move |_| action_value.read().get_param_error("username_or_email"));
+    let error_password = Memo::new(move |_| action_value.read().get_param_error("password"));
     let (get_redirect_to, set_redirect_to) = use_redirect_to_cookie();
 
     Effect::watch(
@@ -36,7 +36,12 @@ pub fn LoginPage() -> impl IntoView {
 
     view! {
         <GuestPage title="Login">
-            <ActionForm action=action attr:class="form" attr:autocomplete="off" attr:novalidate="true">
+            <ActionForm
+                action=action
+                attr:class="form"
+                attr:autocomplete="off"
+                attr:novalidate="true"
+            >
                 <Show when=move || action_value.read().has_errors()>
                     <Alert alert_type=AlertType::Error>"Failed to authenticate user"</Alert>
                 </Show>
@@ -48,7 +53,12 @@ pub fn LoginPage() -> impl IntoView {
                     error=error_username_or_email
                 />
 
-                <PasswordField disabled=action.pending() label="Password" name="password" error=error_password />
+                <PasswordField
+                    disabled=action.pending()
+                    label="Password"
+                    name="password"
+                    error=error_password
+                />
 
                 <SubmitButton is_pending=action.pending() />
             </ActionForm>
