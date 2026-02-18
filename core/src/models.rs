@@ -2,13 +2,43 @@ use std::borrow::Cow;
 use std::fmt::Display;
 use std::path::PathBuf;
 
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{DateTime, NaiveDate, TimeDelta, Utc};
 use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
 
 use crate::commands;
 use crate::config::STORAGE_CONFIG;
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct AccessToken<'a> {
+    pub id: Uuid,
+    pub authorization_id: Uuid,
+    pub code: Cow<'a, str>,
+    pub refresh_code: Cow<'a, str>,
+    pub code_expires_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub refreshed_at: Option<DateTime<Utc>>,
+    pub revoked_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+impl Display for AccessToken<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.id)
+    }
+}
+
+impl AccessToken<'_> {
+    pub async fn authorization<'a>(&self) -> sqlx::Result<Authorization<'a>> {
+        commands::get_authorization_by_id(self.authorization_id).await
+    }
+
+    pub fn code_expires_in(&self) -> TimeDelta {
+        self.code_expires_at - Utc::now()
+    }
+}
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Application<'a> {
@@ -19,18 +49,19 @@ pub struct Application<'a> {
     pub updated_at: Option<DateTime<Utc>>,
 }
 
-impl Application<'_> {
-    pub fn redirect_url(&self) -> Url {
-        Url::parse(&self.redirect_url).expect("Could not get Redirect URL")
-    }
-}
-
 impl Display for Application<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.id)
     }
 }
 
+impl Application<'_> {
+    pub fn redirect_url(&self) -> Url {
+        Url::parse(&self.redirect_url).expect("Could not get Redirect URL")
+    }
+}
+
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Authorization<'a> {
     pub id: Uuid,
     pub application_id: Uuid,
@@ -44,21 +75,35 @@ pub struct Authorization<'a> {
     pub updated_at: Option<DateTime<Utc>>,
 }
 
+impl Display for Authorization<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.id)
+    }
+}
+
 impl Authorization<'_> {
     pub async fn application(&self) -> sqlx::Result<Application<'_>> {
         commands::get_application_by_id(self.application_id).await
     }
 
     pub fn full_redirect_url(&self) -> Url {
-        let mut url = Url::parse(&self.redirect_url).expect("Could not get Redirect URL");
+        let mut url = self.redirect_url();
 
         url.set_query(Some(&format!("code={}", self.code)));
 
         url
     }
 
+    pub fn redirect_url(&self) -> Url {
+        Url::parse(&self.redirect_url).expect("Could not get Redirect URL")
+    }
+
     pub async fn session(&self) -> sqlx::Result<Session> {
         commands::get_session_by_id(self.session_id).await
+    }
+
+    pub fn verify_code_challenge(&self, code_verifier: &str) -> bool {
+        commands::verify_authorization_code_challenge(self, code_verifier)
     }
 }
 

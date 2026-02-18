@@ -1,11 +1,15 @@
 use leptos::prelude::*;
-use leptos::server::codee::string::FromToStringCodec;
-use leptos_use::{SameSite, UseCookieOptions, use_cookie_with_options};
+use leptos_router::hooks::use_query;
+use leptos_router::params::Params;
 
 use crate::components::AlertType;
-use crate::constants::KEY_REDIRECT_TO;
 use crate::presenters::UserPresenter;
 use crate::server_fns::{self, ServerFnResult};
+
+#[derive(Clone, Default, Params, PartialEq)]
+pub struct LoginQuery {
+    redirect_to: Option<String>,
+}
 
 #[derive(Clone, Copy, Default)]
 pub struct Toast {
@@ -48,14 +52,24 @@ pub fn use_current_user_resource() -> Resource<ServerFnResult<UserPresenter>> {
     expect_context()
 }
 
-pub fn use_redirect_to_cookie() -> (Signal<Option<String>>, WriteSignal<Option<String>>) {
-    use_cookie_with_options::<String, FromToStringCodec>(
-        KEY_REDIRECT_TO,
-        UseCookieOptions::default()
-            .http_only(true)
-            .max_age(3600000)
-            .same_site(SameSite::Strict),
-    )
+pub fn use_redirect_to() -> Memo<String> {
+    let query = use_query::<LoginQuery>();
+
+    Memo::new(move |_| {
+        query.with(|result| {
+            let value = result
+                .as_ref()
+                .ok()
+                .and_then(|query| query.redirect_to.clone())
+                .unwrap_or("/".to_owned());
+
+            if value.starts_with("/login") || value.starts_with("/register") {
+                "/".to_owned()
+            } else {
+                value
+            }
+        })
+    })
 }
 
 pub fn use_toast() -> Toast {

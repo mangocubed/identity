@@ -5,6 +5,8 @@ use std::time::Duration;
 use envconfig::Envconfig;
 use url::Url;
 
+pub(crate) static ACCESS_TOKEN_CONFIG: LazyLock<AccessTokenConfig> =
+    LazyLock::new(|| AccessTokenConfig::init_from_env().unwrap());
 pub(crate) static AUTHORIZATION_CONFIG: LazyLock<AuthorizationConfig> =
     LazyLock::new(|| AuthorizationConfig::init_from_env().unwrap());
 pub(crate) static CACHE_CONFIG: LazyLock<CacheConfig> = LazyLock::new(|| CacheConfig::init_from_env().unwrap());
@@ -14,11 +16,33 @@ pub(crate) static MONITOR_CONFIG: LazyLock<MonitorConfig> = LazyLock::new(|| Mon
 pub(crate) static STORAGE_CONFIG: LazyLock<StorageConfig> = LazyLock::new(|| StorageConfig::init_from_env().unwrap());
 
 #[derive(Envconfig)]
+pub(crate) struct AccessTokenConfig {
+    #[envconfig(from = "ACCESS_TOKEN_CODE_TTL_SECS", default = "86400")]
+    pub code_ttl_secs: u32,
+    #[envconfig(from = "ACCESS_TOKEN_MIN_LENGTH", default = "64")]
+    pub min_length: u8,
+    #[envconfig(from = "ACCESS_TOKEN_MAX_LENGTH", default = "128")]
+    pub max_length: u8,
+    #[envconfig(from = "ACCESS_TOKEN_TTL_SECS", default = "2592000")]
+    pub ttl_secs: u32,
+}
+
+impl AccessTokenConfig {
+    pub fn code_ttl(&self) -> Duration {
+        Duration::from_secs(self.code_ttl_secs as u64)
+    }
+
+    pub fn ttl(&self) -> Duration {
+        Duration::from_secs(self.ttl_secs as u64)
+    }
+}
+
+#[derive(Envconfig)]
 pub(crate) struct AuthorizationConfig {
-    #[envconfig(from = "AUTHORIZATION_CODE_MIN_LENGTH", default = "64")]
-    pub code_min_length: u8,
-    #[envconfig(from = "AUTHORIZATION_CODE_MAX_LENGTH", default = "128")]
-    pub code_max_length: u8,
+    #[envconfig(from = "AUTHORIZATION_MIN_LENGTH", default = "64")]
+    pub min_length: u8,
+    #[envconfig(from = "AUTHORIZATION_MAX_LENGTH", default = "128")]
+    pub max_length: u8,
     #[envconfig(from = "AUTHORIZATION_TTL_SECS", default = "600")]
     pub ttl_secs: u16,
 }

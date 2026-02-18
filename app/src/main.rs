@@ -1,17 +1,14 @@
 #[cfg(feature = "ssr")]
-use axum::extract::{Path, Query};
-#[cfg(feature = "ssr")]
-use axum::response::IntoResponse;
-#[cfg(feature = "ssr")]
-use serde::Deserialize;
-#[cfg(feature = "ssr")]
-use tower_sessions::SessionManagerLayer;
-#[cfg(feature = "ssr")]
 use tower_sessions::service::PrivateCookie;
 #[cfg(feature = "ssr")]
-use tower_sessions_redis_store::{RedisStore, fred};
+use tower_sessions::{Expiry, SessionManagerLayer};
 #[cfg(feature = "ssr")]
-use uuid::Uuid;
+use tower_sessions_redis_store::{RedisStore, fred};
+
+#[cfg(feature = "ssr")]
+mod config;
+#[cfg(feature = "ssr")]
+mod handlers;
 
 #[cfg(feature = "ssr")]
 async fn session_layer() -> anyhow::Result<(
@@ -20,10 +17,9 @@ async fn session_layer() -> anyhow::Result<(
 )> {
     use fred::prelude::{ClientLike, Config, Pool};
     use time::Duration;
-    use tower_sessions::Expiry;
     use tower_sessions::cookie::{Key, SameSite};
 
-    use identity_app::config::SESSION_CONFIG;
+    use config::SESSION_CONFIG;
 
     let redis_pool = Pool::new(Config::from_url(&SESSION_CONFIG.redis_url)?, None, None, None, 6)?;
 
@@ -49,61 +45,21 @@ async fn session_layer() -> anyhow::Result<(
 }
 
 #[cfg(feature = "ssr")]
-#[derive(Deserialize)]
-pub struct AvatarImageQuery {
-    pub size: Option<u32>,
-}
-#[cfg(feature = "ssr")]
-async fn get_user_avatar_image(Path(user_id): Path<Uuid>, Query(params): Query<AvatarImageQuery>) -> impl IntoResponse {
-    use axum::body::Body;
-    use http::StatusCode;
-    use http::header::{CONTENT_DISPOSITION, CONTENT_LENGTH, CONTENT_TYPE};
-
-    use identity_core::commands;
-
-    let size = params.size.unwrap_or(128);
-
-    if size > 512 {
-        return Err((StatusCode::BAD_REQUEST, "BAD REQUEST"));
-    }
-
-    let Ok(user) = commands::get_user_by_id(user_id).await else {
-        return Err((StatusCode::NOT_FOUND, "NOT FOUND"));
-    };
-
-    let Ok(avatar_image) = user.avatar_image(size) else {
-        return Err((StatusCode::INTERNAL_SERVER_ERROR, "INTERNAL SERVER ERROR"));
-    };
-
-    let content_length = avatar_image.len();
-    let body = Body::from(avatar_image);
-
-    let headers = [
-        (CONTENT_TYPE, "image/jpeg".to_owned()),
-        (CONTENT_LENGTH, content_length.to_string()),
-        (
-            CONTENT_DISPOSITION,
-            format!("inline; filename=\"{}_{}x{}.jpg\"", user_id, size, size),
-        ),
-    ];
-
-    Ok((headers, body))
-}
-
-#[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     use std::net::SocketAddr;
 
     use axum::Router;
-    use axum::routing::get;
+    use axum::routing::{get, post};
     use leptos::prelude::*;
     use leptos_axum::{LeptosRoutes, generate_route_list};
     use tower_http::trace::TraceLayer;
     use tracing::Level;
 
     use identity_app::app::{App, shell};
-    use identity_app::config::APP_CONFIG;
+
+    use config::APP_CONFIG;
+    use handlers::{get_user_avatar_image, post_oauth_revoke, post_oauth_token};
 
     let tracing_level = if cfg!(debug_assertions) {
         Level::DEBUG
@@ -125,6 +81,8 @@ async fn main() -> anyhow::Result<()> {
             move || shell(leptos_options.clone())
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
+        .route("/oauth/revoke", post(post_oauth_revoke))
+        .route("/oauth/token", post(post_oauth_token))
         .route("/storage/users/{user_id}/avatar_image", get(get_user_avatar_image))
         .layer(session_layer)
         .layer(TraceLayer::new_for_http())

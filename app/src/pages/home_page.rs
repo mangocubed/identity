@@ -4,5 +4,9 @@ use crate::pages::AuthenticatedPage;
 
 #[component]
 pub fn HomePage() -> impl IntoView {
-    view! { <AuthenticatedPage title="Home">{"Welcome to Mango3!"}</AuthenticatedPage> }
+    view! {
+        <AuthenticatedPage title="Home">
+            <div>{"Welcome to Mango3!"}</div>
+        </AuthenticatedPage>
+    }
 }

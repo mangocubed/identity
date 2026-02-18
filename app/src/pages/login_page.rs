@@ -1,22 +1,24 @@
 use leptos::prelude::*;
 use leptos_router::components::A;
 use leptos_router::hooks::use_navigate;
+use url::form_urlencoded;
 
 use crate::components::{Alert, AlertType, PasswordField, SubmitButton, TextField};
-use crate::hooks::{use_current_user_resource, use_redirect_to_cookie, use_toast};
-use crate::pages::GuestPage;
+use crate::hooks::{use_current_user_resource, use_redirect_to, use_toast};
 use crate::server_fns::{ActionResultExt, CreateSession};
+
+use super::GuestPage;
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
     let navigate = use_navigate();
     let current_user_resource = use_current_user_resource();
     let mut toast = use_toast();
+    let redirect_to = use_redirect_to();
     let action = ServerAction::<CreateSession>::new();
     let action_value = action.value();
     let error_username_or_email = Memo::new(move |_| action_value.read().get_param_error("username_or_email"));
     let error_password = Memo::new(move |_| action_value.read().get_param_error("password"));
-    let (get_redirect_to, set_redirect_to) = use_redirect_to_cookie();
 
     Effect::watch(
         move || action_value.get(),
@@ -24,11 +26,7 @@ pub fn LoginPage() -> impl IntoView {
             if action_value.is_success() {
                 current_user_resource.refetch();
                 toast.push_alert(AlertType::Success, "Session started successfully");
-                set_redirect_to.set(None);
-                navigate(
-                    &get_redirect_to.with_untracked(|value| value.clone().unwrap_or("/".to_owned())),
-                    Default::default(),
-                );
+                navigate(&redirect_to.get_untracked(), Default::default());
             }
         },
         false,
@@ -62,9 +60,17 @@ pub fn LoginPage() -> impl IntoView {
 
                 <SubmitButton is_pending=action.pending() />
             </ActionForm>
-
             <div class="login-links">
-                <A attr:class="btn btn-block btn-outline" href="/register">
+                <A
+                    attr:class="btn btn-block btn-outline"
+                    href=move || {
+                        format!(
+                            "/register?redirect_to={}",
+                            form_urlencoded::byte_serialize(redirect_to.get().as_bytes())
+                                .collect::<String>(),
+                        )
+                    }
+                >
                     "I don't have an account"
                 </A>
             </div>
