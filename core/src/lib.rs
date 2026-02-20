@@ -1,5 +1,6 @@
 use apalis::prelude::TaskSink;
 use apalis_redis::RedisStorage;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
@@ -77,5 +78,20 @@ impl JobsStorage {
             .push(NewUserJob { user_id: user.id })
             .await
             .expect("Could not store job");
+    }
+}
+
+#[derive(Serialize)]
+pub struct Info {
+    pub built_at: DateTime<Utc>,
+    pub version: String,
+}
+
+impl Default for Info {
+    fn default() -> Self {
+        Self {
+            built_at: env!("BUILD_DATETIME").parse().unwrap(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        }
     }
 }

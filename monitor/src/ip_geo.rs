@@ -49,13 +49,22 @@ impl<'a> IpGeo<'a> {
 
         request_url.set_query(Some(&format!("apiKey={}&{}", self.api_key, query.unwrap_or_default())));
 
-        reqwest::Client::new()
+        let result = reqwest::Client::new()
             .get(request_url.clone())
             .send()
             .await?
             .error_for_status()?
             .json()
-            .await
+            .await;
+
+        match result {
+            Ok(data) => Ok(data),
+            Err(err) => {
+                tracing::error!("Could not execute request: {:?}", err);
+
+                Err(err)
+            }
+        }
     }
 
     pub async fn info(&self, ip_addr: IpAddr) -> reqwest::Result<IpGeoInfo<'_>> {

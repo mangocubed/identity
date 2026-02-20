@@ -26,6 +26,27 @@ pub async fn authenticate_user<'a>(params: AuthenticationParams) -> Result<User<
 
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
+    ty = "AsyncRedisCache<&str, User<'_>>",
+    create = r##"{ async_redis_cache(CACHE_PREFIX_GET_USER_BY_ACCESS_TOKEN_CODE).await }"##
+)]
+pub async fn get_user_by_access_token_code(code: &str) -> sqlx::Result<User<'static>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        User,
+        "SELECT us.* FROM users AS us, sessions AS se, authorizations AS au, access_tokens AS at
+        WHERE us.id = se.user_id AND se.id = au.session_id AND au.id = at.authorization_id AND us.disabled_at IS NULL
+            AND se.finished_at IS NULL AND au.revoked_at IS NULL AND at.code_expires_at > current_timestamp
+            AND at.revoked_at IS NULL AND at.code = $1
+        LIMIT 1",
+        code, // $1
+    )
+    .fetch_one(db_pool)
+    .await
+}
+
+#[io_cached(
+    map_error = r##"|_| sqlx::Error::RowNotFound"##,
     ty = "AsyncRedisCache<Uuid, User<'_>>",
     create = r##"{ async_redis_cache(CACHE_PREFIX_GET_USER_BY_ID).await }"##
 )]
@@ -43,7 +64,38 @@ pub async fn get_user_by_id(id: Uuid) -> sqlx::Result<User<'static>> {
 
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
-    ty = "AsyncRedisCache<&str, User<'_>>",
+    convert = r#"{ username.to_lowercase() }"#,
+    ty = "AsyncRedisCache<String, User<'_>>",
+    create = r##"{ async_redis_cache(CACHE_PREFIX_GET_USER_BY_USERNAME).await }"##
+)]
+async fn get_user_by_username(username: &str) -> sqlx::Result<User<'static>> {
+    if username.is_empty() {
+        return Err(sqlx::Error::RowNotFound);
+    }
+
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        User,
+        "SELECT * FROM users WHERE disabled_at IS NULL AND LOWER(username) = $1 LIMIT 1",
+        username.to_lowercase()
+    )
+    .fetch_one(db_pool)
+    .await
+}
+
+pub async fn get_user_by_username_or_id(username_or_id: &str) -> sqlx::Result<User<'static>> {
+    if let Ok(id) = username_or_id.parse::<Uuid>() {
+        get_user_by_id(id).await
+    } else {
+        get_user_by_username(username_or_id).await
+    }
+}
+
+#[io_cached(
+    map_error = r##"|_| sqlx::Error::RowNotFound"##,
+    convert = r#"{ username_or_email.to_lowercase() }"#,
+    ty = "AsyncRedisCache<String, User<'_>>",
     create = r##"{ async_redis_cache(CACHE_PREFIX_GET_USER_BY_USERNAME_OR_EMAIL).await }"##
 )]
 async fn get_user_by_username_or_email(username_or_email: &str) -> sqlx::Result<User<'static>> {

@@ -3,7 +3,23 @@ use url::Url;
 use uuid::Uuid;
 
 #[cfg(feature = "ssr")]
-use identity_core::models::User;
+use identity_core::models::{Application, User};
+
+#[derive(Clone, Deserialize, Serialize)]
+pub struct ApplicationPresenter {
+    id: Uuid,
+    name: String,
+}
+
+#[cfg(feature = "ssr")]
+impl From<Application<'_>> for ApplicationPresenter {
+    fn from(application: Application<'_>) -> Self {
+        ApplicationPresenter {
+            id: application.id,
+            name: application.name.to_string(),
+        }
+    }
+}
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct UserPresenter {

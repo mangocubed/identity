@@ -20,6 +20,8 @@ use identity_core::commands;
 #[cfg(feature = "ssr")]
 use identity_core::models::{Session, User};
 
+use crate::presenters::ApplicationPresenter;
+
 #[cfg(feature = "ssr")]
 use crate::constants::KEY_SESSION_ID;
 
@@ -202,6 +204,13 @@ async fn require_no_authentication() -> ServerFnResult {
     }
 
     Ok(())
+}
+
+#[server]
+pub async fn application(id: Uuid) -> ServerFnResult<ApplicationPresenter> {
+    let application = commands::get_application_by_id(id).await?;
+
+    Ok(application.into())
 }
 
 #[server]

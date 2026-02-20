@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["app", "cli", "core", "monitor"]
+members = ["api", "app", "cli", "core", "monitor"]
 
 [workspace.package]
 version = "0.0.0-alpha.0"
@@ -14,9 +14,17 @@ anyhow = "1.0.101"
 apalis = "1.0.0-rc.3"
 chrono = { version = "0.4.43", features = ["serde"] }
 envconfig = "0.11.1"
+http = "1.4.0"
 rust_iso3166 = "0.1.14"
 serde = "1.0.228"
-tokio = { version = "1.49.0", features = ["rt-multi-thread", "signal"] }
+serde_json = "1.0.149"
+tokio = { version = "1.49.0", features = [
+    "macros",
+    "rt-multi-thread",
+    "signal",
+] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 url = { version = "2.5.8", features = ["serde"] }
 uuid = { version = "1.21.0", features = ["serde"] }
 validator = "0.20.0"

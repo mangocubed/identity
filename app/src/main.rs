@@ -7,8 +7,6 @@ use tower_sessions_redis_store::{RedisStore, fred};
 
 #[cfg(feature = "ssr")]
 mod config;
-#[cfg(feature = "ssr")]
-mod handlers;
 
 #[cfg(feature = "ssr")]
 async fn session_layer() -> anyhow::Result<(
@@ -50,7 +48,6 @@ async fn main() -> anyhow::Result<()> {
     use std::net::SocketAddr;
 
     use axum::Router;
-    use axum::routing::{get, post};
     use leptos::prelude::*;
     use leptos_axum::{LeptosRoutes, generate_route_list};
     use tower_http::trace::TraceLayer;
@@ -59,7 +56,6 @@ async fn main() -> anyhow::Result<()> {
     use identity_app::app::{App, shell};
 
     use config::APP_CONFIG;
-    use handlers::{get_user_avatar_image, post_oauth_revoke, post_oauth_token};
 
     let tracing_level = if cfg!(debug_assertions) {
         Level::DEBUG
@@ -81,9 +77,6 @@ async fn main() -> anyhow::Result<()> {
             move || shell(leptos_options.clone())
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
-        .route("/oauth/revoke", post(post_oauth_revoke))
-        .route("/oauth/token", post(post_oauth_token))
-        .route("/storage/users/{user_id}/avatar_image", get(get_user_avatar_image))
         .layer(session_layer)
         .layer(TraceLayer::new_for_http())
         .layer(APP_CONFIG.client_ip_source.clone().into_extension())

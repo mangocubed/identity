@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use std::time::Duration;
@@ -5,6 +6,7 @@ use std::time::Duration;
 use envconfig::Envconfig;
 use url::Url;
 
+pub static API_CONFIG: LazyLock<ApiConfig> = LazyLock::new(|| ApiConfig::init_from_env().unwrap());
 pub(crate) static ACCESS_TOKEN_CONFIG: LazyLock<AccessTokenConfig> =
     LazyLock::new(|| AccessTokenConfig::init_from_env().unwrap());
 pub(crate) static AUTHORIZATION_CONFIG: LazyLock<AuthorizationConfig> =
@@ -35,6 +37,14 @@ impl AccessTokenConfig {
     pub fn ttl(&self) -> Duration {
         Duration::from_secs(self.ttl_secs as u64)
     }
+}
+
+#[derive(Envconfig)]
+pub struct ApiConfig {
+    #[envconfig(from = "API_ADDRESS", default = "127.0.0.1:8005")]
+    pub address: SocketAddr,
+    #[envconfig(from = "API_URL", default = "http://127.0.0.1:8005")]
+    pub(crate) url: Url,
 }
 
 #[derive(Envconfig)]
@@ -93,6 +103,4 @@ pub(crate) struct StorageConfig {
     pub font_path: PathBuf,
     #[envconfig(from = "STORAGE_PATH", default = "./storage/")]
     pub path: PathBuf,
-    #[envconfig(from = "STORAGE_URL", default = "http://127.0.0.1:8000/storage/")]
-    pub url: Url,
 }

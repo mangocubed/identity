@@ -8,7 +8,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::commands;
-use crate::config::STORAGE_CONFIG;
+use crate::config::{API_CONFIG, STORAGE_CONFIG};
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AccessToken<'a> {
@@ -200,10 +200,7 @@ impl User<'_> {
     }
 
     pub fn avatar_image_url(&self) -> Url {
-        STORAGE_CONFIG
-            .url
-            .join(&format!("users/{}/avatar_image", self.id))
-            .unwrap()
+        API_CONFIG.url.join(&format!("users/{}/avatar-image", self.id)).unwrap()
     }
 
     pub fn initials(&self) -> String {
