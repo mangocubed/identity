@@ -21,7 +21,7 @@ trait OrHttpError<T> {
     #[allow(clippy::result_large_err)]
     fn or_bad_request(self) -> Result<T>;
 
-    #[allow(clippy::result_large_err)]
+    #[allow(clippy::result_large_err, dead_code)]
     fn or_forbidden(self) -> Result<T>;
 
     #[allow(clippy::result_large_err)]

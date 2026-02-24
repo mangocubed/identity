@@ -34,12 +34,7 @@ pub fn LoginPage() -> impl IntoView {
 
     view! {
         <GuestPage title="Login">
-            <ActionForm
-                action=action
-                attr:class="form"
-                attr:autocomplete="off"
-                attr:novalidate="true"
-            >
+            <ActionForm action=action attr:class="form" attr:autocomplete="off" attr:novalidate="true">
                 <Show when=move || action_value.read().has_errors()>
                     <Alert alert_type=AlertType::Error>"Failed to authenticate user"</Alert>
                 </Show>
@@ -51,12 +46,7 @@ pub fn LoginPage() -> impl IntoView {
                     error=error_username_or_email
                 />
 
-                <PasswordField
-                    disabled=action.pending()
-                    label="Password"
-                    name="password"
-                    error=error_password
-                />
+                <PasswordField disabled=action.pending() label="Password" name="password" error=error_password />
 
                 <SubmitButton is_pending=action.pending() />
             </ActionForm>
@@ -66,8 +56,7 @@ pub fn LoginPage() -> impl IntoView {
                     href=move || {
                         format!(
                             "/register?redirect_to={}",
-                            form_urlencoded::byte_serialize(redirect_to.get().as_bytes())
-                                .collect::<String>(),
+                            form_urlencoded::byte_serialize(redirect_to.get().as_bytes()).collect::<String>(),
                         )
                     }
                 >

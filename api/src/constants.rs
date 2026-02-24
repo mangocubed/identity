@@ -1,6 +1,7 @@
 use http::StatusCode;
 
 pub const ERROR_BAD_REQUEST: (StatusCode, &str) = (StatusCode::BAD_REQUEST, "Bad Request");
+#[allow(dead_code)]
 pub const ERROR_FORBIDDEN: (StatusCode, &str) = (StatusCode::FORBIDDEN, "Forbidden");
 pub const ERROR_INTERNAL_SERVER_ERROR: (StatusCode, &str) =
     (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error");

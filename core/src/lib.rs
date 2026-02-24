@@ -6,7 +6,7 @@ use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use tokio::sync::OnceCell;
 
-mod config;
+pub mod config;
 mod constants;
 pub mod jobs;
 pub mod models;
