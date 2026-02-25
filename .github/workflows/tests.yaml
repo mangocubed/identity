@@ -6,7 +6,6 @@ on:
 env:
     CARGO_TERM_COLOR: always
     DATABASE_URL: postgres://mango3:mango3@127.0.0.1:5432/identity_test
-    MONITOR_REDIS_URL: redis://127.0.0.1:6379/10
 
 jobs:
     unit_tests:
@@ -57,8 +56,8 @@ jobs:
             - name: Setup Playwright
               run: |
                   cd app/end2end
-                  npm install
-                  npx playwright install
+                  npm ci
+                  npx playwright install --with-deps
                   cd ../..
             - name: Run end2end tests
               run: cargo leptos end-to-end
