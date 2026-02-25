@@ -1,0 +1,23 @@
+name: Setup Leptos
+description: Setup Leptos environment with dependencies and database configuration
+
+runs:
+    using: composite
+    steps:
+        - uses: actions/cache@v5
+          with:
+              path: |
+                  ~/.cargo/
+                  ~/.rustup/
+                  target/
+              key: ${{ runner.os }}-cargo-{{ hashFiles('**/Cargo.lock') }}
+        - uses: cargo-bins/cargo-binstall@main
+        - name: Install Cargo Leptos & SQLx CLI
+          shell: bash
+          run: cargo binstall -y cargo-leptos@0.3.5 sqlx-cli@0.8.6
+        - name: Add additional Rustup targets
+          shell: bash
+          run: rustup target add wasm32-unknown-unknown
+        - name: Run database migrations
+          shell: bash
+          run: sqlx database setup

@@ -48,10 +48,7 @@ pub fn AuthenticatedPage(children: ChildrenFn, #[prop(into)] title: String) -> i
                         if let Some(Err(_)) = *current_user_resource.read() {
                             Either::Left(
                                 view! {
-                                    <Redirect path=format!(
-                                        "/login?redirect_to={}",
-                                        redirect_to.get_untracked(),
-                                    ) />
+                                    <Redirect path=format!("/login?redirect_to={}", redirect_to.get_untracked()) />
                                 },
                             )
                         } else {

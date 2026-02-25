@@ -38,44 +38,18 @@ pub fn RegisterPage() -> impl IntoView {
 
     view! {
         <GuestPage title="Register">
-            <ActionForm
-                action=action
-                attr:class="form"
-                attr:autocomplete="off"
-                attr:novalidate="true"
-            >
+            <ActionForm action=action attr:class="form" attr:autocomplete="off" attr:novalidate="true">
                 <Show when=move || action_value.read().has_errors()>
                     <Alert alert_type=AlertType::Error>"Failed to create user"</Alert>
                 </Show>
 
-                <TextField
-                    disabled=action.pending()
-                    label="Username"
-                    name="username"
-                    error=error_username
-                />
+                <TextField disabled=action.pending() label="Username" name="username" error=error_username />
 
-                <TextField
-                    disabled=action.pending()
-                    label="Email"
-                    input_type="email"
-                    name="email"
-                    error=error_email
-                />
+                <TextField disabled=action.pending() label="Email" input_type="email" name="email" error=error_email />
 
-                <PasswordField
-                    disabled=action.pending()
-                    label="Password"
-                    name="password"
-                    error=error_password
-                />
+                <PasswordField disabled=action.pending() label="Password" name="password" error=error_password />
 
-                <TextField
-                    disabled=action.pending()
-                    label="Full name"
-                    name="full_name"
-                    error=error_full_name
-                />
+                <TextField disabled=action.pending() label="Full name" name="full_name" error=error_full_name />
 
                 <TextField
                     disabled=action.pending()
@@ -85,12 +59,7 @@ pub fn RegisterPage() -> impl IntoView {
                     error=error_birthdate
                 />
 
-                <SelectField
-                    disabled=action.pending()
-                    label="Country"
-                    name="country_code"
-                    error=error_country_code
-                >
+                <SelectField disabled=action.pending() label="Country" name="country_code" error=error_country_code>
                     <option value="">"Select"</option>
                     {rust_iso3166::ALL
                         .iter()
@@ -118,8 +87,7 @@ pub fn RegisterPage() -> impl IntoView {
                     href=move || {
                         format!(
                             "/login?redirect_to={}",
-                            form_urlencoded::byte_serialize(redirect_to.get().as_bytes())
-                                .collect::<String>(),
+                            form_urlencoded::byte_serialize(redirect_to.get().as_bytes()).collect::<String>(),
                         )
                     }
                 >

@@ -43,25 +43,11 @@ pub fn AuthorizePage() -> impl IntoView {
             <Suspense>
                 {move || Suspend::new(async move {
                     match authorize_resource.get() {
-                        Some(Ok(_)) => {
-                            EitherOf3::A(view! { <div class="text-center">"Redirecting..."</div> })
-                        }
+                        Some(Ok(_)) => EitherOf3::A(view! { <div class="text-center">"Redirecting..."</div> }),
                         Some(Err(_)) => {
-                            EitherOf3::B(
-                                view! {
-                                    <div class="text-center">
-                                        "Could not authorize application..."
-                                    </div>
-                                },
-                            )
+                            EitherOf3::B(view! { <div class="text-center">"Could not authorize application..."</div> })
                         }
-                        None => {
-                            EitherOf3::C(
-                                view! {
-                                    <div class="text-center">"Authorizing application..."</div>
-                                },
-                            )
-                        }
+                        None => EitherOf3::C(view! { <div class="text-center">"Authorizing application..."</div> }),
                     }
                 })}
             </Suspense>
