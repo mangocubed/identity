@@ -13,7 +13,7 @@ chrono.workspace = true
 ab_glyph = "0.2.32"
 anyhow.workspace = true
 apalis.workspace = true
-apalis-redis = "1.0.0-rc.3"
+apalis-redis = "1.0.0-rc.4"
 argon2 = "0.5.3"
 base64 = "0.22.1"
 cached = { version = "0.56.0", features = [
