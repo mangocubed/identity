@@ -18,7 +18,7 @@ http = "1.4.0"
 rust_iso3166 = "0.1.14"
 serde = "1.0.228"
 serde_json = "1.0.149"
-tokio = { version = "1.49.0", features = [
+tokio = { version = "1.50.0", features = [
     "macros",
     "rt-multi-thread",
     "signal",
