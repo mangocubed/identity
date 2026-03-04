@@ -12,11 +12,12 @@ Authentication provider and user account manager.
 | Name                         | Type    | Default                                                          | Packages        |
 | ---------------------------- | ------- | ---------------------------------------------------------------- | --------------- |
 | API_ADDRESS                  | String  | 127.0.0.1:8005                                                   | api             |
-| API_URL                      | String  | http://127.0.0.1:8005                                            | app             |
-| ACCESS_TOKEN_CODE_TTL_SECS   | Number  | 86400                                                            | app             |
-| ACCESS_TOKEN_MIN_LENGTH      | Number  | 64                                                               | app             |
-| ACCESS_TOKEN_MAX_LENGTH      | Number  | 128                                                              | app             |
-| ACCESS_TOKEN_TTL_SECS        | Number  | 2592000                                                          | app             |
+| API_URL                      | String  | http://127.0.0.1:8005                                            | api             |
+| APP_CLIENT_IP_SOURCE         | String  | ConnectInfo                                                      | app             |
+| ACCESS_TOKEN_CODE_TTL_SECS   | Number  | 86400                                                            | api,app         |
+| ACCESS_TOKEN_MIN_LENGTH      | Number  | 64                                                               | api,app         |
+| ACCESS_TOKEN_MAX_LENGTH      | Number  | 128                                                              | api,app         |
+| ACCESS_TOKEN_TTL_SECS        | Number  | 2592000                                                          | api,app         |
 | AUTHORIZATION_MIN_LENGTH     | Number  | 64                                                               | app             |
 | AUTHORIZATION_MAX_LENGTH     | Number  | 128                                                              | app             |
 | AUTHORIZATION_TTL_SECS       | Number  | 600                                                              | app             |
