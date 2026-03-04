@@ -55,13 +55,15 @@ jobs:
             - uses: ./.github/actions/setup-leptos
             - uses: ./.github/actions/setup-node
             - run: cargo leptos build --release
+            - run: |
+                  mkdir artifact
+                  cp -r target/app artifact/app
+                  cp target/release/identity-app artifact/
+                  cp target/release/hash-app.txt artifact/
             - uses: actions/upload-artifact@v7
               with:
                   name: identity_app_build
-                  path: |
-                      ./target/app
-                      ./target/release/identity-app
-                      ./target/release/hash-app.txt
+                  path: ./artifact/
                   retention-days: 1
                   overwrite: true
 
