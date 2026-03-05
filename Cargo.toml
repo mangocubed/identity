@@ -3,7 +3,7 @@ resolver = "3"
 members = ["api", "app", "cli", "core", "monitor"]
 
 [workspace.package]
-version = "0.0.0-alpha.2"
+version = "0.0.0-alpha.3"
 edition = "2024"
 authors = ["Javier E. <jaedns@gmail.com>"]
 homepage = "https://id.mango3.app"
