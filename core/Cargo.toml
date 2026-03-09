@@ -16,7 +16,7 @@ apalis.workspace = true
 apalis-redis = "1.0.0-rc.4"
 argon2 = "0.5.3"
 base64 = "0.22.1"
-cached = { version = "0.56.0", features = [
+cached = { version = "0.58.0", features = [
     "async",
     "redis_store",
     "redis_tokio",
