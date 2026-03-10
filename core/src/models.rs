@@ -147,6 +147,10 @@ impl Session {
         location
     }
 
+    pub fn should_refresh(&self) -> bool {
+        self.refreshed_at.unwrap_or(self.created_at) < Utc::now() - TimeDelta::days(1)
+    }
+
     pub async fn user<'a>(&self) -> sqlx::Result<User<'a>> {
         commands::get_user_by_id(self.user_id).await
     }

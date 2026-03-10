@@ -38,6 +38,21 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
 
 #[component]
 pub fn App() -> impl IntoView {
+    #[cfg(feature = "ssr")]
+    {
+        leptos::task::spawn(async {
+            use identity_core::commands;
+
+            use crate::server_fns;
+
+            if let Ok(session) = server_fns::extract_session().await
+                && session.should_refresh()
+            {
+                let _ = commands::refresh_session(&session).await;
+            }
+        });
+    }
+
     provide_meta_context();
     provide_current_user_resource();
 

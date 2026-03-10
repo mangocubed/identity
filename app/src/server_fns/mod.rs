@@ -161,7 +161,7 @@ async fn extract_tower_session() -> Result<tower_sessions::Session, ServerFnErro
 }
 
 #[cfg(feature = "ssr")]
-async fn extract_session() -> ServerFnResult<Session> {
+pub async fn extract_session() -> ServerFnResult<Session> {
     let tower_session = extract_tower_session().await?;
 
     let Some(session_id) = tower_session.get::<Uuid>(KEY_SESSION_ID).await? else {
