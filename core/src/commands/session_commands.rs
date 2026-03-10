@@ -64,6 +64,23 @@ pub async fn insert_session(user: &User<'_>, ip_address: IpAddr) -> sqlx::Result
     }
 }
 
+pub async fn refresh_session(session: &Session) -> sqlx::Result<()> {
+    let db_pool = db_pool().await;
+
+    sqlx::query!(
+        "UPDATE sessions
+        SET refreshed_at = current_timestamp, expires_at = current_timestamp + INTERVAL '30 days'
+        WHERE id = $1",
+        session.id, // $1
+    )
+    .execute(db_pool)
+    .await?;
+
+    remove_session_cache(session).await;
+
+    Ok(())
+}
+
 pub async fn update_session_location(
     session: &Session,
     country_code: &str,
