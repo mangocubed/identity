@@ -4,10 +4,22 @@ use std::str::FromStr;
 use apalis::prelude::BoxDynError;
 
 use identity_core::commands;
-use identity_core::jobs::{NewSessionJob, NewUserJob};
+use identity_core::jobs::{FinishedSessionJob, NewSessionJob, NewUserJob};
 
 use crate::ip_geo::IpGeo;
 use crate::mailer::{admin_emails, send_new_session_email, send_welcome_email};
+
+pub async fn finished_session(job: FinishedSessionJob) -> Result<(), BoxDynError> {
+    let session = commands::get_finished_session_by_id(job.session_id).await?;
+
+    let access_tokens = session.access_tokens().await?;
+
+    for access_token in access_tokens {
+        let _ = commands::revoke_access_token(&access_token).await;
+    }
+
+    Ok(())
+}
 
 pub async fn new_session(job: NewSessionJob) -> Result<(), BoxDynError> {
     let mut session = commands::get_session_by_id(job.session_id).await?;

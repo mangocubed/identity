@@ -184,9 +184,7 @@ pub async fn post_oauth_revoke(Form(params): Form<RevokeParams>) -> Result<impl 
         .await
         .or_bad_request()?;
 
-    let authorization = access_token.authorization().await.or_bad_request()?;
-
-    if params.client_id != authorization.application_id {
+    if params.client_id != access_token.application_id {
         return Err(ERROR_BAD_REQUEST.into());
     }
 
@@ -196,7 +194,7 @@ pub async fn post_oauth_revoke(Form(params): Form<RevokeParams>) -> Result<impl 
 }
 
 pub async fn post_oauth_token(Form(params): Form<TokenParams>) -> Result<impl IntoResponse> {
-    let authorization = match params.grant_type {
+    let (application, authorization, session) = match params.grant_type {
         TokenGrantType::AuthorizationCode => {
             let authorization_code = params.code.or_bad_request()?;
 
@@ -213,7 +211,10 @@ pub async fn post_oauth_token(Form(params): Form<TokenParams>) -> Result<impl In
                 return Err(ERROR_BAD_REQUEST.into());
             }
 
-            authorization
+            let application = authorization.application().await.or_internal_server_error()?;
+            let session = authorization.session().await.or_bad_request()?;
+
+            (application, authorization, session)
         }
         TokenGrantType::RefreshToken => {
             let refresh_code = params.refresh_token.or_bad_request()?;
@@ -222,17 +223,21 @@ pub async fn post_oauth_token(Form(params): Form<TokenParams>) -> Result<impl In
                 .await
                 .or_bad_request()?;
 
-            let authorization = current_access_token.authorization().await.or_bad_request()?;
-
-            if params.client_id != authorization.application_id {
+            if params.client_id != current_access_token.application_id {
                 return Err(ERROR_BAD_REQUEST.into());
             }
 
-            authorization
+            let application = current_access_token.application().await.or_internal_server_error()?;
+            let authorization = current_access_token.authorization().await.or_bad_request()?;
+            let session = current_access_token.session().await.or_bad_request()?;
+
+            (application, authorization, session)
         }
     };
 
-    let access_token = commands::insert_access_token(&authorization).await.or_bad_request()?;
+    let access_token = commands::insert_access_token(&application, &authorization, &session)
+        .await
+        .or_bad_request()?;
 
     Ok(Json(serde_json::json!({
         "access_token": access_token.code,

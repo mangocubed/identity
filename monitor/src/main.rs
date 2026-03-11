@@ -29,6 +29,13 @@ async fn main() {
 
     let jobs_storage = jobs_storage().await;
 
+    let finished_session_worker = |index| {
+        WorkerBuilder::new(format!("finished-session-{index}"))
+            .backend(jobs_storage.finished_session.clone())
+            .enable_tracing()
+            .build(handlers::finished_session)
+    };
+
     let new_session_worker = |index| {
         WorkerBuilder::new(format!("new-session-{index}"))
             .backend(jobs_storage.new_session.clone())
@@ -44,6 +51,7 @@ async fn main() {
     };
 
     Monitor::new()
+        .register(finished_session_worker)
         .register(new_session_worker)
         .register(new_user_worker)
         .shutdown_timeout(Duration::from_millis(10000))

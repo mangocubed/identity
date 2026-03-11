@@ -34,9 +34,9 @@ pub async fn get_user_by_access_token_code(code: &str) -> sqlx::Result<User<'sta
 
     sqlx::query_as!(
         User,
-        "SELECT us.* FROM users AS us, sessions AS se, authorizations AS au, access_tokens AS at
-        WHERE us.id = se.user_id AND se.id = au.session_id AND au.id = at.authorization_id AND us.disabled_at IS NULL
-            AND se.finished_at IS NULL AND au.revoked_at IS NULL AND at.code_expires_at > current_timestamp
+        "SELECT us.* FROM users AS us, access_tokens AS at
+        WHERE
+            us.id = at.user_id AND us.disabled_at IS NULL AND at.code_expires_at > current_timestamp
             AND at.revoked_at IS NULL AND at.code = $1
         LIMIT 1",
         code, // $1
