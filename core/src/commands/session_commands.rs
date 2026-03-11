@@ -22,7 +22,21 @@ pub async fn finish_session(session: &Session) -> sqlx::Result<()> {
 
     remove_session_cache(session).await;
 
+    jobs_storage().await.push_finished_session(session).await;
+
     Ok(())
+}
+
+pub async fn get_finished_session_by_id(id: Uuid) -> sqlx::Result<Session> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        Session,
+        "SELECT * FROM sessions WHERE (expires_at <= current_timestamp OR finished_at IS NOT NULL) AND id = $1 LIMIT 1",
+        id
+    )
+    .fetch_one(db_pool)
+    .await
 }
 
 #[io_cached(

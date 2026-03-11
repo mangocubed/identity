@@ -5,9 +5,22 @@ use chrono::Utc;
 use crate::config::ACCESS_TOKEN_CONFIG;
 use crate::constants::{CACHE_PREFIX_GET_ACCESS_TOKEN_BY_CODE, CACHE_PREFIX_GET_ACCESS_TOKEN_BY_REFRESH_CODE};
 use crate::db_pool;
-use crate::models::{AccessToken, Authorization};
+use crate::models::{AccessToken, Application, Authorization, Session};
 
 use super::{AsyncRedisCacheExt, async_redis_cache, generate_random_string};
+
+pub async fn all_access_tokens_by_session(session: &Session) -> sqlx::Result<Vec<AccessToken<'_>>> {
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        AccessToken,
+        "SELECT * FROM access_tokens
+        WHERE expires_at > current_timestamp AND revoked_at IS NULL AND session_id = $1",
+        session.id
+    )
+    .fetch_all(db_pool)
+    .await
+}
 
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
@@ -55,13 +68,18 @@ pub async fn get_access_token_by_refresh_code(refresh_code: String) -> sqlx::Res
     .await
 }
 
-pub async fn insert_access_token<'a>(authorization: &Authorization<'_>) -> sqlx::Result<AccessToken<'a>> {
-    if authorization.revoked_at.is_some() {
+pub async fn insert_access_token<'a>(
+    application: &Application<'_>,
+    authorization: &Authorization<'_>,
+    session: &Session,
+) -> sqlx::Result<AccessToken<'a>> {
+    if authorization.user_id != session.user_id {
         return Err(sqlx::Error::InvalidArgument("Invalid authorization".to_owned()));
     }
 
     let db_pool = db_pool().await;
 
+    let user = session.user().await?;
     let code = generate_random_string(ACCESS_TOKEN_CONFIG.min_length..=ACCESS_TOKEN_CONFIG.max_length);
     let refresh_code = generate_random_string(ACCESS_TOKEN_CONFIG.min_length..=ACCESS_TOKEN_CONFIG.max_length);
     let code_expires_at = Utc::now() + ACCESS_TOKEN_CONFIG.code_ttl();
@@ -69,13 +87,18 @@ pub async fn insert_access_token<'a>(authorization: &Authorization<'_>) -> sqlx:
 
     sqlx::query_as!(
         AccessToken,
-        "INSERT INTO access_tokens AS a (authorization_id, code, refresh_code, code_expires_at, expires_at)
-        VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        authorization.id, // $1
-        code,             // $2
-        refresh_code,     // $3
-        code_expires_at,  // $4
-        expires_at,       // $5
+        "INSERT INTO access_tokens (
+            application_id, authorization_id, session_id, user_id, code, refresh_code, code_expires_at, expires_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+        application.id,   // $1
+        authorization.id, // $2
+        session.id,       // $3
+        user.id,          // $4
+        code,             // $5
+        refresh_code,     // $6
+        code_expires_at,  // $7
+        expires_at,       // $8
     )
     .fetch_one(db_pool)
     .await

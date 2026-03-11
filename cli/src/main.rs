@@ -45,9 +45,9 @@ enum CliCommand {
         #[arg(short, long)]
         id: Uuid,
         #[arg(short, long)]
-        name: String,
+        name: Option<String>,
         #[arg(short, long)]
-        redirect_url: String,
+        redirect_url: Option<String>,
     },
 }
 
@@ -140,14 +140,19 @@ async fn main() {
             }
         }
         CliCommand::UpdateApplication { id, name, redirect_url } => {
+            if name.is_none() && redirect_url.is_none() {
+                println!("No changes to update.");
+                return;
+            }
+
             let application = commands::get_application_by_id(*id)
                 .await
                 .expect("Could not get application");
             let result = commands::update_application(
                 &application,
                 ApplicationParams {
-                    name: name.clone(),
-                    redirect_url: redirect_url.clone(),
+                    name: name.clone().unwrap_or(application.name.to_string()),
+                    redirect_url: redirect_url.clone().unwrap_or(application.redirect_url.to_string()),
                 },
             )
             .await;

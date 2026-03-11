@@ -20,7 +20,7 @@ Authentication provider and user account manager.
 | ACCESS_TOKEN_TTL_SECS        | Number  | 2592000                                                          | api,app         |
 | AUTHORIZATION_MIN_LENGTH     | Number  | 64                                                               | app             |
 | AUTHORIZATION_MAX_LENGTH     | Number  | 128                                                              | app             |
-| AUTHORIZATION_TTL_SECS       | Number  | 600                                                              | app             |
+| AUTHORIZATION_TTL_SECS       | Number  | 600                                                              | app,monitor     |
 | CACHE_REDIS_URL              | String  | redis://127.0.0.1:6379/0                                         | api,app,monitor |
 | CACHE_TTL_SECS               | Number  | 3600                                                             | api,app,monitor |
 | DATABASE_MAX_CONNECTIONS     | Number  | 5                                                                | api,app,monitor |

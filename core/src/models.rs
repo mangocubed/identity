@@ -13,7 +13,10 @@ use crate::config::{API_CONFIG, STORAGE_CONFIG};
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AccessToken<'a> {
     pub id: Uuid,
+    pub application_id: Uuid,
     pub authorization_id: Uuid,
+    pub session_id: Uuid,
+    pub user_id: Uuid,
     pub code: Cow<'a, str>,
     pub refresh_code: Cow<'a, str>,
     pub code_expires_at: DateTime<Utc>,
@@ -31,8 +34,16 @@ impl Display for AccessToken<'_> {
 }
 
 impl AccessToken<'_> {
+    pub async fn application<'a>(&self) -> sqlx::Result<Application<'a>> {
+        commands::get_application_by_id(self.application_id).await
+    }
+
     pub async fn authorization<'a>(&self) -> sqlx::Result<Authorization<'a>> {
         commands::get_authorization_by_id(self.authorization_id).await
+    }
+
+    pub async fn session(&self) -> sqlx::Result<Session> {
+        commands::get_session_by_id(self.session_id).await
     }
 
     pub fn code_expires_in(&self) -> TimeDelta {
@@ -66,6 +77,7 @@ pub struct Authorization<'a> {
     pub id: Uuid,
     pub application_id: Uuid,
     pub session_id: Uuid,
+    pub user_id: Uuid,
     pub code: Cow<'a, str>,
     pub code_challenge: Cow<'a, str>,
     pub redirect_url: Cow<'a, str>,
@@ -82,7 +94,7 @@ impl Display for Authorization<'_> {
 }
 
 impl Authorization<'_> {
-    pub async fn application(&self) -> sqlx::Result<Application<'_>> {
+    pub async fn application<'a>(&self) -> sqlx::Result<Application<'a>> {
         commands::get_application_by_id(self.application_id).await
     }
 
@@ -100,6 +112,10 @@ impl Authorization<'_> {
 
     pub async fn session(&self) -> sqlx::Result<Session> {
         commands::get_session_by_id(self.session_id).await
+    }
+
+    pub async fn user(&self) -> sqlx::Result<User<'_>> {
+        commands::get_user_by_id(self.user_id).await
     }
 
     pub fn verify_code_challenge(&self, code_verifier: &str) -> bool {
@@ -129,6 +145,10 @@ impl Display for Session {
 }
 
 impl Session {
+    pub async fn access_tokens(&self) -> sqlx::Result<Vec<AccessToken<'_>>> {
+        commands::all_access_tokens_by_session(self).await
+    }
+
     pub fn location(&self) -> String {
         let Some(country) = self.country_code.as_ref().and_then(|c| rust_iso3166::from_alpha2(c)) else {
             return "Unknown".to_owned();
