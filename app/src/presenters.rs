@@ -7,8 +7,8 @@ use identity_core::models::{Application, User};
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct ApplicationPresenter {
-    id: Uuid,
-    name: String,
+    pub id: Uuid,
+    pub name: String,
 }
 
 #[cfg(feature = "ssr")]

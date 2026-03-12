@@ -1,4 +1,4 @@
-use leptos::either::EitherOf3;
+use leptos::either::{Either, EitherOf5};
 use leptos::prelude::*;
 use leptos_router::hooks::use_query;
 use leptos_router::params::Params;
@@ -20,9 +20,19 @@ struct AuthorizeQuery {
 #[component]
 pub fn AuthorizePage() -> impl IntoView {
     let query = use_query::<AuthorizeQuery>();
-    let authorize_resource = Resource::new_blocking(
-        move || query.get().unwrap_or_default(),
-        async move |query| {
+    let application_resource = Resource::new_blocking(
+        move || query.get().unwrap_or_default().client_id,
+        async move |id| {
+            let Some(id) = id else {
+                return Err(ServerFnError::Args("client_id is required".to_owned()));
+            };
+
+            server_fns::application(id).await
+        },
+    );
+    let action = Action::new(move |query: &AuthorizeQuery| {
+        let query = query.to_owned();
+        async move {
             if query.response_type != Some("code".to_owned()) || query.code_challenge_method != Some("S256".to_owned())
             {
                 return Err(ServerFnError::Args("Invalid arguments".to_owned()));
@@ -35,19 +45,59 @@ pub fn AuthorizePage() -> impl IntoView {
             };
 
             server_fns::create_authorization(application_id, redirect_url, code_challenge).await
-        },
-    );
+        }
+    });
+    let action_value = action.value();
 
     view! {
         <AuthenticatedPage title="Authorize Application">
             <Suspense>
                 {move || Suspend::new(async move {
-                    match authorize_resource.get() {
-                        Some(Ok(_)) => EitherOf3::A(view! { <div class="text-center">"Redirecting..."</div> }),
-                        Some(Err(_)) => {
-                            EitherOf3::B(view! { <div class="text-center">"Could not authorize application..."</div> })
+                    match (application_resource.get(), action_value.get()) {
+                        (Some(Ok(_)), Some(Ok(_))) => {
+                            EitherOf5::A(view! { <div class="text-center">"Redirecting..."</div> })
                         }
-                        None => EitherOf3::C(view! { <div class="text-center">"Authorizing application..."</div> }),
+                        (Some(Ok(_)), Some(Err(_))) => {
+                            EitherOf5::B(view! { <div class="text-center">"Could not authorize application..."</div> })
+                        }
+                        (Some(Ok(application)), None) => {
+                            EitherOf5::C(
+                                view! {
+                                    <div class="card card-border bg-base-100">
+                                        <div class="card-body">
+                                            <p class="text-xl">
+                                                "Authorize "<b>{application.name}</b>
+                                                " to use your user account information"
+                                            </p>
+
+                                            <div class="card-actions">
+                                                <button
+                                                    on:click=move |_| {
+                                                        action.dispatch(query.get().unwrap_or_default());
+                                                    }
+                                                    class="btn-submit"
+                                                    disabled=move || action.pending().get()
+                                                >
+                                                    {move || {
+                                                        if action.pending().get() {
+                                                            Either::Left(
+                                                                view! { <span class="loading loading-spinner" /> },
+                                                            )
+                                                        } else {
+                                                            Either::Right("Authorize")
+                                                        }
+                                                    }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                },
+                            )
+                        }
+                        (Some(Err(_)), _) => {
+                            EitherOf5::D(view! { <div class="text-center">"Application not found"</div> })
+                        }
+                        (_, _) => EitherOf5::E(()),
                     }
                 })}
             </Suspense>

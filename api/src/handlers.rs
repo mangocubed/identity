@@ -131,7 +131,7 @@ pub async fn get_current_user(authorization: Option<TypedHeader<Authorization<Be
 
     let code = bearer.token().to_owned();
 
-    let user = commands::get_user_by_access_token_code(&code).await.or_unauthorized()?;
+    let user = commands::get_user_by_access_token_code(code).await.or_unauthorized()?;
 
     Ok(Json(UserJson::from(user)))
 }
