@@ -26,10 +26,10 @@ pub async fn authenticate_user<'a>(params: AuthenticationParams) -> Result<User<
 
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
-    ty = "AsyncRedisCache<&str, User<'_>>",
+    ty = "AsyncRedisCache<String, User<'_>>",
     create = r##"{ async_redis_cache(CACHE_PREFIX_GET_USER_BY_ACCESS_TOKEN_CODE).await }"##
 )]
-pub async fn get_user_by_access_token_code(code: &str) -> sqlx::Result<User<'static>> {
+pub async fn get_user_by_access_token_code(code: String) -> sqlx::Result<User<'static>> {
     let db_pool = db_pool().await;
 
     sqlx::query_as!(

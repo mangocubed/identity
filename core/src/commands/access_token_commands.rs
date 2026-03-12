@@ -3,11 +3,11 @@ use cached::proc_macro::io_cached;
 use chrono::Utc;
 
 use crate::config::ACCESS_TOKEN_CONFIG;
-use crate::constants::{CACHE_PREFIX_GET_ACCESS_TOKEN_BY_CODE, CACHE_PREFIX_GET_ACCESS_TOKEN_BY_REFRESH_CODE};
+use crate::constants::*;
 use crate::db_pool;
 use crate::models::{AccessToken, Application, Authorization, Session};
 
-use super::{AsyncRedisCacheExt, async_redis_cache, generate_random_string};
+use super::{AsyncRedisCacheExt, GET_USER_BY_ACCESS_TOKEN_CODE, async_redis_cache, generate_random_string};
 
 pub async fn all_access_tokens_by_session(session: &Session) -> sqlx::Result<Vec<AccessToken<'_>>> {
     let db_pool = db_pool().await;
@@ -105,7 +105,7 @@ pub async fn insert_access_token<'a>(
 }
 
 pub async fn revoke_access_token(access_token: &AccessToken<'_>) -> sqlx::Result<()> {
-    if access_token.revoked_at.is_none() {
+    if access_token.revoked_at.is_some() {
         return Ok(());
     }
 
@@ -129,6 +129,7 @@ async fn remove_access_token_cache(access_token: &AccessToken<'_>) {
 
     tokio::join!(
         GET_ACCESS_TOKEN_BY_CODE.cache_remove(CACHE_PREFIX_GET_ACCESS_TOKEN_BY_CODE, &code),
-        GET_ACCESS_TOKEN_BY_REFRESH_CODE.cache_remove(CACHE_PREFIX_GET_ACCESS_TOKEN_BY_REFRESH_CODE, &refresh_code)
+        GET_ACCESS_TOKEN_BY_REFRESH_CODE.cache_remove(CACHE_PREFIX_GET_ACCESS_TOKEN_BY_REFRESH_CODE, &refresh_code),
+        GET_USER_BY_ACCESS_TOKEN_CODE.cache_remove(CACHE_PREFIX_GET_USER_BY_ACCESS_TOKEN_CODE, &code)
     );
 }

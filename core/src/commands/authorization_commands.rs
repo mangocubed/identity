@@ -77,7 +77,7 @@ pub async fn insert_or_refresh_authorization<'a>(
         "INSERT INTO authorizations AS a (application_id, session_id, user_id, redirect_url, code, code_challenge, expires_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (application_id, user_id) DO UPDATE
-        SET redirect_url = $4, code = $5, code_challenge = $6, expires_at = $7, revoked_at = NULL
+        SET session_id = $2, redirect_url = $4, code = $5, code_challenge = $6, expires_at = $7, revoked_at = NULL
         RETURNING *",
         application.id,        // $1
         session.id,            // $2
