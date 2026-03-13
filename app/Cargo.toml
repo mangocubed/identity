@@ -35,7 +35,7 @@ tower-sessions = { version = "=0.14.0", features = [
 ], optional = true }
 tower-sessions-redis-store = { version = "0.16.0", optional = true }
 tracing = { version = "0.1.44", optional = true }
-tracing-subscriber = { version = "0.3.22", features = [
+tracing-subscriber = { version = "0.3.23", features = [
     "env-filter",
 ], optional = true }
 url.workspace = true
