@@ -6,6 +6,7 @@ use leptos_router::{StaticSegment, path};
 
 use crate::components::{Alert, Navbar};
 use crate::hooks::{provide_current_user_resource, provide_toast};
+use crate::icons::Mango3Icon;
 use crate::pages::{AuthorizePage, HomePage, LoginPage, RegisterPage};
 use crate::utils::sleep;
 
@@ -54,9 +55,16 @@ pub fn App() -> impl IntoView {
     }
 
     provide_meta_context();
-    provide_current_user_resource();
 
+    let user_resource = provide_current_user_resource();
     let mut toast = provide_toast();
+    let is_ready = RwSignal::new(false);
+
+    Effect::new(move || {
+        if user_resource.read().is_some() {
+            is_ready.set(true);
+        }
+    });
 
     view! {
         <Title formatter=|page_title: String| {
@@ -107,6 +115,13 @@ pub fn App() -> impl IntoView {
                     view! { <Alert alert_type=alert_type>{message}</Alert> }
                 }
             />
+        </div>
+
+        <div class="splash" class:splash-hidden=is_ready>
+            <figure>
+                <div class="splash-pulse"></div>
+                <Mango3Icon />
+            </figure>
         </div>
     }
 }

@@ -36,8 +36,12 @@ impl Toast {
     }
 }
 
-pub fn provide_current_user_resource() {
-    provide_context(Resource::new_blocking(|| (), |_| server_fns::current_user()))
+pub fn provide_current_user_resource() -> Resource<ServerFnResult<UserPresenter>> {
+    let resource = Resource::new_blocking(|| (), |_| server_fns::current_user());
+
+    provide_context(resource);
+
+    resource
 }
 
 pub fn provide_toast() -> Toast {
