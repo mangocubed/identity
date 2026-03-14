@@ -102,7 +102,7 @@ pub fn InformationCircleOutline<'a>(#[prop(default = "size-6")] class: &'a str) 
 }
 
 #[component]
-pub fn Mango3Icon<'a>(class: &'a str) -> impl IntoView {
+pub fn Mango3Icon<'a>(#[prop(optional)] class: &'a str) -> impl IntoView {
     view! {
         <svg class=class width="124" height="124" viewBox="0 0 124 124" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path

@@ -111,6 +111,55 @@
     }
 }
 
+@utility splash {
+    @apply flex items-center justify-center fixed inset-0 z-1000 bg-black;
+
+    transition:
+        visibility 0s 0.3s,
+        background-color 0.3s;
+
+    .splash-pulse {
+        @apply bottom-3.5 left-3.5 m-auto h-25 w-25 rounded-full animate-[splash-pulse_1.5s_infinite];
+    }
+
+    figure {
+        @apply block h-32 w-32 relative;
+    }
+
+    svg {
+        @apply block h-auto w-full;
+    }
+
+    svg,
+    .splash-pulse {
+        @apply absolute;
+
+        transition:
+            visibility 0s 0.3s,
+            opacity 0.3s;
+    }
+
+    &.splash-hidden {
+        @apply bg-[#0000] invisible;
+    }
+
+    &.splash-hidden svg,
+    &.splash-hidden .splash-pulse {
+        @apply invisible opacity-0;
+    }
+}
+
 @utility wrapper {
     @apply absolute flex flex-col inset-0;
+}
+
+@keyframes splash-pulse {
+    0% {
+        background-color: #333;
+        box-shadow: 0 0 0 0px #333;
+    }
+    100% {
+        background-color: #3333;
+        box-shadow: 0 0 0 64px #3333;
+    }
 }
