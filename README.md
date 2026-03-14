@@ -7,6 +7,11 @@ Authentication provider and user account manager.
 - Node.js 24.x
 - Rust 1.93.x
 
+## Run Requirements
+
+- PostgreSQL 18.x
+- Redis 8.x
+
 ## Environment variables
 
 | Name                         | Type    | Default                                                          | Packages        |
