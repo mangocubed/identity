@@ -47,9 +47,7 @@ pub async fn get_authorization_by_id(id: Uuid) -> sqlx::Result<Authorization<'st
 
     sqlx::query_as!(
         Authorization,
-        "SELECT * FROM authorizations
-        WHERE expires_at > current_timestamp AND revoked_at IS NULL AND id = $1
-        LIMIT 1",
+        "SELECT * FROM authorizations WHERE revoked_at IS NULL AND id = $1 LIMIT 1",
         id // $1
     )
     .fetch_one(db_pool)

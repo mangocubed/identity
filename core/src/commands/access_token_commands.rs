@@ -7,7 +7,7 @@ use crate::constants::*;
 use crate::db_pool;
 use crate::models::{AccessToken, Application, Authorization, Session};
 
-use super::{AsyncRedisCacheExt, GET_USER_BY_ACCESS_TOKEN_CODE, async_redis_cache, generate_random_string};
+use super::*;
 
 pub async fn all_access_tokens_by_session(session: &Session) -> sqlx::Result<Vec<AccessToken<'_>>> {
     let db_pool = db_pool().await;
@@ -85,7 +85,7 @@ pub async fn insert_access_token<'a>(
     let code_expires_at = Utc::now() + ACCESS_TOKEN_CONFIG.code_ttl();
     let expires_at = Utc::now() + ACCESS_TOKEN_CONFIG.ttl();
 
-    sqlx::query_as!(
+    let access_token = sqlx::query_as!(
         AccessToken,
         "INSERT INTO access_tokens (
             application_id, authorization_id, session_id, user_id, code, refresh_code, code_expires_at, expires_at
@@ -101,7 +101,13 @@ pub async fn insert_access_token<'a>(
         expires_at,       // $8
     )
     .fetch_one(db_pool)
-    .await
+    .await?;
+
+    if session.should_refresh() {
+        let _ = refresh_session(session).await;
+    }
+
+    Ok(access_token)
 }
 
 pub async fn revoke_access_token(access_token: &AccessToken<'_>) -> sqlx::Result<()> {
