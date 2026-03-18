@@ -5,10 +5,10 @@ use validator::{Validate, ValidationErrors};
 
 use crate::constants::*;
 use crate::models::User;
-use crate::params::{AuthenticationParams, UserParams};
+use crate::params::{AuthenticationParams, PasswordParams, UserParams};
 use crate::{db_pool, jobs_storage};
 
-use super::{OrValidationErrors, ValidationResult, async_redis_cache, encrypt_password};
+use super::{AsyncRedisCacheExt, OrValidationErrors, ValidationResult, async_redis_cache, encrypt_password};
 
 pub async fn authenticate_user<'a>(params: AuthenticationParams) -> Result<User<'a>, ValidationErrors> {
     params.validate()?;
@@ -193,6 +193,60 @@ pub async fn insert_user<'a>(params: UserParams) -> ValidationResult<User<'a>> {
     jobs_storage().await.push_new_user(&user).await;
 
     Ok(user)
+}
+
+async fn remove_user_cache(user: &User<'_>) {
+    let username = user.username.to_lowercase();
+    let email = user.email.to_lowercase();
+
+    tokio::join!(
+        GET_USER_BY_ID.cache_remove(CACHE_PREFIX_GET_USER_BY_ID, &user.id),
+        GET_USER_BY_USERNAME.cache_remove(CACHE_PREFIX_GET_USER_BY_USERNAME, &username),
+        GET_USER_BY_USERNAME_OR_EMAIL.cache_remove(CACHE_PREFIX_GET_USER_BY_USERNAME_OR_EMAIL, &username),
+        GET_USER_BY_USERNAME_OR_EMAIL.cache_remove(CACHE_PREFIX_GET_USER_BY_USERNAME_OR_EMAIL, &email),
+        GET_USER_ID_BY_EMAIL.cache_remove(CACHE_PREFIX_GET_USER_ID_BY_EMAIL, &email),
+        GET_USER_ID_BY_USERNAME.cache_remove(CACHE_PREFIX_GET_USER_ID_BY_USERNAME, &username),
+    );
+}
+
+pub async fn update_user_password(user: &User<'_>, params: PasswordParams) -> Result<(), ValidationErrors> {
+    params.validate()?;
+
+    let mut validation_errors = ValidationErrors::new();
+
+    if !user.verify_password(&params.current_password) {
+        validation_errors.add("current_password", ERROR_IS_INVALID.clone());
+
+        return Err(validation_errors);
+    }
+
+    if params.current_password == params.new_password {
+        validation_errors.add("new_password", ERROR_PASSWORD_MUST_CHANGE.clone());
+
+        return Err(validation_errors);
+    }
+
+    let db_pool = db_pool().await;
+
+    let result = sqlx::query_as!(
+        User,
+        r#"UPDATE users SET encrypted_password = $2 WHERE disabled_at IS NULL AND id = $1"#,
+        user.id,                                // $1
+        encrypt_password(&params.new_password), // $2
+    )
+    .execute(db_pool)
+    .await;
+
+    match result {
+        Ok(_) => {
+            jobs_storage().await.push_password_changed(user).await;
+
+            remove_user_cache(user).await;
+
+            Ok(())
+        }
+        Err(_) => Err(validation_errors),
+    }
 }
 
 pub(crate) async fn user_email_exists(email: &str) -> bool {

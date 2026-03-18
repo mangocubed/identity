@@ -15,3 +15,8 @@ pub struct NewSessionJob {
 pub struct NewUserJob {
     pub user_id: Uuid,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct PasswordChangedJob {
+    pub user_id: Uuid,
+}

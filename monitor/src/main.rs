@@ -32,6 +32,7 @@ async fn main() {
     let finished_session_worker = |index| {
         WorkerBuilder::new(format!("finished-session-{index}"))
             .backend(jobs_storage.finished_session.clone())
+            .concurrency(1)
             .enable_tracing()
             .build(handlers::finished_session)
     };
@@ -39,6 +40,7 @@ async fn main() {
     let new_session_worker = |index| {
         WorkerBuilder::new(format!("new-session-{index}"))
             .backend(jobs_storage.new_session.clone())
+            .concurrency(1)
             .enable_tracing()
             .build(handlers::new_session)
     };
@@ -46,14 +48,24 @@ async fn main() {
     let new_user_worker = |index| {
         WorkerBuilder::new(format!("new-user-{index}"))
             .backend(jobs_storage.new_user.clone())
+            .concurrency(1)
             .enable_tracing()
             .build(handlers::new_user)
+    };
+
+    let password_changed_worker = |index| {
+        WorkerBuilder::new(format!("password-changed-{index}"))
+            .backend(jobs_storage.password_changed.clone())
+            .concurrency(1)
+            .enable_tracing()
+            .build(handlers::password_changed)
     };
 
     Monitor::new()
         .register(finished_session_worker)
         .register(new_session_worker)
         .register(new_user_worker)
+        .register(password_changed_worker)
         .shutdown_timeout(Duration::from_millis(10000))
         .run_with_signal(async {
             info!("Monitor started");

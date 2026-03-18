@@ -59,6 +59,14 @@ pub struct AuthenticationParams {
 }
 
 #[derive(Validate)]
+pub struct PasswordParams {
+    #[validate(length(min = 1, max = 255, message = "Can't be blank"))]
+    pub current_password: String,
+    #[validate(length(min = 6, max = 128, message = "Must have at least 6 characters"))]
+    pub new_password: String,
+}
+
+#[derive(Validate)]
 pub struct UserParams {
     #[validate(
         length(min = 3, max = 16, message = "Must have at least 3 characters"),
