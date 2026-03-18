@@ -4,7 +4,7 @@ use leptos::prelude::*;
 #[cfg(feature = "ssr")]
 use identity_core::commands;
 #[cfg(feature = "ssr")]
-use identity_core::params::UserParams;
+use identity_core::params::{PasswordParams, UserParams};
 
 use crate::presenters::UserPresenter;
 
@@ -14,7 +14,7 @@ use crate::server_fns::KEY_SESSION_ID;
 use super::{ActionResult, ServerFnResult};
 
 #[cfg(feature = "ssr")]
-use super::{OrHttpError, extract_client_ip, extract_tower_session, extract_user, require_no_authentication};
+use super::*;
 
 #[server]
 pub async fn create_user(
@@ -53,4 +53,22 @@ pub async fn current_user() -> ServerFnResult<UserPresenter> {
     let user = extract_user().await.or_unauthorized()?;
 
     Ok(user.into())
+}
+
+#[server]
+pub async fn update_password(current_password: String, new_password: String) -> ActionResult {
+    require_authentication().await?;
+
+    let user = extract_user().await?;
+
+    commands::update_user_password(
+        &user,
+        PasswordParams {
+            current_password,
+            new_password,
+        },
+    )
+    .await?;
+
+    Ok(())
 }

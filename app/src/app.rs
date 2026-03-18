@@ -1,13 +1,13 @@
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_meta::{Title, provide_meta_context};
-use leptos_router::components::{Route, Router, Routes};
+use leptos_router::components::{ParentRoute, Route, Router, Routes};
 use leptos_router::{StaticSegment, path};
 
 use crate::components::{Alert, Navbar};
 use crate::hooks::{provide_current_user_resource, provide_toast};
 use crate::icons::Mango3Icon;
-use crate::pages::{AuthorizePage, HomePage, LoginPage, RegisterPage};
+use crate::pages::{AuthorizePage, ChangePasswordPage, HomePage, HomeParentPage, LoginPage, RegisterPage};
 use crate::utils::sleep;
 
 #[cfg(feature = "ssr")]
@@ -82,7 +82,10 @@ pub fn App() -> impl IntoView {
                 <div class="layout">
                     <main class="main">
                         <Routes fallback=|| "Page not found.".into_view()>
-                            <Route path=StaticSegment("") view=HomePage />
+                            <ParentRoute path=StaticSegment("") view=HomeParentPage>
+                                <Route path=StaticSegment("") view=HomePage />
+                                <Route path=StaticSegment("change-password") view=ChangePasswordPage />
+                            </ParentRoute>
                             <Route path=path!("/oauth/authorize") view=AuthorizePage />
                             <Route path=StaticSegment("login") view=LoginPage />
                             <Route path=StaticSegment("register") view=RegisterPage />

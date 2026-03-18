@@ -63,7 +63,7 @@ pub fn AuthorizePage() -> impl IntoView {
                         (Some(Ok(application)), None) => {
                             EitherOf5::C(
                                 view! {
-                                    <div class="card card-border bg-base-100">
+                                    <div class="card card-border bg-base-100 max-w-160 mx-auto my-4 w-full">
                                         <div class="card-body">
                                             <p class="text-xl">
                                                 "Authorize "<b>{application.name}</b>
