@@ -5,7 +5,7 @@ use validator::{Validate, ValidationErrors};
 
 use crate::constants::*;
 use crate::models::User;
-use crate::params::{AuthenticationParams, PasswordParams, UserParams};
+use crate::params::{AuthenticationParams, PasswordParams, ProfileParams, UserParams};
 use crate::{db_pool, jobs_storage};
 
 use super::{AsyncRedisCacheExt, OrValidationErrors, ValidationResult, async_redis_cache, encrypt_password};
@@ -228,25 +228,45 @@ pub async fn update_user_password(user: &User<'_>, params: PasswordParams) -> Re
 
     let db_pool = db_pool().await;
 
-    let result = sqlx::query_as!(
+    sqlx::query_as!(
         User,
         r#"UPDATE users SET encrypted_password = $2 WHERE disabled_at IS NULL AND id = $1"#,
         user.id,                                // $1
         encrypt_password(&params.new_password), // $2
     )
     .execute(db_pool)
-    .await;
+    .await
+    .map_err(|_| validation_errors)?;
 
-    match result {
-        Ok(_) => {
-            jobs_storage().await.push_password_changed(user).await;
+    jobs_storage().await.push_password_changed(user).await;
 
-            remove_user_cache(user).await;
+    remove_user_cache(user).await;
 
-            Ok(())
-        }
-        Err(_) => Err(validation_errors),
-    }
+    Ok(())
+}
+
+pub async fn update_user_profile(user: &User<'_>, params: ProfileParams) -> Result<(), ValidationErrors> {
+    params.validate()?;
+
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        User,
+        r#"UPDATE users SET display_name = $2, full_name = $3, birthdate = $4, country_code = $5
+        WHERE disabled_at IS NULL AND id = $1"#,
+        user.id,             // $1
+        params.display_name, // $2
+        params.full_name,    // $3
+        params.birthdate,    // $4
+        params.country_code  // $5
+    )
+    .execute(db_pool)
+    .await
+    .map_err(|_| ValidationErrors::new())?;
+
+    remove_user_cache(user).await;
+
+    Ok(())
 }
 
 pub(crate) async fn user_email_exists(email: &str) -> bool {

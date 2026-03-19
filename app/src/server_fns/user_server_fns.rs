@@ -4,7 +4,7 @@ use leptos::prelude::*;
 #[cfg(feature = "ssr")]
 use identity_core::commands;
 #[cfg(feature = "ssr")]
-use identity_core::params::{PasswordParams, UserParams};
+use identity_core::params::{PasswordParams, ProfileParams, UserParams};
 
 use crate::presenters::UserPresenter;
 
@@ -66,6 +66,31 @@ pub async fn update_password(current_password: String, new_password: String) -> 
         PasswordParams {
             current_password,
             new_password,
+        },
+    )
+    .await?;
+
+    Ok(())
+}
+
+#[server]
+pub async fn update_profile(
+    display_name: String,
+    full_name: String,
+    birthdate: Option<NaiveDate>,
+    country_code: String,
+) -> ActionResult {
+    require_authentication().await?;
+
+    let user = extract_user().await?;
+
+    commands::update_user_profile(
+        &user,
+        ProfileParams {
+            display_name,
+            full_name,
+            birthdate,
+            country_code,
         },
     )
     .await?;

@@ -67,6 +67,18 @@ pub struct PasswordParams {
 }
 
 #[derive(Validate)]
+pub struct ProfileParams {
+    #[validate(length(min = 2, max = 255, message = "Must have at least 2 characters"))]
+    pub display_name: String,
+    #[validate(length(min = 2, max = 255, message = "Must have at least 2 characters"))]
+    pub full_name: String,
+    #[validate(required(message = "Can't be blank"), custom(function = "validate_birthdate"))]
+    pub birthdate: Option<NaiveDate>,
+    #[validate(custom(function = "validate_country_code"))]
+    pub country_code: String,
+}
+
+#[derive(Validate)]
 pub struct UserParams {
     #[validate(
         length(min = 3, max = 16, message = "Must have at least 3 characters"),

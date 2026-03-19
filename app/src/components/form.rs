@@ -4,6 +4,34 @@ use leptos::prelude::*;
 use crate::icons::{EyeMini, EyeSlashMini};
 
 #[component]
+pub fn CountryField(
+    #[prop(into, optional)] disabled: Signal<bool>,
+    #[prop(into, optional)] error: Signal<Option<String>>,
+    #[prop(optional)] id: String,
+    #[prop(optional, into)] label: String,
+    #[prop(optional, into)] name: String,
+    #[prop(into, optional)] value: Signal<String>,
+) -> impl IntoView {
+    view! {
+        <SelectField disabled=disabled id=id label=label name=name error=error>
+            <option value="" selected=move || value.get().is_empty()>
+                "Select"
+            </option>
+            {rust_iso3166::ALL
+                .iter()
+                .map(|country| {
+                    view! {
+                        <option value=country.alpha2 selected=move || value.get() == country.alpha2>
+                            {country.name}
+                        </option>
+                    }
+                })
+                .collect::<Vec<_>>()}
+        </SelectField>
+    }
+}
+
+#[component]
 fn FormField(
     children: Children,
     #[prop(into, optional)] disabled: Signal<bool>,
