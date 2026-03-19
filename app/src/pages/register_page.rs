@@ -3,7 +3,7 @@ use leptos_router::components::A;
 use leptos_router::hooks::use_navigate;
 use url::form_urlencoded;
 
-use crate::components::{Alert, AlertType, PasswordField, SelectField, SubmitButton, TextField};
+use crate::components::{Alert, AlertType, CountryField, PasswordField, SubmitButton, TextField};
 use crate::hooks::{use_current_user_resource, use_redirect_to, use_toast};
 use crate::server_fns::{ActionResultExt, CreateUser};
 
@@ -59,15 +59,7 @@ pub fn RegisterPage() -> impl IntoView {
                     error=error_birthdate
                 />
 
-                <SelectField disabled=action.pending() label="Country" name="country_code" error=error_country_code>
-                    <option value="">"Select"</option>
-                    {rust_iso3166::ALL
-                        .iter()
-                        .map(|country| {
-                            view! { <option value=country.alpha2>{country.name}</option> }
-                        })
-                        .collect::<Vec<_>>()}
-                </SelectField>
+                <CountryField disabled=action.pending() label="Country" name="country_code" error=error_country_code />
 
                 <Alert>
                     "By submitting this form, you are declaring that you accept our "

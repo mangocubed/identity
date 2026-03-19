@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use leptos_router::components::{A, Outlet};
 
-use crate::icons::{HomeOutline, PasswordOutline};
+use crate::icons::{HomeOutline, PasswordOutline, UserOutline};
 
 #[component]
 pub fn HomeParentPage() -> impl IntoView {
@@ -14,6 +14,14 @@ pub fn HomeParentPage() -> impl IntoView {
                             <HomeOutline />
 
                             <span>"Home"</span>
+                        </A>
+                    </li>
+
+                    <li data-tip="Edit profile">
+                        <A href="/edit-profile">
+                            <UserOutline />
+
+                            <span>"Edit profile"</span>
                         </A>
                     </li>
 

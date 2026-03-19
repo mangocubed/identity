@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use url::Url;
 use uuid::Uuid;
@@ -26,6 +27,9 @@ pub struct UserPresenter {
     id: Uuid,
     pub username: String,
     pub display_name: String,
+    pub full_name: String,
+    pub birthdate: NaiveDate,
+    pub country_code: String,
     pub initials: String,
     avatar_image_url: Url,
 }
@@ -47,6 +51,9 @@ impl From<User<'_>> for UserPresenter {
             id: user.id,
             username: user.username.to_string(),
             display_name: user.display_name.to_string(),
+            full_name: user.full_name.to_string(),
+            birthdate: user.birthdate,
+            country_code: user.country_code.to_string(),
             initials: user.initials(),
             avatar_image_url: user.avatar_image_url(),
         }
