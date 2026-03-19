@@ -197,9 +197,9 @@ dependencies = [
 
 [[package]]
 name = "apalis-codec"
-version = "0.1.0-rc.4"
+version = "0.1.0-rc.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7044b64a1cf157936c016768aeb5be6b5fd3b551ce113c39f8a3bbf2611f661b"
+checksum = "45efb57fc006fadf87bb07b3d7d19903f85e18f06d8e48d8c648cb8cbb461e6f"
 dependencies = [
  "apalis-core",
  "serde",
@@ -227,9 +227,9 @@ dependencies = [
 
 [[package]]
 name = "apalis-redis"
-version = "1.0.0-rc.4"
+version = "1.0.0-rc.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "460b8ccd1326e7405a0e092eb2af86d4daf12cd220717cbed3d4015a61d908ac"
+checksum = "a95f23e26315398d562dbfa51147a23dd344c2987e982d0daa4fdf605507ee92"
 dependencies = [
  "apalis-codec",
  "apalis-core",
