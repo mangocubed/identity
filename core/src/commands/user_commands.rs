@@ -4,11 +4,12 @@ use uuid::Uuid;
 use validator::{Validate, ValidationErrors};
 
 use crate::constants::*;
+use crate::enums::ConfirmationAction;
 use crate::models::User;
-use crate::params::{AuthenticationParams, PasswordParams, ProfileParams, UserParams};
+use crate::params::{AuthenticationParams, ConfirmationParams, EmailParams, PasswordParams, ProfileParams, UserParams};
 use crate::{db_pool, jobs_storage};
 
-use super::{AsyncRedisCacheExt, OrValidationErrors, ValidationResult, async_redis_cache, encrypt_password};
+use super::*;
 
 pub async fn authenticate_user<'a>(params: AuthenticationParams) -> Result<User<'a>, ValidationErrors> {
     params.validate()?;
@@ -22,6 +23,32 @@ pub async fn authenticate_user<'a>(params: AuthenticationParams) -> Result<User<
     } else {
         Err(Default::default())
     }
+}
+
+pub async fn confirm_user_email(user: &User<'_>, params: ConfirmationParams) -> ValidationResult<()> {
+    params.validate()?;
+
+    let confirmation = get_confirmation_by_user(user, ConfirmationAction::Email)
+        .await
+        .map_err(|_| ValidationErrors::new())?;
+
+    finish_confirmation(&confirmation, &params.code, async move || {
+        let db_pool = db_pool().await;
+
+        sqlx::query!(
+            "UPDATE users SET email_confirmed_at = current_timestamp
+            WHERE disabled_at IS NULL AND email_confirmed_at IS NULL AND id = $1",
+            user.id, // $1
+        )
+        .execute(db_pool)
+        .await
+        .or_validation_errors()?;
+
+        remove_user_cache(user).await;
+
+        Ok(())
+    })
+    .await
 }
 
 #[io_cached(
@@ -108,7 +135,7 @@ async fn get_user_by_username_or_email(username_or_email: &str) -> sqlx::Result<
     sqlx::query_as!(
         User,
         "SELECT * FROM users
-        WHERE disabled_at IS NULL AND (LOWER(username) = $1 OR LOWER(email) = $1)
+        WHERE disabled_at IS NULL AND (LOWER(username) = $1 OR (email_confirmed_at IS NOT NULL AND LOWER(email) = $1))
         LIMIT 1",
         username_or_email.to_lowercase()
     )
@@ -245,6 +272,41 @@ pub async fn update_user_password(user: &User<'_>, params: PasswordParams) -> Re
     Ok(())
 }
 
+pub async fn update_user_email(user: &User<'_>, params: EmailParams) -> ValidationResult<()> {
+    params.validate()?;
+
+    let mut validation_errors = ValidationErrors::new();
+
+    if user.email == params.email {
+        validation_errors.add("email", ERROR_IS_INVALID.clone());
+    } else if user_email_exists(&params.email).await {
+        validation_errors.add("email", ERROR_ALREADY_EXISTS.clone());
+    }
+
+    if !user.verify_password(&params.password) {
+        validation_errors.add("password", ERROR_IS_INVALID.clone());
+    }
+
+    if !validation_errors.is_empty() {
+        return Err(validation_errors);
+    }
+
+    let db_pool = db_pool().await;
+
+    sqlx::query_as!(
+        User,
+        r#"UPDATE users SET email = $2, email_confirmed_at = NULL WHERE disabled_at IS NULL AND id = $1"#,
+        user.id,      // $1
+        params.email, // $2
+    )
+    .execute(db_pool)
+    .await
+    .or_validation_errors()?;
+
+    remove_user_cache(user).await;
+
+    Ok(())
+}
 pub async fn update_user_profile(user: &User<'_>, params: ProfileParams) -> Result<(), ValidationErrors> {
     params.validate()?;
 

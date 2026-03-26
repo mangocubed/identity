@@ -9,6 +9,7 @@ use uuid::Uuid;
 
 use crate::commands;
 use crate::config::{API_CONFIG, STORAGE_CONFIG};
+use crate::enums::ConfirmationAction;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct AccessToken<'a> {
@@ -123,6 +124,28 @@ impl Authorization<'_> {
     }
 }
 
+pub struct Confirmation<'a> {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub action: ConfirmationAction,
+    pub(crate) encrypted_code: Cow<'a, str>,
+    pub pending_attempts: i16,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+impl Confirmation<'_> {
+    pub async fn user(&self) -> User<'_> {
+        commands::get_user_by_id(self.user_id)
+            .await
+            .expect("Could not get user")
+    }
+
+    pub fn verify_code(&self, code: &str) -> bool {
+        commands::verify_password(&self.encrypted_code, code)
+    }
+}
+
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Session {
     pub id: Uuid,
@@ -181,7 +204,8 @@ pub struct User<'a> {
     pub id: Uuid,
     pub username: Cow<'a, str>,
     pub email: Cow<'a, str>,
-    pub encrypted_password: Cow<'a, str>,
+    pub email_confirmed_at: Option<DateTime<Utc>>,
+    pub(crate) encrypted_password: Cow<'a, str>,
     pub full_name: Cow<'a, str>,
     pub display_name: Cow<'a, str>,
     pub birthdate: NaiveDate,
@@ -225,6 +249,10 @@ impl User<'_> {
 
     pub fn avatar_image_url(&self) -> Url {
         API_CONFIG.url.join(&format!("users/{}/avatar-image", self.id)).unwrap()
+    }
+
+    pub fn email_is_confirmed(&self) -> bool {
+        self.email_confirmed_at.is_some()
     }
 
     pub fn initials(&self) -> String {

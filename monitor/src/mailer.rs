@@ -1,9 +1,10 @@
 use apalis::prelude::BoxDynError;
+use identity_core::enums::ConfirmationAction;
 use lettre::message::header::ContentType;
 use lettre::{AsyncSmtpTransport, AsyncTransport, Tokio1Executor};
 use lettre::{Message, transport::smtp::authentication::Credentials};
 
-use identity_core::models::{Session, User};
+use identity_core::models::{Confirmation, Session, User};
 
 use crate::config::MAILER_CONFIG;
 
@@ -44,6 +45,29 @@ async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), BoxDynErr
     .await?;
 
     Ok(())
+}
+
+pub async fn send_new_confirmation_email(confirmation: &Confirmation<'_>, code: &str) -> Result<(), BoxDynError> {
+    let user = confirmation.user().await;
+
+    let message = format!(
+        "Hello {},
+
+Use this code to {}:
+
+{}
+
+If you don't recognize this action, you can ignore this message.",
+        user.username,
+        match confirmation.action {
+            ConfirmationAction::Email => "confirm your email",
+            ConfirmationAction::Login => "confirm your login",
+            ConfirmationAction::PasswordReset => "reset your password",
+        },
+        code,
+    );
+
+    send_email(&user.email, "Confirmation code", &message).await
 }
 
 pub async fn send_new_session_email(session: &Session) -> Result<(), BoxDynError> {

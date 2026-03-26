@@ -7,6 +7,12 @@ pub struct FinishedSessionJob {
 }
 
 #[derive(Deserialize, Serialize)]
+pub struct NewConfirmationJob {
+    pub confirmation_id: Uuid,
+    pub code: String,
+}
+
+#[derive(Deserialize, Serialize)]
 pub struct NewSessionJob {
     pub session_id: Uuid,
 }
