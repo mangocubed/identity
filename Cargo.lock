@@ -2709,7 +2709,7 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "identity-api"
-version = "0.0.0-alpha.8"
+version = "0.0.0-alpha.9"
 dependencies = [
  "axum",
  "axum-extra",
@@ -2729,7 +2729,7 @@ dependencies = [
 
 [[package]]
 name = "identity-app"
-version = "0.0.0-alpha.8"
+version = "0.0.0-alpha.9"
 dependencies = [
  "anyhow",
  "axum",
@@ -2765,7 +2765,7 @@ dependencies = [
 
 [[package]]
 name = "identity-cli"
-version = "0.0.0-alpha.8"
+version = "0.0.0-alpha.9"
 dependencies = [
  "chrono",
  "clap",
@@ -2776,7 +2776,7 @@ dependencies = [
 
 [[package]]
 name = "identity-core"
-version = "0.0.0-alpha.8"
+version = "0.0.0-alpha.9"
 dependencies = [
  "ab_glyph",
  "anyhow",
@@ -2806,7 +2806,7 @@ dependencies = [
 
 [[package]]
 name = "identity-monitor"
-version = "0.0.0-alpha.8"
+version = "0.0.0-alpha.9"
 dependencies = [
  "apalis",
  "chrono",
