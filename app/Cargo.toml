@@ -22,7 +22,7 @@ http = { workspace = true, optional = true }
 leptos = "0.8.17"
 leptos_axum = { version = "0.8.8", optional = true }
 leptos_meta = "0.8.6"
-leptos_router = "0.8.12"
+leptos_router = "0.8.13"
 rust_iso3166.workspace = true
 sentry = { workspace = true, features = ["tower-http"], optional = true }
 serde.workspace = true
