@@ -16,6 +16,7 @@ chrono = { version = "0.4.44", features = ["serde"] }
 envconfig = "0.11.1"
 http = "1.4.0"
 rust_iso3166 = "0.1.14"
+sentry = { version = "0.47.0", features = ["logs", "tracing"] }
 serde = "1.0.228"
 serde_json = "1.0.149"
 tokio = { version = "1.50.0", features = [
@@ -24,7 +25,6 @@ tokio = { version = "1.50.0", features = [
     "signal",
 ] }
 tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 url = { version = "2.5.8", features = ["serde"] }
 uuid = { version = "1.22.0", features = ["serde"] }
 validator = "0.20.0"
