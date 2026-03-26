@@ -40,6 +40,9 @@ Authentication provider and user account manager.
 | MAILER_SMTP_USERNAME         | String  |                                                                  | monitor         |
 | MAILER_SUPPORT_EMAIL_ADDRESS | String  | support@localhost                                                | monitor         |
 | MONITOR_REDIS_URL            | String  | redis://127.0.0.1:6379/1                                         | app,monitor     |
+| SENTRY_DSN                   | String  |                                                                  | app,api,monitor |
+| SENTRY_TRACES_SAMPLE_RATE    | Number  | 1.0                                                              | app,api,monitor |
+| SENTRY_SEND_DEFAULT_PII      | Boolean | true                                                             | app,api,monitor |
 | SESSION_DOMAIN               | String  |                                                                  | app             |
 | SESSION_PRIVATE_KEY          | String  | abcdefghijklmnopqrestuvvwxyz0123456789ABCDEFGHIJKLMNOPQRESTUVVWX | app             |
 | SESSION_REDIS_URL            | String  | redis://127.0.0.1:6379/2                                         | app             |
