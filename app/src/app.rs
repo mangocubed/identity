@@ -85,6 +85,7 @@ pub fn App() -> impl IntoView {
                             <ParentRoute path=StaticSegment("") view=HomeParentPage>
                                 <Route path=StaticSegment("") view=HomePage />
                                 <Route path=StaticSegment("edit-profile") view=EditProfilePage />
+                                <Route path=StaticSegment("edit-email") view=EditEmailPage />
                                 <Route path=StaticSegment("change-password") view=ChangePasswordPage />
                             </ParentRoute>
                             <Route path=path!("/oauth/authorize") view=AuthorizePage />

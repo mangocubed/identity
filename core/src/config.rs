@@ -12,6 +12,8 @@ pub(crate) static ACCESS_TOKEN_CONFIG: LazyLock<AccessTokenConfig> =
 pub(crate) static AUTHORIZATION_CONFIG: LazyLock<AuthorizationConfig> =
     LazyLock::new(|| AuthorizationConfig::init_from_env().unwrap());
 pub(crate) static CACHE_CONFIG: LazyLock<CacheConfig> = LazyLock::new(|| CacheConfig::init_from_env().unwrap());
+pub(crate) static CONFIRMATION_CONFIG: LazyLock<ConfirmationConfig> =
+    LazyLock::new(|| ConfirmationConfig::init_from_env().unwrap());
 pub(crate) static DATABASE_CONFIG: LazyLock<DatabaseConfig> =
     LazyLock::new(|| DatabaseConfig::init_from_env().unwrap());
 pub(crate) static MONITOR_CONFIG: LazyLock<MonitorConfig> = LazyLock::new(|| MonitorConfig::init_from_env().unwrap());
@@ -75,6 +77,12 @@ impl CacheConfig {
     pub fn ttl(&self) -> Duration {
         Duration::from_secs(self.ttl_secs as u64)
     }
+}
+
+#[derive(Envconfig)]
+pub(crate) struct ConfirmationConfig {
+    #[envconfig(from = "CONFIRMATION_CODE_LENGTH", default = "6")]
+    pub code_length: u8,
 }
 
 #[derive(Envconfig)]

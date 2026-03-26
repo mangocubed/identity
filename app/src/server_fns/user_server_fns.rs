@@ -4,7 +4,9 @@ use leptos::prelude::*;
 #[cfg(feature = "ssr")]
 use identity_core::commands;
 #[cfg(feature = "ssr")]
-use identity_core::params::{PasswordParams, ProfileParams, UserParams};
+use identity_core::enums::ConfirmationAction;
+#[cfg(feature = "ssr")]
+use identity_core::params::{ConfirmationParams, EmailParams, PasswordParams, ProfileParams, UserParams};
 
 use crate::presenters::UserPresenter;
 
@@ -15,6 +17,17 @@ use super::{ActionResult, ServerFnResult};
 
 #[cfg(feature = "ssr")]
 use super::*;
+
+#[server]
+pub async fn confirm_email(code: String) -> ActionResult {
+    require_authentication().await?;
+
+    let user = extract_user().await?;
+
+    commands::confirm_user_email(&user, ConfirmationParams { code }).await?;
+
+    Ok(())
+}
 
 #[server]
 pub async fn create_user(
@@ -53,6 +66,32 @@ pub async fn current_user() -> ServerFnResult<UserPresenter> {
     let user = extract_user().await.or_unauthorized()?;
 
     Ok(user.into())
+}
+
+#[server]
+pub async fn update_email(email: String, password: String) -> ActionResult {
+    require_authentication().await?;
+
+    let user = extract_user().await?;
+
+    commands::update_user_email(&user, EmailParams { email, password }).await?;
+
+    Ok(())
+}
+
+#[server]
+pub async fn send_email_confirmation() -> ActionResult {
+    require_authentication().await?;
+
+    let user = extract_user().await?;
+
+    if user.email_is_confirmed() {
+        return Err(ActionError::default());
+    }
+
+    commands::insert_confirmation(&user, ConfirmationAction::Email).await?;
+
+    Ok(())
 }
 
 #[server]

@@ -6,17 +6,18 @@ use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use tokio::sync::OnceCell;
 
-pub mod config;
 mod constants;
-pub mod jobs;
-pub mod models;
 
 pub mod commands;
+pub mod config;
+pub mod enums;
+pub mod jobs;
+pub mod models;
 pub mod params;
 
 use crate::config::{DATABASE_CONFIG, MONITOR_CONFIG};
-use crate::jobs::{FinishedSessionJob, NewSessionJob, NewUserJob, PasswordChangedJob};
-use crate::models::{Session, User};
+use crate::jobs::{FinishedSessionJob, NewConfirmationJob, NewSessionJob, NewUserJob, PasswordChangedJob};
+use crate::models::{Confirmation, Session, User};
 
 static DB_POOL_CELL: OnceCell<PgPool> = OnceCell::const_new();
 static JOBS_STORAGE_CELL: OnceCell<JobsStorage> = OnceCell::const_new();
@@ -45,6 +46,7 @@ pub async fn jobs_storage<'a>() -> &'a JobsStorage {
 
 pub struct JobsStorage {
     pub finished_session: RedisStorage<FinishedSessionJob>,
+    pub new_confirmation: RedisStorage<NewConfirmationJob>,
     pub new_session: RedisStorage<NewSessionJob>,
     pub new_user: RedisStorage<NewUserJob>,
     pub password_changed: RedisStorage<PasswordChangedJob>,
@@ -54,6 +56,7 @@ impl JobsStorage {
     async fn new() -> Self {
         Self {
             finished_session: Self::storage().await,
+            new_confirmation: Self::storage().await,
             new_session: Self::storage().await,
             new_user: Self::storage().await,
             password_changed: Self::storage().await,
@@ -72,6 +75,17 @@ impl JobsStorage {
         self.finished_session
             .clone()
             .push(FinishedSessionJob { session_id: session.id })
+            .await
+            .expect("Could not store job");
+    }
+
+    pub(crate) async fn push_new_confirmation(&self, confirmation: &Confirmation<'_>, code: &str) {
+        self.new_confirmation
+            .clone()
+            .push(NewConfirmationJob {
+                confirmation_id: confirmation.id,
+                code: code.to_owned(),
+            })
             .await
             .expect("Could not store job");
     }
