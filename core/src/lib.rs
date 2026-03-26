@@ -40,7 +40,14 @@ async fn db_pool<'a>() -> &'a PgPool {
 
 pub fn start_tracing_subscriber() -> Option<sentry::ClientInitGuard> {
     use sentry::integrations::tracing::EventFilter;
+    use tracing::level_filters::LevelFilter;
     use tracing_subscriber::prelude::*;
+
+    let fmt_layer = tracing_subscriber::fmt::layer().with_filter(if cfg!(debug_assertions) {
+        LevelFilter::DEBUG
+    } else {
+        LevelFilter::INFO
+    });
 
     let sentry_guard = if let Some(sentry_dsn) = SENTRY_CONFIG.dsn.as_deref() {
         let guard = sentry::init((
@@ -63,16 +70,11 @@ pub fn start_tracing_subscriber() -> Option<sentry::ClientInitGuard> {
             })
             .span_filter(|metadata| matches!(*metadata.level(), tracing::Level::ERROR | tracing::Level::WARN));
 
-        tracing_subscriber::registry()
-            .with(tracing_subscriber::fmt::layer())
-            .with(sentry_layer)
-            .init();
+        tracing_subscriber::registry().with(fmt_layer).with(sentry_layer).init();
 
         Some(guard)
     } else {
-        tracing_subscriber::registry()
-            .with(tracing_subscriber::fmt::layer())
-            .init();
+        tracing_subscriber::registry().with(fmt_layer).init();
 
         None
     };
