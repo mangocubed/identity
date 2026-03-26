@@ -48,22 +48,19 @@ async fn main() -> anyhow::Result<()> {
     use std::net::SocketAddr;
 
     use axum::Router;
+    use axum::body::Body;
+    use axum::http::Request;
     use leptos::prelude::*;
     use leptos_axum::{LeptosRoutes, generate_route_list};
+    use sentry::integrations::tower::{NewSentryLayer, SentryHttpLayer};
     use tower_http::trace::TraceLayer;
-    use tracing::Level;
 
     use identity_app::app::{App, shell};
+    use identity_core::start_tracing_subscriber;
 
     use config::APP_CONFIG;
 
-    let tracing_level = if cfg!(debug_assertions) {
-        Level::DEBUG
-    } else {
-        Level::INFO
-    };
-
-    tracing_subscriber::fmt().with_max_level(tracing_level).init();
+    let _guard = start_tracing_subscriber();
 
     let conf = get_configuration(None)?;
     let addr = conf.leptos_options.site_addr;
@@ -77,8 +74,10 @@ async fn main() -> anyhow::Result<()> {
             move || shell(leptos_options.clone())
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
-        .layer(session_layer)
+        .layer(SentryHttpLayer::new().enable_transaction())
+        .layer(NewSentryLayer::<Request<Body>>::new_from_top())
         .layer(TraceLayer::new_for_http())
+        .layer(session_layer)
         .layer(APP_CONFIG.client_ip_source.clone().into_extension())
         .with_state(leptos_options);
 

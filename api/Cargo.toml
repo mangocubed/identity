@@ -12,12 +12,12 @@ axum-extra = { version = "0.12.5", features = ["typed-header"] }
 chrono.workspace = true
 envconfig.workspace = true
 http.workspace = true
+sentry = { workspace = true, features = ["tower-http"] }
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
 tower-http = { version = "0.6.8", features = ["cors", "fs", "trace"] }
 tracing.workspace = true
-tracing-subscriber.workspace = true
 url.workspace = true
 uuid.workspace = true
 identity-core.workspace = true

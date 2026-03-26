@@ -1,11 +1,13 @@
 use std::time::Duration;
 
 use apalis::layers::WorkerBuilderExt;
+use apalis::layers::sentry::SentryLayer;
 use apalis::prelude::{Monitor, WorkerBuilder};
+use sentry::integrations::tower::NewSentryLayer;
 use tokio::signal::unix::SignalKind;
-use tracing::{Level, info};
+use tracing::info;
 
-use identity_core::jobs_storage;
+use identity_core::{jobs_storage, start_tracing_subscriber};
 
 mod config;
 mod handlers;
@@ -14,13 +16,7 @@ mod mailer;
 
 #[tokio::main]
 async fn main() {
-    let tracing_level = if cfg!(debug_assertions) {
-        Level::DEBUG
-    } else {
-        Level::INFO
-    };
-
-    tracing_subscriber::fmt().with_max_level(tracing_level).init();
+    let _guard = start_tracing_subscriber();
 
     info!("Monitor starting");
 
@@ -32,40 +28,50 @@ async fn main() {
     let finished_session_worker = |index| {
         WorkerBuilder::new(format!("finished-session-{index}"))
             .backend(jobs_storage.finished_session.clone())
-            .concurrency(1)
+            .layer(NewSentryLayer::new_from_top())
+            .layer(SentryLayer::new())
             .enable_tracing()
+            .concurrency(1)
             .build(handlers::finished_session)
     };
 
     let new_confirmation_worker = |index| {
         WorkerBuilder::new(format!("new-confirmation-{index}"))
             .backend(jobs_storage.new_confirmation.clone())
-            .concurrency(1)
+            .layer(NewSentryLayer::new_from_top())
+            .layer(SentryLayer::new())
             .enable_tracing()
+            .concurrency(1)
             .build(handlers::new_confirmation)
     };
 
     let new_session_worker = |index| {
         WorkerBuilder::new(format!("new-session-{index}"))
             .backend(jobs_storage.new_session.clone())
-            .concurrency(1)
+            .layer(NewSentryLayer::new_from_top())
+            .layer(SentryLayer::new())
             .enable_tracing()
+            .concurrency(1)
             .build(handlers::new_session)
     };
 
     let new_user_worker = |index| {
         WorkerBuilder::new(format!("new-user-{index}"))
             .backend(jobs_storage.new_user.clone())
-            .concurrency(1)
+            .layer(NewSentryLayer::new_from_top())
+            .layer(SentryLayer::new())
             .enable_tracing()
+            .concurrency(1)
             .build(handlers::new_user)
     };
 
     let password_changed_worker = |index| {
         WorkerBuilder::new(format!("password-changed-{index}"))
             .backend(jobs_storage.password_changed.clone())
-            .concurrency(1)
+            .layer(NewSentryLayer::new_from_top())
+            .layer(SentryLayer::new())
             .enable_tracing()
+            .concurrency(1)
             .build(handlers::password_changed)
     };
 
