@@ -1,12 +1,13 @@
 use chrono::NaiveDate;
 use leptos::prelude::*;
+use uuid::Uuid;
 
 #[cfg(feature = "ssr")]
 use identity_core::commands;
 #[cfg(feature = "ssr")]
 use identity_core::enums::ConfirmationAction;
 #[cfg(feature = "ssr")]
-use identity_core::params::{ConfirmationParams, EmailParams, PasswordParams, ProfileParams, UserParams};
+use identity_core::params::*;
 
 use crate::presenters::UserPresenter;
 
@@ -19,12 +20,12 @@ use super::{ActionResult, ServerFnResult};
 use super::*;
 
 #[server]
-pub async fn confirm_email(code: String) -> ActionResult {
+pub async fn confirm_email(confirmation_code: String) -> ActionResult {
     require_authentication().await?;
 
     let user = extract_user().await?;
 
-    commands::confirm_user_email(&user, ConfirmationParams { code }).await?;
+    commands::confirm_user_email(&user, ConfirmationParams { confirmation_code }).await?;
 
     Ok(())
 }
@@ -69,12 +70,15 @@ pub async fn current_user() -> ServerFnResult<UserPresenter> {
 }
 
 #[server]
-pub async fn update_email(email: String, password: String) -> ActionResult {
-    require_authentication().await?;
+pub async fn reset_password(confirmation_id: Uuid, confirmation_code: String, new_password: String) -> ActionResult {
+    require_no_authentication().await?;
 
-    let user = extract_user().await?;
-
-    commands::update_user_email(&user, EmailParams { email, password }).await?;
+    commands::reset_user_password(ResetPasswordParams {
+        confirmation_id,
+        confirmation_code,
+        new_password,
+    })
+    .await?;
 
     Ok(())
 }
@@ -95,6 +99,17 @@ pub async fn send_email_confirmation() -> ActionResult {
 }
 
 #[server]
+pub async fn send_password_reset_confirmation(username_or_email: String) -> ActionResult<Uuid> {
+    require_no_authentication().await?;
+
+    let user = commands::get_user_by_username_or_email(&username_or_email).await?;
+
+    let confirmation = commands::insert_confirmation(&user, ConfirmationAction::PasswordReset).await?;
+
+    Ok(confirmation.id)
+}
+
+#[server]
 pub async fn update_password(current_password: String, new_password: String) -> ActionResult {
     require_authentication().await?;
 
@@ -108,6 +123,17 @@ pub async fn update_password(current_password: String, new_password: String) -> 
         },
     )
     .await?;
+
+    Ok(())
+}
+
+#[server]
+pub async fn update_email(email: String, password: String) -> ActionResult {
+    require_authentication().await?;
+
+    let user = extract_user().await?;
+
+    commands::update_user_email(&user, EmailParams { email, password }).await?;
 
     Ok(())
 }

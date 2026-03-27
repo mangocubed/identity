@@ -91,6 +91,7 @@ pub fn App() -> impl IntoView {
                             <Route path=path!("/oauth/authorize") view=AuthorizePage />
                             <Route path=StaticSegment("login") view=LoginPage />
                             <Route path=StaticSegment("register") view=RegisterPage />
+                            <Route path=StaticSegment("reset-password") view=ResetPasswordPage />
                         </Routes>
                     </main>
 

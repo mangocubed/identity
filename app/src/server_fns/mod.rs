@@ -103,7 +103,7 @@ pub trait ActionResultExt {
     fn is_success(&self) -> bool;
 }
 
-impl ActionResultExt for Option<ActionResult> {
+impl<T> ActionResultExt for Option<ActionResult<T>> {
     fn get_param_error(&self, name: &str) -> Option<String> {
         if let Some(Err(error)) = self {
             error

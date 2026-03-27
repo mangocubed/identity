@@ -86,7 +86,7 @@ fn EmailConfirmationModal(is_open: RwSignal<bool>) -> impl IntoView {
     let mut toast = use_toast();
     let action = ServerAction::<ConfirmEmail>::new();
     let action_value = action.value();
-    let error_code = Memo::new(move |_| action_value.read().get_param_error("code"));
+    let error_confirmation_code = Memo::new(move |_| action_value.read().get_param_error("confirmation_code"));
 
     Effect::watch(
         move || action_value.get(),
@@ -108,7 +108,12 @@ fn EmailConfirmationModal(is_open: RwSignal<bool>) -> impl IntoView {
                     <Alert alert_type=AlertType::Error>"Failed to confirm email"</Alert>
                 </Show>
 
-                <TextField disabled=action.pending() label="Confirmation code" name="code" error=error_code />
+                <TextField
+                    disabled=action.pending()
+                    label="Confirmation code"
+                    name="confirmation_code"
+                    error=error_confirmation_code
+                />
 
                 <SubmitButton is_pending=action.pending() />
             </ActionForm>
