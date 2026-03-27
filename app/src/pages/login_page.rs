@@ -62,6 +62,18 @@ pub fn LoginPage() -> impl IntoView {
                 >
                     "I don't have an account"
                 </A>
+
+                <A
+                    attr:class="btn btn-block btn-outline"
+                    href=move || {
+                        format!(
+                            "/reset-password?redirect_to={}",
+                            form_urlencoded::byte_serialize(redirect_to.get().as_bytes()).collect::<String>(),
+                        )
+                    }
+                >
+                    "I don't remember my password"
+                </A>
             </div>
         </GuestPage>
     }

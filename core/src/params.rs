@@ -1,4 +1,5 @@
 use chrono::{NaiveDate, Utc};
+use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
 use crate::commands;
@@ -61,15 +62,7 @@ pub struct AuthenticationParams {
 #[derive(Validate)]
 pub struct ConfirmationParams {
     #[validate(length(min = 1, max = 255, message = "Can't be blank"))]
-    pub code: String,
-}
-
-#[derive(Validate)]
-pub struct PasswordParams {
-    #[validate(length(min = 1, max = 255, message = "Can't be blank"))]
-    pub current_password: String,
-    #[validate(length(min = 6, max = 128, message = "Must have at least 6 characters"))]
-    pub new_password: String,
+    pub confirmation_code: String,
 }
 
 #[derive(Validate)]
@@ -84,6 +77,14 @@ pub struct EmailParams {
 }
 
 #[derive(Validate)]
+pub struct PasswordParams {
+    #[validate(length(min = 1, max = 255, message = "Can't be blank"))]
+    pub current_password: String,
+    #[validate(length(min = 6, max = 128, message = "Must have at least 6 characters"))]
+    pub new_password: String,
+}
+
+#[derive(Validate)]
 pub struct ProfileParams {
     #[validate(length(min = 2, max = 255, message = "Must have at least 2 characters"))]
     pub display_name: String,
@@ -93,6 +94,15 @@ pub struct ProfileParams {
     pub birthdate: Option<NaiveDate>,
     #[validate(custom(function = "validate_country_code"))]
     pub country_code: String,
+}
+
+#[derive(Validate)]
+pub struct ResetPasswordParams {
+    pub confirmation_id: Uuid,
+    #[validate(length(min = 1, max = 255, message = "Can't be blank"))]
+    pub confirmation_code: String,
+    #[validate(length(min = 6, max = 128, message = "Must have at least 6 characters"))]
+    pub new_password: String,
 }
 
 #[derive(Validate)]

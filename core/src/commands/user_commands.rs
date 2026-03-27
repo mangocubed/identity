@@ -6,7 +6,10 @@ use validator::{Validate, ValidationErrors};
 use crate::constants::*;
 use crate::enums::ConfirmationAction;
 use crate::models::User;
-use crate::params::{AuthenticationParams, ConfirmationParams, EmailParams, PasswordParams, ProfileParams, UserParams};
+use crate::params::{
+    AuthenticationParams, ConfirmationParams, EmailParams, PasswordParams, ProfileParams, ResetPasswordParams,
+    UserParams,
+};
 use crate::{db_pool, jobs_storage};
 
 use super::*;
@@ -32,7 +35,7 @@ pub async fn confirm_user_email(user: &User<'_>, params: ConfirmationParams) -> 
         .await
         .map_err(|_| ValidationErrors::new())?;
 
-    finish_confirmation(&confirmation, &params.code, async move || {
+    finish_confirmation(&confirmation, &params.confirmation_code, async move || {
         let db_pool = db_pool().await;
 
         sqlx::query!(
@@ -125,7 +128,7 @@ pub async fn get_user_by_username_or_id(username_or_id: &str) -> sqlx::Result<Us
     ty = "AsyncRedisCache<String, User<'_>>",
     create = r##"{ async_redis_cache(CACHE_PREFIX_GET_USER_BY_USERNAME_OR_EMAIL).await }"##
 )]
-async fn get_user_by_username_or_email(username_or_email: &str) -> sqlx::Result<User<'static>> {
+pub async fn get_user_by_username_or_email(username_or_email: &str) -> sqlx::Result<User<'static>> {
     if username_or_email.is_empty() {
         return Err(sqlx::Error::RowNotFound);
     }
@@ -234,6 +237,41 @@ async fn remove_user_cache(user: &User<'_>) {
         GET_USER_ID_BY_EMAIL.cache_remove(CACHE_PREFIX_GET_USER_ID_BY_EMAIL, &email),
         GET_USER_ID_BY_USERNAME.cache_remove(CACHE_PREFIX_GET_USER_ID_BY_USERNAME, &username),
     );
+}
+
+pub async fn reset_user_password(params: ResetPasswordParams) -> ValidationResult {
+    params.validate()?;
+
+    let confirmation = get_confirmation_by_id(params.confirmation_id)
+        .await
+        .or_validation_errors()?;
+
+    if confirmation.action != ConfirmationAction::PasswordReset {
+        return Err(ValidationErrors::new());
+    }
+
+    finish_confirmation(&confirmation.clone(), &params.confirmation_code, move || {
+        let confirmation = confirmation.clone();
+        let new_password = params.new_password.clone();
+        async move {
+            let db_pool = db_pool().await;
+            let user = confirmation.user().await;
+
+            sqlx::query!(
+                "UPDATE users SET encrypted_password = $2 WHERE disabled_at IS NULL AND id = $1",
+                user.id,                         // $1
+                encrypt_password(&new_password), // $2
+            )
+            .execute(db_pool)
+            .await
+            .or_validation_errors()?;
+
+            jobs_storage().await.push_password_changed(&user).await;
+
+            Ok(())
+        }
+    })
+    .await
 }
 
 pub async fn update_user_password(user: &User<'_>, params: PasswordParams) -> Result<(), ValidationErrors> {
