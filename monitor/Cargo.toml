@@ -7,7 +7,7 @@ edition.workspace = true
 apalis = { workspace = true, features = ["sentry"] }
 chrono.workspace = true
 envconfig.workspace = true
-lettre = { version = "0.11.20", features = [
+lettre = { version = "0.11.21", features = [
     "smtp-transport",
     "tokio1-native-tls",
 ] }
