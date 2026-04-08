@@ -31,6 +31,14 @@ fn validate_email(value: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
+fn validate_expires_at(value: &NaiveDate) -> Result<(), ValidationError> {
+    if *value <= Utc::now().date_naive() {
+        return Err(ERROR_IS_INVALID.clone());
+    }
+
+    Ok(())
+}
+
 fn validate_username(value: &str) -> Result<(), ValidationError> {
     if uuid::Uuid::try_parse(value).is_ok() {
         return Err(ERROR_IS_INVALID.clone());
@@ -49,6 +57,14 @@ pub struct ApplicationParams {
     pub name: String,
     #[validate(url(message = "Is invalid"))]
     pub redirect_url: String,
+}
+
+#[derive(Validate)]
+pub struct ApplicationTokenParams {
+    #[validate(length(min = 1, max = 255, message = "Can't be blank"))]
+    pub name: String,
+    #[validate(custom(function = "validate_expires_at"))]
+    pub expires_at: Option<NaiveDate>,
 }
 
 #[derive(Validate)]

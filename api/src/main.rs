@@ -29,6 +29,7 @@ async fn main() {
 
     let router = Router::new()
         .route("/", get(get_index))
+        .route("/authorized", get(handlers::get_authorized))
         .route("/current-user", get(get_current_user))
         .route("/oauth/revoke", post(post_oauth_revoke))
         .route("/oauth/token", post(post_oauth_token))

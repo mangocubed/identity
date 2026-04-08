@@ -15,7 +15,7 @@ pub async fn all_access_tokens_by_session(session: &Session) -> sqlx::Result<Vec
     sqlx::query_as!(
         AccessToken,
         "SELECT * FROM access_tokens
-        WHERE expires_at > current_timestamp AND revoked_at IS NULL AND session_id = $1",
+        WHERE session_id = $1 AND expires_at > current_timestamp AND revoked_at IS NULL",
         session.id
     )
     .fetch_all(db_pool)
@@ -37,7 +37,7 @@ pub async fn get_access_token_by_code(code: String) -> sqlx::Result<AccessToken<
     sqlx::query_as!(
         AccessToken,
         "SELECT * FROM access_tokens
-        WHERE code_expires_at > current_timestamp AND revoked_at IS NULL AND code = $1
+        WHERE code = $1 AND code_expires_at > current_timestamp AND revoked_at IS NULL
         LIMIT 1",
         code // $1
     )
@@ -60,7 +60,7 @@ pub async fn get_access_token_by_refresh_code(refresh_code: String) -> sqlx::Res
     sqlx::query_as!(
         AccessToken,
         "SELECT * FROM access_tokens
-        WHERE expires_at > current_timestamp AND revoked_at IS NULL AND refresh_code = $1
+        WHERE refresh_code = $1 AND expires_at > current_timestamp AND revoked_at IS NULL
         LIMIT 1",
         refresh_code // $1
     )
