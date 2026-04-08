@@ -20,6 +20,7 @@ use crate::config::{CACHE_CONFIG, STORAGE_CONFIG};
 
 mod access_token_commands;
 mod application_commands;
+mod application_token_commands;
 mod authorization_commands;
 mod confirmation_commands;
 mod session_commands;
@@ -27,6 +28,7 @@ mod user_commands;
 
 pub use access_token_commands::*;
 pub use application_commands::*;
+pub use application_token_commands::*;
 pub use authorization_commands::*;
 pub use confirmation_commands::*;
 pub use session_commands::*;

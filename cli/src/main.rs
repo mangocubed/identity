@@ -2,8 +2,8 @@ use clap::{Parser, Subcommand};
 
 use chrono::NaiveDate;
 use identity_core::commands;
-use identity_core::models::Application;
-use identity_core::params::{ApplicationParams, UserParams};
+use identity_core::models::{Application, ApplicationToken};
+use identity_core::params::{ApplicationParams, ApplicationTokenParams, UserParams};
 use uuid::Uuid;
 
 #[derive(Parser)]
@@ -17,11 +17,23 @@ struct Cli {
 #[derive(Subcommand)]
 enum CliCommand {
     ApplicationsList,
+    ApplicationTokensList {
+        #[arg(short, long)]
+        application_id: Uuid,
+    },
     CreateApplication {
         #[arg(short, long)]
         name: String,
         #[arg(short, long)]
         redirect_url: String,
+    },
+    CreateApplicationToken {
+        #[arg(short, long)]
+        application_id: Uuid,
+        #[arg(short, long)]
+        name: String,
+        #[arg(short, long)]
+        expires_at: Option<NaiveDate>,
     },
     CreateUser {
         #[arg(short, long)]
@@ -38,6 +50,10 @@ enum CliCommand {
         country_code: String,
     },
     DeleteApplication {
+        #[arg(short, long)]
+        id: Uuid,
+    },
+    RevoveApplicationToken {
         #[arg(short, long)]
         id: Uuid,
     },
@@ -65,15 +81,31 @@ fn print_application(application: &Application) {
     );
 }
 
+fn print_application_token(application_token: &ApplicationToken) {
+    println!(
+        "\nID: {}\nApplication ID: {}\nName: {}\nCode: {}\nExpires At: {}\nCreated at: {}\nUpdated at: {}",
+        application_token.id,
+        application_token.application_id,
+        application_token.name,
+        application_token.code,
+        application_token.expires_at,
+        application_token.created_at,
+        application_token
+            .updated_at
+            .map(|updated_at| updated_at.to_string())
+            .unwrap_or_else(|| "None".to_owned())
+    );
+}
+
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
         CliCommand::ApplicationsList => {
-            let applications = commands::all_applications().await;
+            let result = commands::all_applications().await;
 
-            match applications {
+            match result {
                 Ok(applications) => {
                     let applications_len = applications.len();
 
@@ -90,6 +122,30 @@ async fn main() {
                 Err(err) => println!("Failed to get applications.\n\n{err}"),
             }
         }
+        CliCommand::ApplicationTokensList { application_id } => {
+            let application = commands::get_application_by_id(*application_id)
+                .await
+                .expect("Could not get application");
+
+            let result = commands::all_application_tokens(&application).await;
+
+            match result {
+                Ok(application_tokens) => {
+                    let application_tokens_len = application_tokens.len();
+
+                    println!(
+                        "{} application token{} found.",
+                        application_tokens_len,
+                        if application_tokens_len != 1 { "s" } else { "" }
+                    );
+
+                    for application_token in application_tokens {
+                        print_application_token(&application_token);
+                    }
+                }
+                Err(err) => println!("Failed to get application_tokens.\n\n{err}"),
+            }
+        }
         CliCommand::CreateApplication { name, redirect_url } => {
             let result = commands::insert_application(ApplicationParams {
                 name: name.clone(),
@@ -103,6 +159,32 @@ async fn main() {
                     print_application(&application);
                 }
                 Err(err) => println!("Failed to create application.\n\n{err}"),
+            }
+        }
+        CliCommand::CreateApplicationToken {
+            application_id,
+            name,
+            expires_at,
+        } => {
+            let application = commands::get_application_by_id(*application_id)
+                .await
+                .expect("Could not get application");
+
+            let result = commands::insert_application_token(
+                &application,
+                ApplicationTokenParams {
+                    name: name.clone(),
+                    expires_at: *expires_at,
+                },
+            )
+            .await;
+
+            match result {
+                Ok(application_token) => {
+                    println!("Application token created successfully.");
+                    print_application_token(&application_token);
+                }
+                Err(err) => println!("Failed to create application token.\n\n{err}"),
             }
         }
         CliCommand::CreateUser {
@@ -137,6 +219,17 @@ async fn main() {
             match result {
                 Ok(_) => println!("Application deleted successfully."),
                 Err(err) => println!("Failed to delete application.\n\n{err}"),
+            }
+        }
+        CliCommand::RevoveApplicationToken { id } => {
+            let application_token = commands::get_application_token_by_id(*id)
+                .await
+                .expect("Could not get application token");
+            let result = commands::revoke_application_token(&application_token).await;
+
+            match result {
+                Ok(_) => println!("Application token revoked successfully."),
+                Err(err) => println!("Failed to revoke application token.\n\n{err}"),
             }
         }
         CliCommand::UpdateApplication { id, name, redirect_url } => {

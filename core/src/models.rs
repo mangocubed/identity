@@ -74,6 +74,24 @@ impl Application<'_> {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
+pub struct ApplicationToken<'a> {
+    pub id: Uuid,
+    pub application_id: Uuid,
+    pub name: Cow<'a, str>,
+    pub code: Cow<'a, str>,
+    pub expires_at: DateTime<Utc>,
+    pub revoked_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: Option<DateTime<Utc>>,
+}
+
+impl Display for ApplicationToken<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.id)
+    }
+}
+
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Authorization<'a> {
     pub id: Uuid,
     pub application_id: Uuid,

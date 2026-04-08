@@ -6,6 +6,7 @@ use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
 use axum_extra::headers::authorization::Bearer;
 use chrono::{DateTime, Utc};
+use http::StatusCode;
 use http::header::{CONTENT_DISPOSITION, CONTENT_LENGTH, CONTENT_TYPE};
 use serde::Serialize;
 use url::Url;
@@ -16,6 +17,8 @@ use identity_core::{Info, commands};
 
 use crate::constants::*;
 use crate::params::{AvatarImageParams, RevokeParams, TokenGrantType, TokenParams};
+
+type AuthorizationBearer = TypedHeader<Authorization<Bearer>>;
 
 trait OrHttpError<T> {
     #[allow(clippy::result_large_err)]
@@ -124,7 +127,27 @@ impl From<User<'_>> for UserJson {
     }
 }
 
-pub async fn get_current_user(authorization: Option<TypedHeader<Authorization<Bearer>>>) -> Result<impl IntoResponse> {
+async fn require_token(bearer: Option<AuthorizationBearer>) -> Result<impl IntoResponse> {
+    let Some(TypedHeader(Authorization(bearer))) = bearer else {
+        return Err(ERROR_UNAUTHORIZED.into());
+    };
+
+    let code = bearer.token().to_owned();
+
+    commands::get_user_by_access_token_code(code.clone())
+        .await
+        .map(|_| ())
+        .or(commands::get_application_token_by_code(code).await.map(|_| ()))
+        .or_unauthorized()
+}
+
+pub async fn get_authorized(authorization: Option<AuthorizationBearer>) -> Result<impl IntoResponse> {
+    require_token(authorization)
+        .await
+        .map(|_| (StatusCode::OK, "\"Authorized\""))
+}
+
+pub async fn get_current_user(authorization: Option<AuthorizationBearer>) -> Result<impl IntoResponse> {
     let Some(TypedHeader(Authorization(bearer))) = authorization else {
         return Err(ERROR_UNAUTHORIZED.into());
     };
@@ -140,7 +163,12 @@ pub async fn get_index() -> impl IntoResponse {
     Json(Info::default())
 }
 
-pub async fn get_user(Path(username_or_id): Path<String>) -> Result<impl IntoResponse> {
+pub async fn get_user(
+    bearer: Option<AuthorizationBearer>,
+    Path(username_or_id): Path<String>,
+) -> Result<impl IntoResponse> {
+    require_token(bearer).await?;
+
     let user = commands::get_user_by_username_or_id(&username_or_id)
         .await
         .or_not_found()?;

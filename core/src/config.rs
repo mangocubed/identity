@@ -9,6 +9,8 @@ use url::Url;
 pub static API_CONFIG: LazyLock<ApiConfig> = LazyLock::new(|| ApiConfig::init_from_env().unwrap());
 pub(crate) static ACCESS_TOKEN_CONFIG: LazyLock<AccessTokenConfig> =
     LazyLock::new(|| AccessTokenConfig::init_from_env().unwrap());
+pub(crate) static APPLICATION_TOKEN_CONFIG: LazyLock<ApplicationTokenConfig> =
+    LazyLock::new(|| ApplicationTokenConfig::init_from_env().unwrap());
 pub(crate) static AUTHORIZATION_CONFIG: LazyLock<AuthorizationConfig> =
     LazyLock::new(|| AuthorizationConfig::init_from_env().unwrap());
 pub(crate) static CACHE_CONFIG: LazyLock<CacheConfig> = LazyLock::new(|| CacheConfig::init_from_env().unwrap());
@@ -48,6 +50,22 @@ pub struct ApiConfig {
     pub address: SocketAddr,
     #[envconfig(from = "API_URL", default = "http://127.0.0.1:8005")]
     pub(crate) url: Url,
+}
+
+#[derive(Envconfig)]
+pub(crate) struct ApplicationTokenConfig {
+    #[envconfig(from = "APPLICATION_TOKEN_MIN_LENGTH", default = "64")]
+    pub min_length: u8,
+    #[envconfig(from = "APPLICATION_TOKEN_MAX_LENGTH", default = "128")]
+    pub max_length: u8,
+    #[envconfig(from = "APPLICATION_TOKEN_TTL_SECS", default = "31104000")]
+    pub ttl_secs: u32,
+}
+
+impl ApplicationTokenConfig {
+    pub fn ttl(&self) -> Duration {
+        Duration::from_secs(self.ttl_secs as u64)
+    }
 }
 
 #[derive(Envconfig)]
