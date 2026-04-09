@@ -8,7 +8,7 @@ use crate::constants::CACHE_PREFIX_GET_SESSION_BY_ID;
 use crate::models::{Session, User};
 use crate::{db_pool, jobs_storage};
 
-use super::{AsyncRedisCacheExt, async_redis_cache};
+use super::{AsyncRedisCacheExt, async_redis_cache, revoke_access_token};
 
 pub async fn finish_session(session: &Session) -> sqlx::Result<()> {
     let db_pool = db_pool().await;
@@ -22,7 +22,11 @@ pub async fn finish_session(session: &Session) -> sqlx::Result<()> {
 
     remove_session_cache(session).await;
 
-    jobs_storage().await.push_finished_session(session).await;
+    if let Ok(access_tokens) = session.access_tokens().await {
+        for access_token in access_tokens {
+            let _ = revoke_access_token(&access_token).await;
+        }
+    }
 
     Ok(())
 }
