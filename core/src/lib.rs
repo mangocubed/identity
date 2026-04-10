@@ -16,7 +16,7 @@ pub mod models;
 pub mod params;
 
 use crate::config::{DATABASE_CONFIG, MONITOR_CONFIG, SENTRY_CONFIG};
-use crate::jobs::{FinishedSessionJob, NewConfirmationJob, NewSessionJob, NewUserJob, PasswordChangedJob};
+use crate::jobs::{NewConfirmationJob, NewSessionJob, NewUserJob, PasswordChangedJob};
 use crate::models::{Confirmation, Session, User};
 
 static DB_POOL_CELL: OnceCell<PgPool> = OnceCell::const_new();
@@ -91,7 +91,6 @@ pub async fn jobs_storage<'a>() -> &'a JobsStorage {
 }
 
 pub struct JobsStorage {
-    pub finished_session: RedisStorage<FinishedSessionJob>,
     pub new_confirmation: RedisStorage<NewConfirmationJob>,
     pub new_session: RedisStorage<NewSessionJob>,
     pub new_user: RedisStorage<NewUserJob>,
@@ -101,7 +100,6 @@ pub struct JobsStorage {
 impl JobsStorage {
     async fn new() -> Self {
         Self {
-            finished_session: Self::storage().await,
             new_confirmation: Self::storage().await,
             new_session: Self::storage().await,
             new_user: Self::storage().await,
@@ -115,14 +113,6 @@ impl JobsStorage {
             .expect("Could not connect to Redis Jobs DB");
 
         RedisStorage::new(conn)
-    }
-
-    pub(crate) async fn push_finished_session(&self, session: &Session) {
-        self.finished_session
-            .clone()
-            .push(FinishedSessionJob { session_id: session.id })
-            .await
-            .expect("Could not store job");
     }
 
     pub(crate) async fn push_new_confirmation(&self, confirmation: &Confirmation<'_>, code: &str) {

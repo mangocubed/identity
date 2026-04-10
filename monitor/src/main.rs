@@ -25,16 +25,6 @@ async fn main() {
 
     let jobs_storage = jobs_storage().await;
 
-    let finished_session_worker = |index| {
-        WorkerBuilder::new(format!("finished-session-{index}"))
-            .backend(jobs_storage.finished_session.clone())
-            .layer(NewSentryLayer::new_from_top())
-            .layer(SentryLayer::new())
-            .enable_tracing()
-            .concurrency(1)
-            .build(handlers::finished_session)
-    };
-
     let new_confirmation_worker = |index| {
         WorkerBuilder::new(format!("new-confirmation-{index}"))
             .backend(jobs_storage.new_confirmation.clone())
@@ -76,7 +66,6 @@ async fn main() {
     };
 
     Monitor::new()
-        .register(finished_session_worker)
         .register(new_confirmation_worker)
         .register(new_session_worker)
         .register(new_user_worker)
