@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS versions;
+
+DROP FUNCTION IF EXISTS insert_into_versions CASCADE;
+DROP FUNCTION IF EXISTS manage_versions CASCADE;
