@@ -55,8 +55,9 @@ async fn main() -> anyhow::Result<()> {
     use sentry::integrations::tower::{NewSentryLayer, SentryHttpLayer};
     use tower_http::trace::TraceLayer;
 
+    use toolbox::tracing::start_tracing_subscriber;
+
     use identity_app::app::{App, shell};
-    use identity_core::start_tracing_subscriber;
 
     use config::APP_CONFIG;
 

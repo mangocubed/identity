@@ -7,7 +7,9 @@ use sentry::integrations::tower::NewSentryLayer;
 use tokio::signal::unix::SignalKind;
 use tracing::info;
 
-use identity_core::{jobs_storage, start_tracing_subscriber};
+use toolbox::tracing::start_tracing_subscriber;
+
+use identity_core::jobs_storage;
 
 mod config;
 mod handlers;

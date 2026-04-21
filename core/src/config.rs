@@ -13,13 +13,11 @@ pub(crate) static APPLICATION_TOKEN_CONFIG: LazyLock<ApplicationTokenConfig> =
     LazyLock::new(|| ApplicationTokenConfig::init_from_env().unwrap());
 pub(crate) static AUTHORIZATION_CONFIG: LazyLock<AuthorizationConfig> =
     LazyLock::new(|| AuthorizationConfig::init_from_env().unwrap());
-pub(crate) static CACHE_CONFIG: LazyLock<CacheConfig> = LazyLock::new(|| CacheConfig::init_from_env().unwrap());
 pub(crate) static CONFIRMATION_CONFIG: LazyLock<ConfirmationConfig> =
     LazyLock::new(|| ConfirmationConfig::init_from_env().unwrap());
 pub(crate) static DATABASE_CONFIG: LazyLock<DatabaseConfig> =
     LazyLock::new(|| DatabaseConfig::init_from_env().unwrap());
 pub(crate) static MONITOR_CONFIG: LazyLock<MonitorConfig> = LazyLock::new(|| MonitorConfig::init_from_env().unwrap());
-pub(crate) static SENTRY_CONFIG: LazyLock<SentryConfig> = LazyLock::new(|| SentryConfig::init_from_env().unwrap());
 pub(crate) static STORAGE_CONFIG: LazyLock<StorageConfig> = LazyLock::new(|| StorageConfig::init_from_env().unwrap());
 
 #[derive(Envconfig)]
@@ -79,20 +77,6 @@ pub(crate) struct AuthorizationConfig {
 }
 
 impl AuthorizationConfig {
-    pub fn ttl(&self) -> Duration {
-        Duration::from_secs(self.ttl_secs as u64)
-    }
-}
-
-#[derive(Envconfig)]
-pub(crate) struct CacheConfig {
-    #[envconfig(from = "CACHE_REDIS_URL", default = "redis://127.0.0.1:6379/0")]
-    pub redis_url: String,
-    #[envconfig(from = "CACHE_TTL_SECS", default = "3600")]
-    ttl_secs: u16,
-}
-
-impl CacheConfig {
     pub fn ttl(&self) -> Duration {
         Duration::from_secs(self.ttl_secs as u64)
     }

@@ -2692,6 +2692,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "toolbox",
  "tower-http",
  "tracing",
  "url",
@@ -2723,6 +2724,7 @@ dependencies = [
  "sqlx-core",
  "time",
  "tokio",
+ "toolbox",
  "tower-http",
  "tower-sessions",
  "tower-sessions-redis-store",
@@ -2768,8 +2770,8 @@ dependencies = [
  "sha2 0.11.0",
  "sqlx",
  "tokio",
+ "toolbox",
  "tracing",
- "tracing-subscriber",
  "url",
  "uuid",
  "validator",
@@ -2779,15 +2781,16 @@ dependencies = [
 name = "identity-monitor"
 version = "0.0.0-alpha.14"
 dependencies = [
+ "anyhow",
  "apalis",
  "chrono",
  "envconfig",
  "identity-core",
- "lettre",
  "reqwest",
  "sentry",
  "serde",
  "tokio",
+ "toolbox",
  "tracing",
  "url",
 ]
@@ -3631,7 +3634,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6227,6 +6230,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "702d4415e08923e7e1ef96cd5727c0dfed80b4d2fa25db9647fe5eb6f7c5a4c4"
 dependencies = [
  "winnow",
+]
+
+[[package]]
+name = "toolbox"
+version = "0.0.0-alpha.0"
+source = "git+https://github.com/mangocubed/toolbox.git?rev=bcfea50#bcfea502002faf48f1fe0ca57cb3e77d4f12b0d3"
+dependencies = [
+ "anyhow",
+ "cached",
+ "envconfig",
+ "lettre",
+ "sentry",
+ "serde",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]

@@ -3,12 +3,14 @@ use cached::proc_macro::io_cached;
 use uuid::Uuid;
 use validator::Validate;
 
+use toolbox::cache::{AsyncRedisCacheExt, redis_cache_store};
+
 use crate::constants::CACHE_PREFIX_GET_APPLICATION_BY_ID;
 use crate::db_pool;
 use crate::models::Application;
 use crate::params::ApplicationParams;
 
-use super::{AsyncRedisCacheExt, OrValidationErrors, ValidationResult, async_redis_cache};
+use super::{OrValidationErrors, ValidationResult};
 
 pub async fn all_applications<'a>() -> sqlx::Result<Vec<Application<'a>>> {
     let db_pool = db_pool().await;
@@ -33,7 +35,7 @@ pub async fn delete_application(application: Application<'_>) -> sqlx::Result<()
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
     ty = "AsyncRedisCache<Uuid, Application<'_>>",
-    create = r##"{ async_redis_cache(CACHE_PREFIX_GET_APPLICATION_BY_ID).await }"##
+    create = r##"{ redis_cache_store(CACHE_PREFIX_GET_APPLICATION_BY_ID).await }"##
 )]
 pub async fn get_application_by_id(id: Uuid) -> sqlx::Result<Application<'static>> {
     let db_pool = db_pool().await;

@@ -42,6 +42,7 @@ validator.workspace = true
 wasm-bindgen = { version = "0.2.114", optional = true }
 web-sys = "0.3.91"
 identity-core = { workspace = true, optional = true }
+toolbox = { workspace = true, optional = true }
 
 [features]
 hydrate = ["leptos/hydrate", "dep:console_error_panic_hook", "dep:wasm-bindgen"]
@@ -64,6 +65,7 @@ ssr = [
     "leptos_meta/ssr",
     "leptos_router/ssr",
     "dep:identity-core",
+    "dep:toolbox",
 ]
 
 [package.metadata.leptos]

@@ -1,22 +1,16 @@
-use std::fmt::Display;
-
 use ab_glyph::{FontRef, PxScale};
 use argon2::password_hash::SaltString;
 use argon2::password_hash::rand_core::OsRng;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
-use cached::{AsyncRedisCache, IOCachedAsync};
 use image::{ImageBuffer, Rgb, RgbImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_text_mut, text_size};
 use imageproc::rect::Rect;
 use rand::distr::Alphanumeric;
 use rand::distr::uniform::SampleRange;
 use rand::{RngExt, rng};
-use serde::Serialize;
-use serde::de::DeserializeOwned;
-use tokio::sync::OnceCell;
 use validator::ValidationErrors;
 
-use crate::config::{CACHE_CONFIG, STORAGE_CONFIG};
+use crate::config::STORAGE_CONFIG;
 
 mod access_token_commands;
 mod application_commands;
@@ -44,37 +38,6 @@ impl<T> OrValidationErrors<T> for Result<T, sqlx::Error> {
     fn or_validation_errors(self) -> ValidationResult<T> {
         self.map_err(|_| Default::default())
     }
-}
-
-trait AsyncRedisCacheExt<K> {
-    async fn cache_remove(&self, prefix: &str, key: &K);
-}
-
-impl<K, V> AsyncRedisCacheExt<K> for OnceCell<AsyncRedisCache<K, V>>
-where
-    K: Display + Send + Sync,
-    V: DeserializeOwned + Display + Send + Serialize + Sync,
-{
-    async fn cache_remove(&self, prefix: &str, key: &K) {
-        let _ = self
-            .get_or_init(|| async { async_redis_cache(prefix).await })
-            .await
-            .cache_remove(key)
-            .await;
-    }
-}
-
-async fn async_redis_cache<K, V>(prefix: &str) -> AsyncRedisCache<K, V>
-where
-    K: Display + Send + Sync,
-    V: DeserializeOwned + Display + Send + Serialize + Sync,
-{
-    AsyncRedisCache::new(format!("{prefix}:"), CACHE_CONFIG.ttl())
-        .set_connection_string(&CACHE_CONFIG.redis_url)
-        .set_refresh(true)
-        .build()
-        .await
-        .expect("Could not get redis cache")
 }
 
 fn encrypt_password(value: &str) -> String {

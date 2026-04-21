@@ -12,7 +12,9 @@ use crate::mailer::*;
 pub async fn new_confirmation(job: NewConfirmationJob) -> Result<(), BoxDynError> {
     let confirmation = commands::get_confirmation_by_id(job.confirmation_id).await?;
 
-    send_new_confirmation_email(&confirmation, &job.code).await
+    send_new_confirmation_email(&confirmation, &job.code).await?;
+
+    Ok(())
 }
 
 pub async fn new_session(job: NewSessionJob) -> Result<(), BoxDynError> {
@@ -42,7 +44,9 @@ pub async fn new_session(job: NewSessionJob) -> Result<(), BoxDynError> {
         }
     };
 
-    send_new_session_email(&session).await
+    send_new_session_email(&session).await?;
+
+    Ok(())
 }
 
 pub async fn new_user(job: NewUserJob) -> Result<(), BoxDynError> {
@@ -50,11 +54,15 @@ pub async fn new_user(job: NewUserJob) -> Result<(), BoxDynError> {
 
     let _ = admin_emails::send_new_user_email(&user).await;
 
-    send_welcome_email(&user).await
+    send_welcome_email(&user).await?;
+
+    Ok(())
 }
 
 pub async fn password_changed(job: PasswordChangedJob) -> Result<(), BoxDynError> {
     let user = commands::get_user_by_id(job.user_id).await?;
 
-    send_password_changed_email(&user).await
+    send_password_changed_email(&user).await?;
+
+    Ok(())
 }
