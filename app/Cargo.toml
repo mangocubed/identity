@@ -20,7 +20,7 @@ envconfig = { workspace = true, optional = true }
 gloo-timers = { version = "0.4", features = ["futures"] }
 http = { workspace = true, optional = true }
 leptos = "0.8.19"
-leptos_axum = { version = "0.8.8", optional = true }
+leptos_axum = { version = "0.8.9", optional = true }
 leptos_meta = "0.8.6"
 leptos_router = "0.8.13"
 rust_iso3166.workspace = true
