@@ -4,13 +4,15 @@ use chrono::Utc;
 use uuid::Uuid;
 use validator::Validate;
 
+use toolbox::cache::{AsyncRedisCacheExt, redis_cache_store};
+
 use crate::config::APPLICATION_TOKEN_CONFIG;
 use crate::constants::{CACHE_PREFIX_GET_APPLICATION_TOKEN_BY_CODE, CACHE_PREFIX_GET_APPLICATION_TOKEN_BY_ID};
 use crate::db_pool;
 use crate::models::{Application, ApplicationToken};
 use crate::params::ApplicationTokenParams;
 
-use super::{AsyncRedisCacheExt, OrValidationErrors, ValidationResult, async_redis_cache, generate_random_string};
+use super::{OrValidationErrors, ValidationResult, generate_random_string};
 
 pub async fn all_application_tokens<'a>(application: &Application<'_>) -> sqlx::Result<Vec<ApplicationToken<'a>>> {
     let db_pool = db_pool().await;
@@ -28,7 +30,7 @@ pub async fn all_application_tokens<'a>(application: &Application<'_>) -> sqlx::
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
     ty = "AsyncRedisCache<String, ApplicationToken<'_>>",
-    create = r##"{ async_redis_cache(CACHE_PREFIX_GET_APPLICATION_TOKEN_BY_CODE).await }"##
+    create = r##"{ redis_cache_store(CACHE_PREFIX_GET_APPLICATION_TOKEN_BY_CODE).await }"##
 )]
 pub async fn get_application_token_by_code(code: String) -> sqlx::Result<ApplicationToken<'static>> {
     if code.is_empty() {
@@ -51,7 +53,7 @@ pub async fn get_application_token_by_code(code: String) -> sqlx::Result<Applica
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
     ty = "AsyncRedisCache<Uuid, ApplicationToken<'_>>",
-    create = r##"{ async_redis_cache(CACHE_PREFIX_GET_APPLICATION_TOKEN_BY_ID).await }"##
+    create = r##"{ redis_cache_store(CACHE_PREFIX_GET_APPLICATION_TOKEN_BY_ID).await }"##
 )]
 pub async fn get_application_token_by_id(id: Uuid) -> sqlx::Result<ApplicationToken<'static>> {
     let db_pool = db_pool().await;

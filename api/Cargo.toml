@@ -21,3 +21,4 @@ tracing.workspace = true
 url.workspace = true
 uuid.workspace = true
 identity-core.workspace = true
+toolbox.workspace = true

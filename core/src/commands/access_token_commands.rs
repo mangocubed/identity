@@ -2,12 +2,14 @@ use cached::AsyncRedisCache;
 use cached::proc_macro::io_cached;
 use chrono::Utc;
 
+use toolbox::cache::{AsyncRedisCacheExt, redis_cache_store};
+
 use crate::config::ACCESS_TOKEN_CONFIG;
 use crate::constants::*;
 use crate::db_pool;
 use crate::models::{AccessToken, Application, Authorization, Session};
 
-use super::*;
+use super::{GET_USER_BY_ACCESS_TOKEN_CODE, generate_random_string, refresh_session};
 
 pub async fn all_access_tokens_by_session(session: &Session) -> sqlx::Result<Vec<AccessToken<'_>>> {
     let db_pool = db_pool().await;
@@ -25,7 +27,7 @@ pub async fn all_access_tokens_by_session(session: &Session) -> sqlx::Result<Vec
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
     ty = "AsyncRedisCache<String, AccessToken<'_>>",
-    create = r##"{ async_redis_cache(CACHE_PREFIX_GET_ACCESS_TOKEN_BY_CODE).await }"##
+    create = r##"{ redis_cache_store(CACHE_PREFIX_GET_ACCESS_TOKEN_BY_CODE).await }"##
 )]
 pub async fn get_access_token_by_code(code: String) -> sqlx::Result<AccessToken<'static>> {
     if code.is_empty() {
@@ -48,7 +50,7 @@ pub async fn get_access_token_by_code(code: String) -> sqlx::Result<AccessToken<
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
     ty = "AsyncRedisCache<String, AccessToken<'_>>",
-    create = r##"{ async_redis_cache(CACHE_PREFIX_GET_ACCESS_TOKEN_BY_REFRESH_CODE).await }"##
+    create = r##"{ redis_cache_store(CACHE_PREFIX_GET_ACCESS_TOKEN_BY_REFRESH_CODE).await }"##
 )]
 pub async fn get_access_token_by_refresh_code(refresh_code: String) -> sqlx::Result<AccessToken<'static>> {
     if refresh_code.is_empty() {

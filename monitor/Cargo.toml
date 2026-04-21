@@ -4,13 +4,10 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+anyhow = "1.0.102"
 apalis = { workspace = true, features = ["sentry"] }
 chrono.workspace = true
 envconfig.workspace = true
-lettre = { version = "0.11.21", features = [
-    "smtp-transport",
-    "tokio1-native-tls",
-] }
 reqwest = { version = "0.13.2", features = ["json"] }
 sentry = { workspace = true, features = ["tower"] }
 serde.workspace = true
@@ -18,3 +15,4 @@ tokio.workspace = true
 tracing.workspace = true
 url.workspace = true
 identity-core.workspace = true
+toolbox = { workspace = true, features = ["mailer"] }

@@ -1,53 +1,10 @@
-use apalis::prelude::BoxDynError;
-use identity_core::enums::ConfirmationAction;
-use lettre::message::header::ContentType;
-use lettre::{AsyncSmtpTransport, AsyncTransport, Tokio1Executor};
-use lettre::{Message, transport::smtp::authentication::Credentials};
+use toolbox::config::MAILER_CONFIG;
+use toolbox::mailer::send_email;
 
+use identity_core::enums::ConfirmationAction;
 use identity_core::models::{Confirmation, Session, User};
 
-use crate::config::MAILER_CONFIG;
-
-async fn send_email(to: &str, subject: &str, body: &str) -> Result<(), BoxDynError> {
-    if !MAILER_CONFIG.enable {
-        return Ok(());
-    }
-
-    let message = Message::builder()
-        .from(
-            MAILER_CONFIG
-                .sender_address
-                .parse()
-                .expect("Could not parse mailer sender address"),
-        )
-        .to(to.parse().expect("Could not parse recipient address"))
-        .subject(subject)
-        .header(ContentType::TEXT_PLAIN)
-        .body(body.to_string())
-        .expect("Could not build message");
-
-    let credentials = Credentials::new(
-        MAILER_CONFIG.smtp_username.to_owned(),
-        MAILER_CONFIG.smtp_password.to_owned(),
-    );
-
-    match MAILER_CONFIG.smtp_security.as_str() {
-        "tls" => AsyncSmtpTransport::<Tokio1Executor>::relay(&MAILER_CONFIG.smtp_address),
-        "starttls" => AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&MAILER_CONFIG.smtp_address),
-        _ => Ok(AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(
-            MAILER_CONFIG.smtp_address.clone(),
-        )),
-    }
-    .expect("Could not get SMTP transport builder")
-    .credentials(credentials)
-    .build()
-    .send(message)
-    .await?;
-
-    Ok(())
-}
-
-pub async fn send_new_confirmation_email(confirmation: &Confirmation<'_>, code: &str) -> Result<(), BoxDynError> {
+pub async fn send_new_confirmation_email(confirmation: &Confirmation<'_>, code: &str) -> anyhow::Result<()> {
     let user = confirmation.user().await;
 
     let message = format!(
@@ -70,7 +27,7 @@ If you don't recognize this action, you can ignore this message.",
     send_email(&user.email, "Confirmation code", &message).await
 }
 
-pub async fn send_new_session_email(session: &Session) -> Result<(), BoxDynError> {
+pub async fn send_new_session_email(session: &Session) -> anyhow::Result<()> {
     let user = session.user().await?;
 
     let message = format!(
@@ -91,7 +48,7 @@ If not, please contact us at the following email address: {}",
     send_email(&user.email, "New session started", &message).await
 }
 
-pub async fn send_password_changed_email(user: &User<'_>) -> Result<(), BoxDynError> {
+pub async fn send_password_changed_email(user: &User<'_>) -> anyhow::Result<()> {
     let message = format!(
         "Hello @{},
 
@@ -106,7 +63,7 @@ If not, please contact us at the following email address: {}",
     send_email(&user.email, "Password changed", &message).await
 }
 
-pub async fn send_welcome_email(user: &User<'_>) -> Result<(), BoxDynError> {
+pub async fn send_welcome_email(user: &User<'_>) -> anyhow::Result<()> {
     let message = format!(
         "Hello @{},
 
@@ -122,7 +79,7 @@ pub async fn send_welcome_email(user: &User<'_>) -> Result<(), BoxDynError> {
 pub mod admin_emails {
     use super::*;
 
-    pub async fn send_new_user_email(user: &User<'_>) -> Result<(), BoxDynError> {
+    pub async fn send_new_user_email(user: &User<'_>) -> anyhow::Result<()> {
         let message = format!(
             "Hello,
 

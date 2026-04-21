@@ -16,7 +16,7 @@ chrono = { version = "0.4.44", features = ["serde"] }
 envconfig = "0.11.1"
 http = "1.4.0"
 rust_iso3166 = "0.1.14"
-sentry = { version = "0.47.0", features = ["logs", "tracing"] }
+sentry = "0.47.0"
 serde = "1.0.228"
 serde_json = "1.0.149"
 tokio = { version = "1.52.1", features = [
@@ -29,6 +29,7 @@ url = { version = "2.5.8", features = ["serde"] }
 uuid = { version = "1.23.1", features = ["serde"] }
 validator = "0.20.0"
 identity-core = { path = "./core", default-features = false }
+toolbox = { git = "https://github.com/mangocubed/toolbox.git", rev = "bcfea50" }
 
 [profile.wasm-release]
 inherits = "release"

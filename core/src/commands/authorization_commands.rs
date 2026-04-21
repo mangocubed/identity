@@ -7,17 +7,19 @@ use sha2::{Digest, Sha256};
 use url::Url;
 use uuid::Uuid;
 
+use toolbox::cache::redis_cache_store;
+
 use crate::config::AUTHORIZATION_CONFIG;
 use crate::constants::{CACHE_PREFIX_GET_AUTHORIZATION_BY_CODE, CACHE_PREFIX_GET_AUTHORIZATION_BY_ID};
 use crate::db_pool;
 use crate::models::{Application, Authorization, Session};
 
-use super::{async_redis_cache, generate_random_string};
+use super::generate_random_string;
 
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
     ty = "AsyncRedisCache<String, Authorization<'_>>",
-    create = r##"{ async_redis_cache(CACHE_PREFIX_GET_AUTHORIZATION_BY_CODE).await }"##
+    create = r##"{ redis_cache_store(CACHE_PREFIX_GET_AUTHORIZATION_BY_CODE).await }"##
 )]
 pub async fn get_authorization_by_code(code: String) -> sqlx::Result<Authorization<'static>> {
     if code.is_empty() {
@@ -40,7 +42,7 @@ pub async fn get_authorization_by_code(code: String) -> sqlx::Result<Authorizati
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
     ty = "AsyncRedisCache<Uuid, Authorization<'_>>",
-    create = r##"{ async_redis_cache(CACHE_PREFIX_GET_AUTHORIZATION_BY_ID).await }"##
+    create = r##"{ redis_cache_store(CACHE_PREFIX_GET_AUTHORIZATION_BY_ID).await }"##
 )]
 pub async fn get_authorization_by_id(id: Uuid) -> sqlx::Result<Authorization<'static>> {
     let db_pool = db_pool().await;

@@ -9,8 +9,9 @@ use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
+use toolbox::tracing::start_tracing_subscriber;
+
 use identity_core::config::API_CONFIG;
-use identity_core::start_tracing_subscriber;
 
 mod constants;
 mod handlers;
