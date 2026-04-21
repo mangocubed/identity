@@ -1,7 +1,7 @@
 {
     "private": "true",
     "devDependencies": {
-        "@tailwindcss/cli": "^4.2.2"
+        "@tailwindcss/cli": "^4.2.3"
     },
     "dependencies": {
         "daisyui": "^5.5.19",
