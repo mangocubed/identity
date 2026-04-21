@@ -19,7 +19,7 @@ console_error_panic_hook = { version = "0.1.7", optional = true }
 envconfig = { workspace = true, optional = true }
 gloo-timers = { version = "0.4", features = ["futures"] }
 http = { workspace = true, optional = true }
-leptos = "0.8.17"
+leptos = "0.8.19"
 leptos_axum = { version = "0.8.8", optional = true }
 leptos_meta = "0.8.6"
 leptos_router = "0.8.13"
