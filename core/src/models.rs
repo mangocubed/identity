@@ -57,6 +57,7 @@ pub struct Application<'a> {
     pub id: Uuid,
     pub name: Cow<'a, str>,
     pub redirect_url: Cow<'a, str>,
+    pub trusted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: Option<DateTime<Utc>>,
 }
@@ -68,6 +69,10 @@ impl Display for Application<'_> {
 }
 
 impl Application<'_> {
+    pub fn is_trusted(&self) -> bool {
+        self.trusted_at.is_some()
+    }
+
     pub fn redirect_url(&self) -> Url {
         Url::parse(&self.redirect_url).expect("Could not get Redirect URL")
     }

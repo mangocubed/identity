@@ -51,9 +51,12 @@ pub async fn insert_application<'a>(params: ApplicationParams) -> ValidationResu
 
     let application = sqlx::query_as!(
         Application,
-        "INSERT INTO applications (name, redirect_url) VALUES ($1, $2) RETURNING *",
+        "INSERT INTO applications (name, redirect_url, trusted_at)
+        VALUES ($1, $2, (CASE WHEN $3 IS TRUE THEN current_timestamp ELSE NULL END))
+        RETURNING *",
         params.name,         // $1
         params.redirect_url, // $2
+        params.trusted,      // $3
     )
     .fetch_one(db_pool)
     .await
@@ -78,10 +81,20 @@ pub async fn update_application<'a>(
 
     let application = sqlx::query_as!(
         Application,
-        "UPDATE applications SET name = $2, redirect_url = $3 WHERE id = $1 RETURNING *",
+        "UPDATE applications
+        SET
+            name = $2,
+            redirect_url = $3,
+            trusted_at = CASE
+                WHEN $4 IS TRUE AND trusted_at IS NOT NULL THEN trusted_at
+                WHEN $4 IS TRUE THEN current_timestamp
+                ELSE NULL END
+        WHERE id = $1
+        RETURNING *",
         application.id,      // $1
         params.name,         // $2
         params.redirect_url, // $3
+        params.trusted,      // $4
     )
     .fetch_one(db_pool)
     .await

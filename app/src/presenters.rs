@@ -10,6 +10,7 @@ use identity_core::models::{Application, User};
 pub struct ApplicationPresenter {
     pub id: Uuid,
     pub name: String,
+    pub is_trusted: bool,
 }
 
 #[cfg(feature = "ssr")]
@@ -18,6 +19,7 @@ impl From<Application<'_>> for ApplicationPresenter {
         ApplicationPresenter {
             id: application.id,
             name: application.name.to_string(),
+            is_trusted: application.is_trusted(),
         }
     }
 }

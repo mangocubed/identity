@@ -26,6 +26,8 @@ enum CliCommand {
         name: String,
         #[arg(short, long)]
         redirect_url: String,
+        #[arg(short, long)]
+        trusted: Option<bool>,
     },
     CreateApplicationToken {
         #[arg(short, long)]
@@ -64,6 +66,8 @@ enum CliCommand {
         name: Option<String>,
         #[arg(short, long)]
         redirect_url: Option<String>,
+        #[arg(short, long)]
+        trusted: Option<bool>,
     },
 }
 
@@ -146,10 +150,15 @@ async fn main() {
                 Err(err) => println!("Failed to get application_tokens.\n\n{err}"),
             }
         }
-        CliCommand::CreateApplication { name, redirect_url } => {
+        CliCommand::CreateApplication {
+            name,
+            redirect_url,
+            trusted,
+        } => {
             let result = commands::insert_application(ApplicationParams {
                 name: name.clone(),
                 redirect_url: redirect_url.clone(),
+                trusted: trusted.unwrap_or(false),
             })
             .await;
 
@@ -232,7 +241,12 @@ async fn main() {
                 Err(err) => println!("Failed to revoke application token.\n\n{err}"),
             }
         }
-        CliCommand::UpdateApplication { id, name, redirect_url } => {
+        CliCommand::UpdateApplication {
+            id,
+            name,
+            redirect_url,
+            trusted,
+        } => {
             if name.is_none() && redirect_url.is_none() {
                 println!("No changes to update.");
                 return;
@@ -246,6 +260,7 @@ async fn main() {
                 ApplicationParams {
                     name: name.clone().unwrap_or(application.name.to_string()),
                     redirect_url: redirect_url.clone().unwrap_or(application.redirect_url.to_string()),
+                    trusted: trusted.unwrap_or(application.is_trusted()),
                 },
             )
             .await;
