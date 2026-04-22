@@ -8,7 +8,6 @@ use imageproc::rect::Rect;
 use rand::distr::Alphanumeric;
 use rand::distr::uniform::SampleRange;
 use rand::{RngExt, rng};
-use validator::ValidationErrors;
 
 use crate::config::STORAGE_CONFIG;
 
@@ -27,18 +26,6 @@ pub use authorization_commands::*;
 pub use confirmation_commands::*;
 pub use session_commands::*;
 pub use user_commands::*;
-
-pub type ValidationResult<T = ()> = Result<T, ValidationErrors>;
-
-trait OrValidationErrors<T> {
-    fn or_validation_errors(self) -> ValidationResult<T>;
-}
-
-impl<T> OrValidationErrors<T> for Result<T, sqlx::Error> {
-    fn or_validation_errors(self) -> ValidationResult<T> {
-        self.map_err(|_| Default::default())
-    }
-}
 
 fn encrypt_password(value: &str) -> String {
     let salt = SaltString::generate(&mut OsRng);

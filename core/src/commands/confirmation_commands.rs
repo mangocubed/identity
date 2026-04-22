@@ -1,13 +1,15 @@
 use uuid::Uuid;
 use validator::ValidationErrors;
 
+use toolbox::constants::ERROR_IS_INVALID;
+use toolbox::validator::ValidationResult;
+
 use crate::config::CONFIRMATION_CONFIG;
-use crate::constants::ERROR_IS_INVALID;
 use crate::enums::ConfirmationAction;
 use crate::models::{Confirmation, User};
 use crate::{db_pool, jobs_storage};
 
-use super::{ValidationResult, encrypt_password, generate_random_string};
+use super::{encrypt_password, generate_random_string};
 
 pub async fn finish_confirmation<F, IF, T>(
     confirmation: &Confirmation<'_>,
