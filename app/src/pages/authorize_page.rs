@@ -6,6 +6,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::pages::AuthenticatedPage;
+use crate::presenters::ApplicationPresenter;
 use crate::server_fns;
 
 #[derive(Clone, Default, Params, PartialEq)]
@@ -49,12 +50,28 @@ pub fn AuthorizePage() -> impl IntoView {
     });
     let action_value = action.value();
 
+    Effect::watch(
+        move || application_resource.get(),
+        move |application, _, _| {
+            if let Some(Ok(ApplicationPresenter {
+                id: _,
+                name: _,
+                is_trusted: true,
+            })) = application
+            {
+                action.dispatch(query.get_untracked().unwrap_or_default());
+            }
+        },
+        false,
+    );
+
     view! {
         <AuthenticatedPage title="Authorize Application">
             <Suspense>
                 {move || Suspend::new(async move {
                     match (application_resource.get(), action_value.get()) {
-                        (Some(Ok(_)), Some(Ok(_))) => {
+                        (Some(Ok(ApplicationPresenter { id: _, name: _, is_trusted: true })), None)
+                        | (Some(Ok(_)), Some(Ok(_))) => {
                             EitherOf5::A(view! { <div class="text-center">"Redirecting..."</div> })
                         }
                         (Some(Ok(_)), Some(Err(_))) => {
@@ -73,7 +90,7 @@ pub fn AuthorizePage() -> impl IntoView {
                                             <div class="card-actions">
                                                 <button
                                                     on:click=move |_| {
-                                                        action.dispatch(query.get().unwrap_or_default());
+                                                        action.dispatch(query.get_untracked().unwrap_or_default());
                                                     }
                                                     class="btn-submit"
                                                     disabled=move || action.pending().get()

@@ -59,6 +59,7 @@ pub struct ApplicationParams {
     pub name: String,
     #[validate(url(message = "Is invalid"))]
     pub redirect_url: String,
+    pub trusted: bool,
 }
 
 #[derive(Validate)]
