@@ -43,4 +43,4 @@ tracing.workspace = true
 url.workspace = true
 uuid.workspace = true
 validator = { workspace = true, features = ["derive"] }
-toolbox.workspace = true
+toolbox = { workspace = true, features = ["validator"] }

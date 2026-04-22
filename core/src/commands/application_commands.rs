@@ -4,13 +4,12 @@ use uuid::Uuid;
 use validator::Validate;
 
 use toolbox::cache::{AsyncRedisCacheExt, redis_cache_store};
+use toolbox::validator::{OrValidationErrors, ValidationResult};
 
 use crate::constants::CACHE_PREFIX_GET_APPLICATION_BY_ID;
 use crate::db_pool;
 use crate::models::Application;
 use crate::params::ApplicationParams;
-
-use super::{OrValidationErrors, ValidationResult};
 
 pub async fn all_applications<'a>() -> sqlx::Result<Vec<Application<'a>>> {
     let db_pool = db_pool().await;

@@ -29,7 +29,7 @@ url = { version = "2.5.8", features = ["serde"] }
 uuid = { version = "1.23.1", features = ["serde"] }
 validator = "0.20.0"
 identity-core = { path = "./core", default-features = false }
-toolbox = { git = "https://github.com/mangocubed/toolbox.git", rev = "bcfea50" }
+toolbox = { git = "https://github.com/mangocubed/toolbox.git", rev = "6b38558" }
 
 [profile.wasm-release]
 inherits = "release"

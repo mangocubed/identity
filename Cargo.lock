@@ -6235,7 +6235,7 @@ dependencies = [
 [[package]]
 name = "toolbox"
 version = "0.0.0-alpha.0"
-source = "git+https://github.com/mangocubed/toolbox.git?rev=bcfea50#bcfea502002faf48f1fe0ca57cb3e77d4f12b0d3"
+source = "git+https://github.com/mangocubed/toolbox.git?rev=6b38558#6b38558036b78786ec70e3f7b35a41f9e06755b0"
 dependencies = [
  "anyhow",
  "cached",
@@ -6243,9 +6243,11 @@ dependencies = [
  "lettre",
  "sentry",
  "serde",
+ "sqlx",
  "tracing",
  "tracing-subscriber",
  "uuid",
+ "validator",
 ]
 
 [[package]]

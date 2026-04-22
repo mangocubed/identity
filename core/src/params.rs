@@ -2,8 +2,10 @@ use chrono::{NaiveDate, Utc};
 use uuid::Uuid;
 use validator::{Validate, ValidationError};
 
+use toolbox::constants::{ERROR_ALREADY_EXISTS, ERROR_IS_INVALID};
+
 use crate::commands;
-use crate::constants::{ERROR_ALREADY_EXISTS, ERROR_IS_INVALID, REGEX_USERNAME};
+use crate::constants::REGEX_USERNAME;
 
 fn validate_birthdate(value: &NaiveDate) -> Result<(), ValidationError> {
     if *value > Utc::now().date_naive() {
