@@ -16,7 +16,7 @@ chrono = { version = "0.4.44", features = ["serde"] }
 envconfig = "0.11.1"
 http = "1.4.0"
 rust_iso3166 = "0.1.14"
-sentry = "0.47.0"
+sentry = "0.48.0"
 serde = "1.0.228"
 serde_json = "1.0.149"
 tokio = { version = "1.52.1", features = [
