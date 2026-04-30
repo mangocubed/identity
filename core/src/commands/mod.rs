@@ -5,9 +5,6 @@ use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use image::{ImageBuffer, Rgb, RgbImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_text_mut, text_size};
 use imageproc::rect::Rect;
-use rand::distr::Alphanumeric;
-use rand::distr::uniform::SampleRange;
-use rand::{RngExt, rng};
 
 use crate::config::STORAGE_CONFIG;
 
@@ -31,17 +28,6 @@ fn encrypt_password(value: &str) -> String {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
     argon2.hash_password(value.as_bytes(), &salt).unwrap().to_string()
-}
-
-fn generate_random_string<R: SampleRange<u8>>(length: R) -> String {
-    let mut rng = rng();
-
-    let length = rng.random_range(length);
-
-    rng.sample_iter(&Alphanumeric)
-        .take(length as usize)
-        .map(char::from)
-        .collect()
 }
 
 pub(crate) fn generate_text_icon(text: &str, size: u32) -> anyhow::Result<ImageBuffer<Rgb<u8>, Vec<u8>>> {

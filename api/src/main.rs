@@ -13,7 +13,6 @@ use toolbox::tracing::start_tracing_subscriber;
 
 use identity_core::config::API_CONFIG;
 
-mod constants;
 mod handlers;
 mod params;
 

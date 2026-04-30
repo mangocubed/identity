@@ -73,10 +73,11 @@ enum CliCommand {
 
 fn print_application(application: &Application) {
     println!(
-        "\nID: {}\nName: {}\nRedirect URL: {}\nCreated at: {}\nUpdated at: {}",
+        "\nID: {}\nName: {}\nRedirect URL: {}\nTrusted: {}\nCreated at: {}\nUpdated at: {}",
         application.id,
         application.name,
         application.redirect_url,
+        application.is_trusted(),
         application.created_at,
         application
             .updated_at
@@ -247,7 +248,7 @@ async fn main() {
             redirect_url,
             trusted,
         } => {
-            if name.is_none() && redirect_url.is_none() {
+            if name.is_none() && redirect_url.is_none() && trusted.is_none() {
                 println!("No changes to update.");
                 return;
             }

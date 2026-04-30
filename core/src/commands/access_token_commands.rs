@@ -3,13 +3,14 @@ use cached::proc_macro::io_cached;
 use chrono::Utc;
 
 use toolbox::cache::{AsyncRedisCacheExt, redis_cache_store};
+use toolbox::rand::random_string;
 
 use crate::config::ACCESS_TOKEN_CONFIG;
 use crate::constants::*;
 use crate::db_pool;
 use crate::models::{AccessToken, Application, Authorization, Session};
 
-use super::{GET_USER_BY_ACCESS_TOKEN_CODE, generate_random_string, refresh_session};
+use super::{GET_USER_BY_ACCESS_TOKEN_CODE, refresh_session};
 
 pub async fn all_access_tokens_by_session(session: &Session) -> sqlx::Result<Vec<AccessToken<'_>>> {
     let db_pool = db_pool().await;
@@ -82,8 +83,8 @@ pub async fn insert_access_token<'a>(
     let db_pool = db_pool().await;
 
     let user = session.user().await?;
-    let code = generate_random_string(ACCESS_TOKEN_CONFIG.min_length..=ACCESS_TOKEN_CONFIG.max_length);
-    let refresh_code = generate_random_string(ACCESS_TOKEN_CONFIG.min_length..=ACCESS_TOKEN_CONFIG.max_length);
+    let code = random_string(ACCESS_TOKEN_CONFIG.length());
+    let refresh_code = random_string(ACCESS_TOKEN_CONFIG.length());
     let code_expires_at = Utc::now() + ACCESS_TOKEN_CONFIG.code_ttl();
     let expires_at = Utc::now() + ACCESS_TOKEN_CONFIG.ttl();
 
