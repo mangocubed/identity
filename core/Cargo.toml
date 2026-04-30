@@ -25,7 +25,6 @@ chrono.workspace = true
 envconfig.workspace = true
 image = "0.25.10"
 imageproc = "0.26.1"
-rand = "0.10.1"
 regex = "1.12.3"
 rust_iso3166.workspace = true
 sentry.workspace = true
@@ -43,4 +42,4 @@ tracing.workspace = true
 url.workspace = true
 uuid.workspace = true
 validator = { workspace = true, features = ["derive"] }
-toolbox = { workspace = true, features = ["validator"] }
+toolbox = { workspace = true, features = ["rand", "validator"] }

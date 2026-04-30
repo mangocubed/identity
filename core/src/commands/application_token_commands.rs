@@ -5,6 +5,7 @@ use uuid::Uuid;
 use validator::Validate;
 
 use toolbox::cache::{AsyncRedisCacheExt, redis_cache_store};
+use toolbox::rand::random_string;
 use toolbox::validator::{OrValidationErrors, ValidationResult};
 
 use crate::config::APPLICATION_TOKEN_CONFIG;
@@ -12,8 +13,6 @@ use crate::constants::{CACHE_PREFIX_GET_APPLICATION_TOKEN_BY_CODE, CACHE_PREFIX_
 use crate::db_pool;
 use crate::models::{Application, ApplicationToken};
 use crate::params::ApplicationTokenParams;
-
-use super::generate_random_string;
 
 pub async fn all_application_tokens<'a>(application: &Application<'_>) -> sqlx::Result<Vec<ApplicationToken<'a>>> {
     let db_pool = db_pool().await;
@@ -78,7 +77,7 @@ pub async fn insert_application_token<'a>(
 
     let db_pool = db_pool().await;
 
-    let code = generate_random_string(APPLICATION_TOKEN_CONFIG.min_length..=APPLICATION_TOKEN_CONFIG.max_length);
+    let code = random_string(APPLICATION_TOKEN_CONFIG.length());
     let expires_at = params
         .expires_at
         .map(|date| date.and_time(Utc::now().time()).and_utc())

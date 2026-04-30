@@ -2,6 +2,7 @@ use uuid::Uuid;
 use validator::ValidationErrors;
 
 use toolbox::constants::ERROR_IS_INVALID;
+use toolbox::rand::random_string;
 use toolbox::validator::ValidationResult;
 
 use crate::config::CONFIRMATION_CONFIG;
@@ -9,7 +10,7 @@ use crate::enums::ConfirmationAction;
 use crate::models::{Confirmation, User};
 use crate::{db_pool, jobs_storage};
 
-use super::{encrypt_password, generate_random_string};
+use super::encrypt_password;
 
 pub async fn finish_confirmation<F, IF, T>(
     confirmation: &Confirmation<'_>,
@@ -123,7 +124,7 @@ pub async fn insert_confirmation<'a>(user: &User<'_>, action: ConfirmationAction
     .execute(db_pool)
     .await;
 
-    let code = generate_random_string(CONFIRMATION_CONFIG.code_length..=CONFIRMATION_CONFIG.code_length);
+    let code = random_string(CONFIRMATION_CONFIG.code_length..=CONFIRMATION_CONFIG.code_length);
 
     let encrypted_code = encrypt_password(&code);
 

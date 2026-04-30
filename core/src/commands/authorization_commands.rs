@@ -8,13 +8,12 @@ use url::Url;
 use uuid::Uuid;
 
 use toolbox::cache::redis_cache_store;
+use toolbox::rand::random_string;
 
 use crate::config::AUTHORIZATION_CONFIG;
 use crate::constants::{CACHE_PREFIX_GET_AUTHORIZATION_BY_CODE, CACHE_PREFIX_GET_AUTHORIZATION_BY_ID};
 use crate::db_pool;
 use crate::models::{Application, Authorization, Session};
-
-use super::generate_random_string;
 
 #[io_cached(
     map_error = r##"|_| sqlx::Error::RowNotFound"##,
@@ -69,7 +68,7 @@ pub async fn insert_or_refresh_authorization<'a>(
     let db_pool = db_pool().await;
 
     let user = session.user().await?;
-    let code = generate_random_string(AUTHORIZATION_CONFIG.min_length..=AUTHORIZATION_CONFIG.max_length);
+    let code = random_string(AUTHORIZATION_CONFIG.length());
     let expires_at = Utc::now() + AUTHORIZATION_CONFIG.ttl();
 
     sqlx::query_as!(

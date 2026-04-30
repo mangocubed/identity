@@ -1,4 +1,5 @@
 use std::net::SocketAddr;
+use std::ops::RangeInclusive;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 use std::time::Duration;
@@ -23,22 +24,26 @@ pub(crate) static STORAGE_CONFIG: LazyLock<StorageConfig> = LazyLock::new(|| Sto
 #[derive(Envconfig)]
 pub(crate) struct AccessTokenConfig {
     #[envconfig(from = "ACCESS_TOKEN_CODE_TTL_SECS", default = "86400")]
-    pub code_ttl_secs: u32,
+    code_ttl_secs: u64,
     #[envconfig(from = "ACCESS_TOKEN_MIN_LENGTH", default = "64")]
-    pub min_length: u8,
+    min_length: u8,
     #[envconfig(from = "ACCESS_TOKEN_MAX_LENGTH", default = "128")]
-    pub max_length: u8,
+    max_length: u8,
     #[envconfig(from = "ACCESS_TOKEN_TTL_SECS", default = "2592000")]
-    pub ttl_secs: u32,
+    ttl_secs: u64,
 }
 
 impl AccessTokenConfig {
     pub fn code_ttl(&self) -> Duration {
-        Duration::from_secs(self.code_ttl_secs as u64)
+        Duration::from_secs(self.code_ttl_secs)
+    }
+
+    pub fn length(&self) -> RangeInclusive<u8> {
+        self.min_length..=self.max_length
     }
 
     pub fn ttl(&self) -> Duration {
-        Duration::from_secs(self.ttl_secs as u64)
+        Duration::from_secs(self.ttl_secs)
     }
 }
 
@@ -53,32 +58,40 @@ pub struct ApiConfig {
 #[derive(Envconfig)]
 pub(crate) struct ApplicationTokenConfig {
     #[envconfig(from = "APPLICATION_TOKEN_MIN_LENGTH", default = "64")]
-    pub min_length: u8,
+    min_length: u8,
     #[envconfig(from = "APPLICATION_TOKEN_MAX_LENGTH", default = "128")]
-    pub max_length: u8,
+    max_length: u8,
     #[envconfig(from = "APPLICATION_TOKEN_TTL_SECS", default = "31104000")]
-    pub ttl_secs: u32,
+    ttl_secs: u64,
 }
 
 impl ApplicationTokenConfig {
+    pub fn length(&self) -> RangeInclusive<u8> {
+        self.min_length..=self.max_length
+    }
+
     pub fn ttl(&self) -> Duration {
-        Duration::from_secs(self.ttl_secs as u64)
+        Duration::from_secs(self.ttl_secs)
     }
 }
 
 #[derive(Envconfig)]
 pub(crate) struct AuthorizationConfig {
     #[envconfig(from = "AUTHORIZATION_MIN_LENGTH", default = "64")]
-    pub min_length: u8,
+    min_length: u8,
     #[envconfig(from = "AUTHORIZATION_MAX_LENGTH", default = "128")]
-    pub max_length: u8,
+    max_length: u8,
     #[envconfig(from = "AUTHORIZATION_TTL_SECS", default = "600")]
-    pub ttl_secs: u16,
+    ttl_secs: u64,
 }
 
 impl AuthorizationConfig {
+    pub fn length(&self) -> RangeInclusive<u8> {
+        self.min_length..=self.max_length
+    }
+
     pub fn ttl(&self) -> Duration {
-        Duration::from_secs(self.ttl_secs as u64)
+        Duration::from_secs(self.ttl_secs)
     }
 }
 

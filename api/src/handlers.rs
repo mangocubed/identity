@@ -4,7 +4,6 @@ use axum::response::{IntoResponse, Result};
 use axum::{Form, Json};
 use axum_extra::TypedHeader;
 use axum_extra::headers::Authorization;
-use axum_extra::headers::authorization::Bearer;
 use chrono::{DateTime, Utc};
 use http::StatusCode;
 use http::header::{CONTENT_DISPOSITION, CONTENT_LENGTH, CONTENT_TYPE};
@@ -12,89 +11,13 @@ use serde::Serialize;
 use url::Url;
 use uuid::Uuid;
 
+use toolbox::axum::{AuthorizationBearer, OrHttpError};
+use toolbox::constants::{RESPONSE_ERROR_BAD_REQUEST, RESPONSE_ERROR_UNAUTHORIZED};
+
 use identity_core::models::User;
 use identity_core::{Info, commands};
 
-use crate::constants::*;
 use crate::params::{AvatarImageParams, RevokeParams, TokenGrantType, TokenParams};
-
-type AuthorizationBearer = TypedHeader<Authorization<Bearer>>;
-
-trait OrHttpError<T> {
-    #[allow(clippy::result_large_err)]
-    fn or_bad_request(self) -> Result<T>;
-
-    #[allow(clippy::result_large_err, dead_code)]
-    fn or_forbidden(self) -> Result<T>;
-
-    #[allow(clippy::result_large_err)]
-    fn or_internal_server_error(self) -> Result<T>;
-
-    #[allow(clippy::result_large_err)]
-    fn or_not_found(self) -> Result<T>;
-
-    #[allow(clippy::result_large_err)]
-    fn or_unauthorized(self) -> Result<T>;
-}
-
-impl<T> OrHttpError<T> for Option<T> {
-    fn or_bad_request(self) -> Result<T> {
-        self.ok_or_else(|| ERROR_BAD_REQUEST.into())
-    }
-
-    fn or_forbidden(self) -> Result<T> {
-        self.ok_or_else(|| ERROR_FORBIDDEN.into())
-    }
-
-    fn or_internal_server_error(self) -> Result<T> {
-        self.ok_or_else(|| ERROR_INTERNAL_SERVER_ERROR.into())
-    }
-
-    fn or_not_found(self) -> Result<T> {
-        self.ok_or_else(|| ERROR_NOT_FOUND.into())
-    }
-
-    fn or_unauthorized(self) -> Result<T> {
-        self.ok_or_else(|| ERROR_UNAUTHORIZED.into())
-    }
-}
-
-impl<T, E> OrHttpError<T> for Result<T, E> {
-    fn or_bad_request(self) -> Result<T> {
-        match self {
-            Ok(value) => Ok(value),
-            Err(_) => Err(ERROR_BAD_REQUEST.into()),
-        }
-    }
-
-    fn or_forbidden(self) -> Result<T> {
-        match self {
-            Ok(value) => Ok(value),
-            Err(_) => Err(ERROR_FORBIDDEN.into()),
-        }
-    }
-
-    fn or_internal_server_error(self) -> Result<T> {
-        match self {
-            Ok(value) => Ok(value),
-            Err(_) => Err(ERROR_INTERNAL_SERVER_ERROR.into()),
-        }
-    }
-
-    fn or_not_found(self) -> Result<T> {
-        match self {
-            Ok(value) => Ok(value),
-            Err(_) => Err(ERROR_NOT_FOUND.into()),
-        }
-    }
-
-    fn or_unauthorized(self) -> Result<T> {
-        match self {
-            Ok(value) => Ok(value),
-            Err(_) => Err(ERROR_UNAUTHORIZED.into()),
-        }
-    }
-}
 
 #[derive(Serialize)]
 pub struct UserJson {
@@ -129,7 +52,7 @@ impl From<User<'_>> for UserJson {
 
 async fn require_token(bearer: Option<AuthorizationBearer>) -> Result<impl IntoResponse> {
     let Some(TypedHeader(Authorization(bearer))) = bearer else {
-        return Err(ERROR_UNAUTHORIZED.into());
+        return Err(RESPONSE_ERROR_UNAUTHORIZED.clone().into());
     };
 
     let code = bearer.token().to_owned();
@@ -149,7 +72,7 @@ pub async fn get_authorized(authorization: Option<AuthorizationBearer>) -> Resul
 
 pub async fn get_current_user(authorization: Option<AuthorizationBearer>) -> Result<impl IntoResponse> {
     let Some(TypedHeader(Authorization(bearer))) = authorization else {
-        return Err(ERROR_UNAUTHORIZED.into());
+        return Err(RESPONSE_ERROR_UNAUTHORIZED.clone().into());
     };
 
     let code = bearer.token().to_owned();
@@ -183,7 +106,7 @@ pub async fn get_user_avatar_image(
     let size = params.size.unwrap_or(128);
 
     if size > 512 {
-        return Err(ERROR_BAD_REQUEST.into());
+        return Err(RESPONSE_ERROR_BAD_REQUEST.clone().into());
     }
 
     let user = commands::get_user_by_username_or_id(&username_or_id)
@@ -213,7 +136,7 @@ pub async fn post_oauth_revoke(Form(params): Form<RevokeParams>) -> Result<impl 
         .or_bad_request()?;
 
     if params.client_id != access_token.application_id {
-        return Err(ERROR_BAD_REQUEST.into());
+        return Err(RESPONSE_ERROR_BAD_REQUEST.clone().into());
     }
 
     let _ = commands::revoke_access_token(&access_token).await;
@@ -236,7 +159,7 @@ pub async fn post_oauth_token(Form(params): Form<TokenParams>) -> Result<impl In
                 || params.redirect_uri != Some(authorization.redirect_url())
                 || !authorization.verify_code_challenge(&code_verifier)
             {
-                return Err(ERROR_BAD_REQUEST.into());
+                return Err(RESPONSE_ERROR_BAD_REQUEST.clone().into());
             }
 
             let application = authorization.application().await.or_internal_server_error()?;
@@ -252,7 +175,7 @@ pub async fn post_oauth_token(Form(params): Form<TokenParams>) -> Result<impl In
                 .or_bad_request()?;
 
             if params.client_id != current_access_token.application_id {
-                return Err(ERROR_BAD_REQUEST.into());
+                return Err(RESPONSE_ERROR_BAD_REQUEST.clone().into());
             }
 
             let application = current_access_token.application().await.or_internal_server_error()?;
