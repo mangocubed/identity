@@ -24,7 +24,7 @@ cached = { version = "0.59.0", features = [
 chrono.workspace = true
 envconfig.workspace = true
 image = "0.25.10"
-imageproc = "0.26.1"
+imageproc = "0.26.2"
 regex = "1.12.3"
 rust_iso3166.workspace = true
 sentry.workspace = true
