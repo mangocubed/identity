@@ -31,7 +31,7 @@ sqlx-core = { version = "0.8.6", optional = true }
 time = { version = "0.3.47", optional = true }
 tokio = { workspace = true, optional = true }
 tower-http = { version = "0.6.8", features = ["trace"], optional = true }
-tower-sessions = { version = "=0.14.0", features = [
+tower-sessions = { version = "=0.15.0", features = [
     "private",
 ], optional = true }
 tower-sessions-redis-store = { version = "0.16.0", optional = true }
