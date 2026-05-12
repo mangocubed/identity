@@ -1,5 +1,8 @@
 pub mod app;
 
+#[cfg(feature = "ssr")]
+pub mod config;
+
 mod components;
 mod constants;
 mod hooks;

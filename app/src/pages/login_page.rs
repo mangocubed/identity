@@ -1,3 +1,4 @@
+use leptos::either::Either;
 use leptos::prelude::*;
 use leptos_router::components::A;
 use leptos_router::hooks::use_navigate;
@@ -5,12 +6,13 @@ use url::form_urlencoded;
 
 use crate::components::{Alert, AlertType, PasswordField, SubmitButton, TextField};
 use crate::hooks::{use_current_user_resource, use_redirect_to, use_toast};
-use crate::server_fns::{ActionResultExt, CreateSession};
+use crate::server_fns::{self, ActionResultExt, CreateSession};
 
 use super::GuestPage;
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
+    let enable_register_resource = Resource::new_blocking(|| (), |_| server_fns::enable_register());
     let navigate = use_navigate();
     let current_user_resource = use_current_user_resource();
     let mut toast = use_toast();
@@ -51,17 +53,32 @@ pub fn LoginPage() -> impl IntoView {
                 <SubmitButton is_pending=action.pending() />
             </ActionForm>
             <div class="login-links">
-                <A
-                    attr:class="btn btn-block btn-outline"
-                    href=move || {
-                        format!(
-                            "/register?redirect_to={}",
-                            form_urlencoded::byte_serialize(redirect_to.get().as_bytes()).collect::<String>(),
-                        )
-                    }
-                >
-                    "I don't have an account"
-                </A>
+                <Transition>
+                    {move || {
+                        Suspend::new(async move {
+                            if let Some(Ok(true)) = *enable_register_resource.read() {
+                                Either::Left(
+                                    view! {
+                                        <A
+                                            attr:class="btn btn-block btn-outline"
+                                            href=move || {
+                                                format!(
+                                                    "/register?redirect_to={}",
+                                                    form_urlencoded::byte_serialize(redirect_to.get().as_bytes())
+                                                        .collect::<String>(),
+                                                )
+                                            }
+                                        >
+                                            "I don't have an account"
+                                        </A>
+                                    },
+                                )
+                            } else {
+                                Either::Right(())
+                            }
+                        })
+                    }}
+                </Transition>
 
                 <A
                     attr:class="btn btn-block btn-outline"

@@ -12,6 +12,8 @@ use identity_core::params::*;
 use crate::presenters::UserPresenter;
 
 #[cfg(feature = "ssr")]
+use crate::config::APP_CONFIG;
+#[cfg(feature = "ssr")]
 use crate::server_fns::KEY_SESSION_ID;
 
 use super::{ActionResult, ServerFnResult};
@@ -39,6 +41,10 @@ pub async fn create_user(
     birthdate: Option<NaiveDate>,
     country_code: String,
 ) -> ActionResult {
+    if !APP_CONFIG.enable_register {
+        return Err(ActionError::default());
+    }
+
     require_no_authentication().await?;
 
     let user = commands::insert_user(UserParams {
@@ -60,6 +66,11 @@ pub async fn create_user(
     tower_session.insert(KEY_SESSION_ID, user_session.id).await?;
 
     Ok(())
+}
+
+#[server]
+pub async fn enable_register() -> ServerFnResult<bool> {
+    Ok(APP_CONFIG.enable_register)
 }
 
 #[server]

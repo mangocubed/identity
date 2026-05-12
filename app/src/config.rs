@@ -10,6 +10,9 @@ pub static SESSION_CONFIG: LazyLock<SessionConfig> = LazyLock::new(|| SessionCon
 pub struct AppConfig {
     #[envconfig(from = "APP_CLIENT_IP_SOURCE", default = "ConnectInfo")]
     pub client_ip_source: ClientIpSource,
+    #[allow(unused)]
+    #[envconfig(from = "APP_ENABLE_REGISTER", default = "false")]
+    pub enable_register: bool,
 }
 
 #[derive(Envconfig)]
