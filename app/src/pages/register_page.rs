@@ -1,16 +1,18 @@
+use leptos::either::Either;
 use leptos::prelude::*;
-use leptos_router::components::A;
+use leptos_router::components::{A, Redirect};
 use leptos_router::hooks::use_navigate;
 use url::form_urlencoded;
 
 use crate::components::{Alert, AlertType, CountryField, PasswordField, SubmitButton, TextField};
 use crate::hooks::{use_current_user_resource, use_redirect_to, use_toast};
-use crate::server_fns::{ActionResultExt, CreateUser};
+use crate::server_fns::{self, ActionResultExt, CreateUser};
 
 use super::GuestPage;
 
 #[component]
 pub fn RegisterPage() -> impl IntoView {
+    let enable_register_resource = Resource::new_blocking(|| (), |_| server_fns::enable_register());
     let navigate = use_navigate();
     let current_user_resource = use_current_user_resource();
     let mut toast = use_toast();
@@ -37,6 +39,18 @@ pub fn RegisterPage() -> impl IntoView {
     );
 
     view! {
+        <Transition>
+            {move || {
+                Suspend::new(async move {
+                    if let Some(Ok(false)) = *enable_register_resource.read() {
+                        Either::Left(view! { <Redirect path="/login" /> })
+                    } else {
+                        Either::Right(())
+                    }
+                })
+            }}
+        </Transition>
+
         <GuestPage title="Register">
             <ActionForm action=action attr:class="form" attr:autocomplete="off" attr:novalidate="true">
                 <Show when=move || action_value.read().has_errors()>
